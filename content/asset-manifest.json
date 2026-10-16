@@ -1,0 +1,69 @@
+{
+  "contentVersion": "1.0.0-draft",
+  "contentSha256": "cd7ced313ab7300834dd30a7726f32f305a46ea857d0bf4793cf988d3bd49a6c",
+  "narration": [
+    {
+      "id": "overview",
+      "path": "/audio/water-cycle/overview.wav",
+      "sha256": "bf260387047f2c04deb81c42dc95aa246c55077ab4da4196b203cf722b018a0e",
+      "bytes": 2687700,
+      "seconds": 60.94,
+      "voice": "Microsoft David Desktop / Windows System.Speech",
+      "status": "development-only-review-required"
+    },
+    {
+      "id": "evaporation",
+      "path": "/audio/water-cycle/evaporation.wav",
+      "sha256": "b5b59ac7417d7a6b5f58cb81477b18f97d1a3783f26c55cdf80e643c3fc85bd1",
+      "bytes": 2796822,
+      "seconds": 63.42,
+      "voice": "Microsoft David Desktop / Windows System.Speech",
+      "status": "development-only-review-required"
+    },
+    {
+      "id": "condensation",
+      "path": "/audio/water-cycle/condensation.wav",
+      "sha256": "fb8a0252fbc871997f26a5956ad25126bc53c04391e70160786f96d2c49ddfa5",
+      "bytes": 2954478,
+      "seconds": 66.99,
+      "voice": "Microsoft David Desktop / Windows System.Speech",
+      "status": "development-only-review-required"
+    },
+    {
+      "id": "precipitation",
+      "path": "/audio/water-cycle/precipitation.wav",
+      "sha256": "bec4197c1e9320ebbfe57e4ced0e23a2d2ab91a4a1b1ecadf73517fb624ced0e",
+      "bytes": 2820898,
+      "seconds": 63.96,
+      "voice": "Microsoft David Desktop / Windows System.Speech",
+      "status": "development-only-review-required"
+    },
+    {
+      "id": "collection",
+      "path": "/audio/water-cycle/collection.wav",
+      "sha256": "46c903889f738091d73d4465fbf005b23dc8c3f213484a69d127a834ebdcbfe5",
+      "bytes": 3162576,
+      "seconds": 71.71,
+      "voice": "Microsoft David Desktop / Windows System.Speech",
+      "status": "development-only-review-required"
+    }
+  ],
+  "stimulus": [
+    {
+      "path": "components/learning/water-diagram.tsx",
+      "sha256": "8bf76662fa96368ed08e72fe9ad5bb784c891e05f88d6ad983e234006ab5699d"
+    },
+    {
+      "path": "lib/content/lesson.ts",
+      "sha256": "c072b4fee12ab3681662e56c6e90b61b3dda8862bc74b6f7972b77543e695ded"
+    },
+    {
+      "path": "app/globals.css",
+      "sha256": "502eec35f6728bd9f68f4dda9b1e66e8cc5a4eed4c091b22e7dd70c23ab926d8"
+    },
+    {
+      "path": "lib/assessments/surveys.ts",
+      "sha256": "0ce63c5844baeaa93dde26e7b451c8d74edc5c9c43034d07defa6dbf77fc0f59"
+    }
+  ]
+}

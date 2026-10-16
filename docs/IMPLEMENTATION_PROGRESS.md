@@ -1,0 +1,47 @@
+# Implementation handoff — 2026-10-16
+
+Repository: https://github.com/Raahin414/VisualLearn_HCI. Initial remote was empty. Working branch: `feat/visuallearn-foundation`. Baseline commit: none (unborn repository); this run creates the first local checkpoint. Use `git log -1` for its exact commit; no GitHub push or deployment is implied.
+
+## Completed engineering
+
+- Read the full 35-section v2 specification and pasted implementation brief; inspect empty repository; preserve the original specification at `VISUALLEARN_AGENT_IMPLEMENTATION_SPEC.md` (byte-for-byte hash checked).
+- Initialize Next.js 16 / React 19 / strict TypeScript / Tailwind with reusable Radix/CVA controls, original cream/teal visual identity, responsive public routes, safe closed research/admin states, error recovery, metadata, security headers and CI.
+- Build catalog, course detail, five-segment Water Cycle demo, original tiered SVG illustration, real 327-second fixed development narration, transcripts, keyboard controls, local refresh recovery, reset and distinct server-scored practice bank P.
+- Implement server-only A/B/C draft banks (8 MCQs each), F0 validation, F3/F5 questionnaire schemas/UI, free recall capture and draft rubric. No answer keys/rationales serialized to learners, and no research score feedback before debrief.
+- Implement PostgreSQL private-schema migration, RLS and backend-role policies, eight disabled experiment seeds, transactional age-stratified allocation, idempotent attempts/surveys, server lesson timestamps and one-hour follow-up schedule, per-session content/media/question/stimulus hashes and frozen follow-up grace.
+- Implement same-origin participant API, signed HttpOnly session cookies, request validation/body limits/rate limits, participant state enforcement, secure hashed return secrets using URL fragments, withdrawal, bounded per-participant retry queue and deduplicated telemetry ingestion.
+- Implement conditional approved-consent enrollment UI and research participant screens covering pretest, fixed-condition lesson, immediate assessment/F3, waiting/return, Form C/F5, completion and withdrawal. Minor enrollment always blocked pending a real guardian verification mechanism.
+- Implement Supabase-verified admin sign-in, UUID allowlist, server aggregates, nine audited CSV exports, consistent de-identified join keys, withdrawal exclusion and formula-safe CSV. Empty dashboards do not invent results.
+- Add actual standalone SVG files, frozen media/source manifest, viewport screenshots, source/licensing register, data dictionary, deployment/privacy/protocol/decision docs, Python analysis scaffold and unfilled results template.
+
+## Verification
+
+`npm run verify-content`: PASS (5 segments, 327.0s WAVs, hashes).
+
+`npm run test`: PASS (29 tests / 5 files); `npm run db:validate`: PASS (5 database-specific tests).
+
+`npm run lint` and `npm run typecheck`: PASS (no errors/warnings).
+
+`npm run test:e2e -- --reporter=line`: PASS (9 tests, final full run 28.6s). Public navigation/demo/score, no research writes, closed gates, key leakage, 360/768/1280px overflow/axe/keyboard/screenshot checks; separate SYNTHETIC participant UI contract through F5. Database service tests independently exercise real PostgreSQL semantics in PGlite. Neither substitutes for hosted Supabase browser testing.
+
+`npm audit --omit=dev --json`: zero production advisories. Full development audit: 5 known transitive lint/glob advisories, documented in DEPLOYMENT/QA. Python AST syntax parse: PASS. No real analysis outputs exist.
+
+`npm run build`: PASS: optimized production compilation, strict TypeScript and generation of all 16 listed routes. `npm start` with the supplied local environment example: PASS. Final full Playwright suite against the production server: **9 passed in 18.0s**. `npm run typecheck` now runs `next typegen` before TypeScript for fresh-checkout reliability.
+
+See [QA.md](QA.md) for limitations and initial failures that were corrected.
+
+## Blockers and incomplete acceptance criteria
+
+- Supabase project/connection/auth configuration not supplied. Hosted migration, dedicated non-owner runtime grants, real admin login, multi-client concurrency, connected E1 browser lifecycle and actual hosted exports remain unverified. No production database or participants have been created.
+- Protocol, ethics, approved consent wording/contact, educator/instrument validation, primary endpoint/sample planning, final +60m window, device/accommodation policy, retention/deletion and narration distribution rights are unresolved. All registry entries are draft; no live enrollment is authorized. Development audio must be approved/replaced before publication as study material.
+- Current research forms have eight objective MCQs plus recall. Richer ordering/labeling items, separately rated scenario responses, finalized equalized forms, blind-rater/adjudication UI, optional D seven-day path, approved debrief and full researcher charts remain incomplete.
+- Telemetry records navigation/audio/visibility/submission events but needs full active-time/scroll/poor-network/device validation. Accommodations/device fields need a finalized, measured UI and export schema. Queue caps/abrupt termination can lose events; behavior is not attention.
+- Exports are implemented and SQL-tested; machine-readable codebook export, expanded item-level rows, complete analytics/CI hosted run and approved analysis model require further implementation/validation.
+- E2–E8 definitions are present; renderer strategies beyond E1 and E2/E3 pilots are not implemented. E4–E8 remain intentionally disabled.
+- No deployment, GitHub push, human research collection, study results or claims of scientific validity.
+
+## Next three tasks
+
+1. Connect an authorized **staging** Supabase PostgreSQL/Auth project, execute the migration with a migration role, provision a non-owner runtime login in `visuallearn_backend`, and verify anonymous/public access is denied. Keep recruitment disabled.
+2. Run the connected E1 flow with clearly SYNTHETIC sessions, including two concurrent clients, refresh/recovery, duplicate submissions, +60m/expired eligibility, real administrator sign-in and every export. Add any failures as regression tests before proceeding.
+3. Obtain supervisor/educator decisions and narration rights; finalize/version instruments, ordering/scenario tasks, blind scoring, debrief, telemetry/accommodations and codebook. Re-run the full acceptance matrix before any human recruitment. Only then consider E2/E3.

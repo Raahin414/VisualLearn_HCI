@@ -1,0 +1,4 @@
+* text=auto eol=lf
+*.png binary
+*.wav binary
+VISUALLEARN_AGENT_IMPLEMENTATION_SPEC.md -text
