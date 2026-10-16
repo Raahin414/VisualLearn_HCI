@@ -9,3 +9,9 @@ coverage/
 .local/
 next-env.d.ts
 __pycache__/
+*.log
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+.postgres-data/

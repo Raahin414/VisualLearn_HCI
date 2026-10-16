@@ -46,6 +46,10 @@ const manifest = {
       "lib/content/lesson.ts",
       "app/globals.css",
       "lib/assessments/surveys.ts",
+      "components/learning/narration-player.tsx",
+      "components/study/study-runner.tsx",
+      "components/assessments/assessment-form.tsx",
+      "lib/assessments/draft.ts",
     ].map(async (path) => ({
       path,
       sha256: hash(

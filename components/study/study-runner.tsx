@@ -1,6 +1,11 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { AssessmentForm } from "@/components/assessments/assessment-form";
+import type { AssessmentDraft } from "@/lib/assessments/draft";
+import { NarrationPlayer } from "@/components/learning/narration-player";
+import { FollowupStatus } from "./followup-status";
+import { safeSessionStorage } from "@/lib/browser-storage";
 import { Button } from "@/components/ui/button";
 import { WaterDiagram } from "@/components/learning/water-diagram";
 import { lesson, type Condition } from "@/lib/content/lesson";
@@ -32,7 +37,14 @@ async function api(action: string, input?: unknown) {
   if (!response.ok) throw new Error(data.error?.message || "Please try again.");
   return data;
 }
-export function StudyRunner() {
+export type StudyTransport = typeof api;
+export function StudyRunner({
+  transport = api,
+  localDemo = false,
+}: {
+  transport?: StudyTransport;
+  localDemo?: boolean;
+}) {
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
   const [form, setForm] = useState<Form | null>(null);
   const [condition, setCondition] = useState<Condition>("low");
@@ -42,16 +54,20 @@ export function StudyRunner() {
   const [returnLink, setReturnLink] = useState("");
   const [withdrawn, setWithdrawn] = useState(false);
   const queue = useRef<EventQueue | null>(null);
-  const audio = useRef<HTMLAudioElement>(null);
+  const heading = useRef<HTMLHeadingElement>(null);
   const reload = useCallback(async () => {
-    const state: Snapshot = await api("session");
+    const state: Snapshot = await transport("session");
     setSnapshot(state);
     setForm(null);
     if (state.state === "lesson_active") {
-      const info = await api("lesson");
+      const info = await transport("lesson");
       setCondition(info.condition);
       setSegment(info.progress);
-      await api("progress", { segment: info.progress });
+      await transport("progress", { segment: info.progress });
+      setSnapshot({
+        ...state,
+        visited: [...new Set([...state.visited, info.progress])],
+      });
     } else {
       const stage = {
         enrolled: "pre",
@@ -59,9 +75,9 @@ export function StudyRunner() {
         waiting_60m: "plus_60m",
       }[state.state as "enrolled" | "lesson_complete" | "waiting_60m"];
       if (stage && state.state !== "waiting_60m")
-        setForm(await api(`assessment/${stage}`));
+        setForm(await transport(`assessment/${stage}`));
     }
-  }, []);
+  }, [transport]);
   useEffect(() => {
     let active = true;
     (async () => {
@@ -69,7 +85,7 @@ export function StudyRunner() {
         const token = window.location.hash.slice(1);
         if (token) {
           history.replaceState(null, "", window.location.pathname);
-          await api("recover", { token });
+          await transport("recover", { token });
         }
         if (active) await reload();
       } catch (e) {
@@ -82,15 +98,15 @@ export function StudyRunner() {
     return () => {
       active = false;
     };
-  }, [reload]);
+  }, [reload, transport]);
   const publicCode = snapshot?.publicCode;
   useEffect(() => {
     if (!publicCode || withdrawn) return;
     const events = new EventQueue(
-      sessionStorage,
+      safeSessionStorage(),
       async (batch) => {
         try {
-          await api("events", batch);
+          await transport("events", batch);
           return true;
         } catch {
           return false;
@@ -113,7 +129,7 @@ export function StudyRunner() {
       window.removeEventListener("pagehide", unload);
       void events.flush();
     };
-  }, [publicCode, withdrawn]);
+  }, [publicCode, withdrawn, transport]);
   async function act(run: () => Promise<void>) {
     if (busy) return;
     setBusy(true);
@@ -127,7 +143,6 @@ export function StudyRunner() {
     }
   }
   async function navigate(next: number) {
-    audio.current?.pause();
     await act(async () => {
       queue.current?.add(
         next > segment ? "navigation_next" : "navigation_back",
@@ -137,36 +152,44 @@ export function StudyRunner() {
         "segment_exited",
         lesson.segments[segment].id as "overview",
       );
-      await api("progress", { segment: next });
+      await transport("progress", { segment: next });
+      setSnapshot((p) =>
+        p
+          ? {
+              ...p,
+              progress: next,
+              visited: [...new Set([...p.visited, next])],
+            }
+          : p,
+      );
       setSegment(next);
+      requestAnimationFrame(() => heading.current?.focus());
       queue.current?.add(
         "segment_entered",
         lesson.segments[next].id as "overview",
       );
     });
   }
-  async function submitAssessment(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const values = new FormData(e.currentTarget);
+  async function submitAssessment(draft: AssessmentDraft) {
     const stage =
       snapshot!.state === "enrolled"
         ? "pre"
         : snapshot!.state === "lesson_complete"
           ? "immediate"
           : "plus_60m";
-    const answers = Object.fromEntries(
-      form!.questions!.map((q) => [q.id, Number(values.get(q.id))]),
-    );
-    await act(async () => {
-      await api(`assessment/${stage}`, {
-        answers,
+    setBusy(true);
+    try {
+      await transport(`assessment/${stage}`, {
+        answers: draft.answers,
         ...(form?.freeRecallPrompt
-          ? { freeRecall: String(values.get("freeRecall")) }
+          ? { freeRecall: draft.freeRecall.trim() }
           : {}),
       });
       queue.current?.add("answer_submitted");
       await reload();
-    });
+    } finally {
+      setBusy(false);
+    }
   }
   async function submitSurvey(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -196,33 +219,47 @@ export function StudyRunner() {
       };
     }
     await act(async () => {
-      await api(`survey/${immediate ? "F3" : "F5"}`, answers);
+      await transport(`survey/${immediate ? "F3" : "F5"}`, answers);
       queue.current?.add("survey_submitted");
       await reload();
     });
   }
+  const Main = localDemo ? "section" : "main";
   if (withdrawn)
     return (
-      <main id="main" className="container prose-page">
-        <h1>You have withdrawn.</h1>
+      <Main
+        id={localDemo ? undefined : "main"}
+        className="container prose-page"
+      >
+        <h1>
+          {localDemo ? "Simulated session discarded." : "You have withdrawn."}
+        </h1>
         <p>
-          Future collection and return links are disabled. The researcher will
-          handle previously collected data under the approved consent policy.
+          {localDemo
+            ? "Only simulated browser data was involved. Use the demo controls to start again."
+            : "Future collection and return links are disabled. The researcher will handle previously collected data under the approved consent policy."}
         </p>
         <Link href="/" className="text-link">
           Return home →
         </Link>
-      </main>
+      </Main>
     );
   const current = lesson.segments[segment];
   return (
-    <main id="main" className="container page-content quiz-shell">
+    <Main
+      id={localDemo ? undefined : "main"}
+      className="container page-content quiz-shell"
+    >
       <div className="eyebrow">
-        STUDY SESSION {snapshot ? `/ ${snapshot.publicCode}` : ""}
+        {localDemo ? "SIMULATED SESSION" : "STUDY SESSION"}{" "}
+        {snapshot ? `/ ${snapshot.publicCode}` : ""}
       </div>
       {error && (
         <div role="alert" className="form-error">
           {error}
+          <Button variant="ghost" disabled={busy} onClick={() => act(reload)}>
+            Retry saved session
+          </Button>
         </div>
       )}
       {!snapshot ? (
@@ -241,56 +278,30 @@ export function StudyRunner() {
           {snapshot.state === "lesson_active" ? (
             <article className="lesson-main">
               <p className="eyebrow">CHAPTER {segment + 1} OF 5</p>
-              <h1>{current.heading}</h1>
+              <h1 ref={heading} tabIndex={-1}>
+                {current.heading}
+              </h1>
+              <progress
+                className="study-chapter-progress"
+                aria-label="Lesson chapters visited"
+                value={snapshot.visited.length}
+                max={5}
+              />
               <div className="lesson-canvas">
                 <WaterDiagram condition={condition} active={current.id} />
                 <p className="diagram-caption">{current.diagramDescription}</p>
               </div>
-              <div className="audio-bar">
-                <audio
-                  ref={audio}
-                  key={current.id}
-                  src={current.audioSrc}
-                  controls
-                  aria-label={`Narration: ${current.shortTitle}`}
-                  onPlay={() =>
-                    queue.current?.add(
-                      "audio_started",
-                      current.id as "overview",
-                    )
-                  }
-                  onPause={() =>
-                    queue.current?.add("audio_paused", current.id as "overview")
-                  }
-                  onEnded={() =>
-                    queue.current?.add(
-                      "audio_completed",
-                      current.id as "overview",
-                    )
-                  }
-                />
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    if (audio.current) {
-                      audio.current.currentTime = 0;
-                      void audio.current
-                        .play()
-                        .catch(() =>
-                          setError(
-                            "Audio is unavailable. Please use the complete transcript.",
-                          ),
-                        );
-                      queue.current?.add(
-                        "audio_replayed",
-                        current.id as "overview",
-                      );
-                    }
-                  }}
-                >
-                  Replay
-                </Button>
-              </div>
+              <NarrationPlayer
+                key={current.id}
+                src={current.audioSrc}
+                title={current.shortTitle}
+                pauseWhen={busy}
+                onEvent={(event, position) =>
+                  queue.current?.add(event, current.id as "overview", {
+                    playbackPositionSeconds: position,
+                  })
+                }
+              />
               <details open className="transcript">
                 <summary>Read the full explanation</summary>
                 <div className="transcript-content">
@@ -320,7 +331,7 @@ export function StudyRunner() {
                     disabled={busy}
                     onClick={() =>
                       act(async () => {
-                        await api("complete", {});
+                        await transport("complete", {});
                         queue.current?.add("lesson_completed");
                         await reload();
                       })
@@ -344,41 +355,13 @@ export function StudyRunner() {
                 No correctness feedback is released during the study. Please
                 work independently.
               </p>
-              <form onSubmit={submitAssessment}>
-                {form.questions.map((q, i) => (
-                  <fieldset key={q.id} className="quiz-card">
-                    <legend>
-                      {i + 1}. {q.stem}
-                    </legend>
-                    {q.options.map((o, index) => (
-                      <label className="quiz-option" key={o}>
-                        <input
-                          type="radio"
-                          name={q.id}
-                          value={index}
-                          required
-                        />
-                        {o}
-                      </label>
-                    ))}
-                  </fieldset>
-                ))}
-                {form.freeRecallPrompt && (
-                  <label className="recall-field">
-                    {form.freeRecallPrompt}
-                    <textarea
-                      name="freeRecall"
-                      required
-                      minLength={20}
-                      maxLength={6000}
-                      rows={6}
-                    />
-                  </label>
-                )}
-                <Button type="submit" disabled={busy}>
-                  Submit assessment
-                </Button>
-              </form>
+              <AssessmentForm
+                key={snapshot.state}
+                questions={form.questions}
+                freeRecallPrompt={form.freeRecallPrompt}
+                draftKey={`visuallearn-${localDemo ? "simulation" : "study"}-${snapshot.publicCode}-${snapshot.state}-v1`}
+                onSubmit={submitAssessment}
+              />
             </>
           ) : snapshot.state === "immediate_test_complete" ||
             snapshot.state === "60m_test_complete" ? (
@@ -479,27 +462,22 @@ export function StudyRunner() {
             <>
               <h1 className="page-title">Thank you. See you in an hour.</h1>
               <p className="lead">
-                You can close this page. Your next assessment is scheduled on
-                the server.
+                {localDemo
+                  ? "This demonstration is saved in this browser. Use the development clock controls above to test the follow-up."
+                  : "You can close this page. Your next assessment is scheduled on the server."}
               </p>
               {snapshot.followup && (
-                <div className="notice">
-                  Return between{" "}
-                  <strong>
-                    {new Date(snapshot.followup.due_at).toLocaleString()}
-                  </strong>{" "}
-                  and{" "}
-                  <strong>
-                    {new Date(snapshot.followup.deadline_at).toLocaleString()}
-                  </strong>{" "}
-                  (your device’s time zone). The server decides availability.
-                </div>
+                <FollowupStatus
+                  followup={snapshot.followup}
+                  serverTime={snapshot.serverTime}
+                  localDemo={localDemo}
+                />
               )}
               <Button
                 disabled={busy}
                 onClick={() =>
                   act(async () => {
-                    setForm(await api("assessment/plus_60m"));
+                    setForm(await transport("assessment/plus_60m"));
                   })
                 }
               >
@@ -511,60 +489,66 @@ export function StudyRunner() {
             </>
           ) : snapshot.state === "finished" ? (
             <>
-              <h1 className="page-title">Your participation is complete.</h1>
+              <h1 className="page-title">
+                {localDemo
+                  ? "Simulated workflow complete."
+                  : "Your participation is complete."}
+              </h1>
               <p className="lead">
-                Thank you for contributing. Scores and explanations are withheld
-                until the researcher’s approved debrief.
+                {localDemo
+                  ? "You have demonstrated baseline, lesson, immediate assessment, F3, one-hour recall and F5. No research record or scientific result was created."
+                  : "Thank you for contributing. Scores and explanations are withheld until the researcher’s approved debrief."}
               </p>
             </>
           ) : null}
-          {["waiting_60m", "immediate_test_complete"].includes(
-            snapshot.state,
-          ) && (
-            <section className="return-panel">
-              <h2>Save a secure return link</h2>
-              <p>
-                Anyone with this link can access your study session. Keep it
-                private.
-              </p>
-              <Button
-                variant="outline"
-                disabled={busy}
-                onClick={() =>
-                  act(async () => {
-                    const result = await api("return-token", {});
-                    setReturnLink(
-                      `${location.origin}/study/session#${result.token}`,
-                    );
-                  })
-                }
-              >
-                Create return link
-              </Button>
-              {returnLink && (
-                <>
-                  <label>
-                    Private return link
-                    <input
-                      readOnly
-                      value={returnLink}
-                      onFocus={(e) => e.currentTarget.select()}
-                    />
-                  </label>
-                  <Button
-                    variant="ghost"
-                    onClick={() =>
-                      act(async () => {
-                        await navigator.clipboard.writeText(returnLink);
-                      })
-                    }
-                  >
-                    Copy link
-                  </Button>
-                </>
-              )}
-            </section>
-          )}
+          {!localDemo &&
+            ["waiting_60m", "immediate_test_complete"].includes(
+              snapshot.state,
+            ) && (
+              <section className="return-panel">
+                <h2>Save a secure return link</h2>
+                <p>
+                  Anyone with this link can access your study session. Keep it
+                  private.
+                </p>
+                <Button
+                  variant="outline"
+                  disabled={busy}
+                  onClick={() =>
+                    act(async () => {
+                      const result = await transport("return-token", {});
+                      setReturnLink(
+                        `${location.origin}/study/session#${result.token}`,
+                      );
+                    })
+                  }
+                >
+                  Create return link
+                </Button>
+                {returnLink && (
+                  <>
+                    <label>
+                      Private return link
+                      <input
+                        readOnly
+                        value={returnLink}
+                        onFocus={(e) => e.currentTarget.select()}
+                      />
+                    </label>
+                    <Button
+                      variant="ghost"
+                      onClick={() =>
+                        act(async () => {
+                          await navigator.clipboard.writeText(returnLink);
+                        })
+                      }
+                    >
+                      Copy link
+                    </Button>
+                  </>
+                )}
+              </section>
+            )}
           <details className="withdraw-panel">
             <summary>Withdraw from the study</summary>
             <p>
@@ -587,7 +571,7 @@ export function StudyRunner() {
                   )?.checked
                 )
                   void act(async () => {
-                    await api("withdraw", {});
+                    await transport("withdraw", {});
                     queue.current?.clear();
                     setWithdrawn(true);
                   });
@@ -602,7 +586,7 @@ export function StudyRunner() {
           </details>
         </>
       )}
-    </main>
+    </Main>
   );
 }
 function Scale({

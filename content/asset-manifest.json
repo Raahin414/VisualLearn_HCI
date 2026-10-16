@@ -59,11 +59,27 @@
     },
     {
       "path": "app/globals.css",
-      "sha256": "502eec35f6728bd9f68f4dda9b1e66e8cc5a4eed4c091b22e7dd70c23ab926d8"
+      "sha256": "f6403d094b1cade873de867be1f6d3d9eee4e80af4d0fe64074591f2881faa7a"
     },
     {
       "path": "lib/assessments/surveys.ts",
       "sha256": "0ce63c5844baeaa93dde26e7b451c8d74edc5c9c43034d07defa6dbf77fc0f59"
+    },
+    {
+      "path": "components/learning/narration-player.tsx",
+      "sha256": "30b366fa7ff29ac1946089768bff0a726e0d54ccf59c0632db03e4470e155e62"
+    },
+    {
+      "path": "components/study/study-runner.tsx",
+      "sha256": "c73198732c00a11309efd9968db64e2f7b013e32bd4a4617fe26850730844c56"
+    },
+    {
+      "path": "components/assessments/assessment-form.tsx",
+      "sha256": "ed71986ba6bf4eac94e0debed1cb1a3fc0015a08b3f79d40cb11180ef49aa555"
+    },
+    {
+      "path": "lib/assessments/draft.ts",
+      "sha256": "a8d1038eae51646fe9408f884d0f9c37d2ddf3b314822cf5923d6355691b8a2a"
     }
   ]
 }

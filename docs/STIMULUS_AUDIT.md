@@ -13,3 +13,5 @@ SVG canvas is 800×470 and scales identically. All conditions retain the same oc
 `docs/screenshots/lesson-{low,medium,high}-{360,768,1280}.png` records the overview at target viewport widths after browser QA. Other segment screenshot matrices and independent reviewer notes remain pending. Reduced motion preserves all facts because motion is not required by these stimuli.
 
 Known confounds: supportive and decorative density form a package; they cannot identify visual relevance independently. Viewport changes density; device policy needs registration. Public demo access may allow outside review; F5 asks about interim exposure. Native audio controls vary by browser/OS and need staging device checks.
+
+Local milestone: `density-v2-draft` changes the shared shell (narration status, progress, assessment drafts) uniformly, preserving canonical copy, SVG tiers and audio bytes. The manifest includes shared player/assessment/study UI sources. Hash changes must reject stale research sessions rather than silently adopt new stimuli. No human trial was active during this change.

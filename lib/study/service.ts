@@ -63,7 +63,7 @@ export type Timepoint = keyof typeof stageForms;
 const submissionSchema = z
   .object({
     answers: z.unknown(),
-    freeRecall: z.string().min(20).max(6000).optional(),
+    freeRecall: z.string().trim().min(20).max(6000).optional(),
   })
   .strict();
 
@@ -174,7 +174,7 @@ export class StudyService {
         lesson.version,
         manifest.contentSha256,
         e.protocol_version,
-        "density-v1-draft",
+        "density-v2-draft",
         mediaHash,
         bankHash,
         stimulusHash,

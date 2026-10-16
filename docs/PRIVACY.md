@@ -1,6 +1,8 @@
 # Privacy and research activation limits
 
-Public demo stores only its chapter, visited chapters and density in localStorage. Demo practice answers go to an in-memory scoring operation and are not persisted. No analytics SDK or research telemetry runs in demo mode.
+The public lesson stores its chapter, visited chapters and density in localStorage. Unsent objective/recall drafts use tab-scoped sessionStorage and are removed after successful submission. This is browser recovery, not database autosave; closing the tab can lose unsent work. Practice answers go to a scoring operation that does not persist them. No analytics SDK or research telemetry runs in the public demo.
+
+The `/dev/study` development-only fixture uses a separate SYNTHETIC localStorage namespace for one simulated session and never sends research API requests. Reset clears the fixture; a fresh synthetic ID isolates any remaining tab draft keys. Do not enter identifying data into development tools. Production returns 404 for this route.
 
 Consented study mode uses an HttpOnly signed cookie and opaque server session. Return secrets contain 32 random bytes; only their SHA-256 hashes persist. The browser places return tokens in URL fragments, strips the fragment before recovery and sends no referrers. Do not collect names, emails, exact birthdates, raw IP addresses, pointer trails or user-agent fingerprints.
 

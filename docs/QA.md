@@ -1,5 +1,25 @@
 # Verification record — 2026-10-16
 
+## Local stabilization milestone after 9562e94
+
+| Executed check | Result |
+|---|---|
+| `npm run test` | PASS: 35 tests / 6 files |
+| `npm run db:validate` | PASS: 5 migration/seed/RLS/assignment tests; no schema changes |
+| `npm run lint`, `npm run typecheck` | PASS: no errors/warnings; fresh route type generation included |
+| `npm run verify-content` | PASS: expanded shared UI source manifest; canonical copy, bank and all 327.0s of WAVs unchanged |
+| `npm run test:e2e -- --reporter=line` on dev | PASS: 13 tests in 29.6s, including browser-only simulation without HTTP mocks |
+| `npm run build` | PASS: optimized build, TypeScript and route generation |
+| `npm run test:e2e:production -- --reporter=line` | PASS: 13 tests in 17.6s; strict production 404 for `/dev/study` |
+| Draft behavior | PASS: refresh restore, failed submission retained, retry success clears, missing-answer focus, whitespace recall rejection, blocked browser storage |
+| Synthetic walkthrough | PASS: baseline → fixed-condition lesson → immediate/recall → F3 → locked/+60m C → F5, no research API requests; separate unit test verifies expiry |
+| Visual/accessibility | PASS: existing 360/768/1280px checks; development empty-state mobile axe/overflow; reviewed desktop simulation and mobile assessment screenshots |
+| Diff/integrity review | PASS: `git diff --check`, credential-signature scan, ignored environment/build/database files, original-spec SHA-256 and unchanged canonical/bank/WAV bytes |
+
+CI now runs the production suite after building, so exposing the development simulator in production fails a test. No dependencies were added. Docker engine was unavailable; no PostgreSQL server/Supabase integration, deployment, human research or hosted CI run is claimed. Questionnaire drafts and broader scientific/security validation remain incomplete. Native audio controls remain browser-dependent. Source review and synthetic simulations do not establish research validity.
+
+## Foundation verification (historical checkpoint 9562e94)
+
 Executed locally on Windows, Node 24.14.1 / npm 11.11.0. See package-lock for resolved library versions. No hosted credentials or real participants were used.
 
 | Command / check | Confirmed result |

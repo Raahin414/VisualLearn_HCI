@@ -97,6 +97,7 @@ describe("Synthetic E1 lifecycle using real PostgreSQL semantics", () => {
     await expect(tx((s) => s.getLesson(id))).rejects.toThrow(/only during/);
   });
   it("persists immediate answers once, withholds scores and validates survey", async () => {
+    await expect(tx(s=>s.submitAssessment(id,'immediate',{answers:correct('B'),freeRecall:' '.repeat(40)}))).rejects.toThrow();
     const result = await tx((s) =>
       s.submitAssessment(id, "immediate", {
         answers: correct("B"),

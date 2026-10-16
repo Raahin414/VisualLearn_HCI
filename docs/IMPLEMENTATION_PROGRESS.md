@@ -2,6 +2,8 @@
 
 Repository: https://github.com/Raahin414/VisualLearn_HCI. Initial remote was empty. Working branch: `feat/visuallearn-foundation`. Baseline commit: none (unborn repository); this run creates the first local checkpoint. Use `git log -1` for its exact commit; no GitHub push or deployment is implied.
 
+> Historical foundation record below. The **current local-stabilization session** follows baseline `9562e94` and is recorded at the end of this document. Current status is in root `PROGRESS.md`; the previous staging-first recommendation is deferred by the latest user scope.
+
 ## Completed engineering
 
 - Read the full 35-section v2 specification and pasted implementation brief; inspect empty repository; preserve the original specification at `VISUALLEARN_AGENT_IMPLEMENTATION_SPEC.md` (byte-for-byte hash checked).
@@ -45,3 +47,28 @@ See [QA.md](QA.md) for limitations and initial failures that were corrected.
 1. Connect an authorized **staging** Supabase PostgreSQL/Auth project, execute the migration with a migration role, provision a non-owner runtime login in `visuallearn_backend`, and verify anonymous/public access is denied. Keep recruitment disabled.
 2. Run the connected E1 flow with clearly SYNTHETIC sessions, including two concurrent clients, refresh/recovery, duplicate submissions, +60m/expired eligibility, real administrator sign-in and every export. Add any failures as regression tests before proceeding.
 3. Obtain supervisor/educator decisions and narration rights; finalize/version instruments, ordering/scenario tasks, blind scoring, debrief, telemetry/accommodations and codebook. Re-run the full acceptance matrix before any human recruitment. Only then consider E2/E3.
+
+## Session 2 — local stabilization after 9562e94 (2026-10-16)
+
+User scope: improve the existing local MVP, finish one bounded milestone, document and push `feat/visuallearn-foundation`. No Supabase integration, deployment, real studies, new subjects or E2–E8 implementation.
+
+Audit: clean working tree on expected branch/baseline. Remote was empty and `git push --dry-run origin feat/visuallearn-foundation` succeeded. Docker CLI exists but `docker info` failed because the Docker Desktop Linux engine pipe was unavailable; no provisioning or database fallback was attempted. Full original spec reviewed and remains unchanged.
+
+Completed: shared narration feedback/cleanup; normalized chapter visits, study progress and next preview; shared assessment progress/validation/focus/tab drafts/retry guards; server whitespace recall rejection; browser-storage denial handling; injected SYNTHETIC browser-only study transport, full development walkthrough and checkpoint preview, +60m/expiry controls, server production-404 boundary. Canonical copy/diagrams/questions/audio are unchanged; draft shell version is `density-v2-draft`, with expanded UI source hashes. No dependencies or migrations changed.
+
+Changed areas: `components/{learning,assessments,study,demo}`, `lib/{assessments,content,demo}`, `lib/browser-storage.ts`, narrow validation/version updates in `lib/study/service.ts`, `/dev/study`, common CSS, content hash manifest, new unit/browser tests and screenshots. Required README/PROGRESS/ROADMAP/AGENTS/DECISIONS docs updated; build/local DB files remain ignored.
+
+Executed:
+
+- `npm run verify-content`: PASS, unchanged 5-segment copy and 327.0s fixed WAVs; expanded shared UI hashes verified.
+- `npm run test`: PASS, 35 tests / 6 files; `npm run db:validate`: PASS, 5 database-specific tests.
+- `npm run lint`, `npm run typecheck`: PASS, no errors/warnings.
+- `npm run test:e2e -- --reporter=line`: PASS, 13 development-server tests in 29.6s. New real browser simulation has no HTTP mocks and sends no research requests; original independent HTTP contract fixture remains separately labeled.
+- Original spec SHA-256 unchanged: `4c4d7e957ce6149940aaeb7bae1ac12a4fbfd76222fa83f57b6c34fe408c12a5`. `git diff --check`: PASS.
+- `npm run build`: PASS, optimized build and route generation. `npm run test:e2e:production -- --reporter=line`: PASS, 13 tests in 17.6s, including strict production 404 for `/dev/study`. CI now runs this suite after building.
+- Final source review: no dependencies/migration changes; unchanged canonical copy, full question bank and WAV bytes checked against `9562e94`; credential-signature scan and ignored-file checks passed. Desktop simulation/mobile assessment screenshots reviewed.
+- Checkpoint/push target: existing `feat/visuallearn-foundation` on `origin` (no force). Exact checkpoint is obtained from Git history; remote confirmation is provided in the final handoff after the actual push. No hosted CI success or deployment is assumed.
+
+Remaining: questionnaire draft recovery, richer item types/scenario scoring, blind-rater UI, codebook/analytics, local PostgreSQL races and complete scientific review. The simulation is not proof of persistence/authentication/grading, and tab drafts are not server autosave. No real records/results or approvals were invented.
+
+Next 3 tasks: (1) mixed assessment interactions and questionnaire draft recovery, (2) local PostgreSQL concurrency when Docker is available, (3) local researcher codebook/item exports and blind scoring. Supabase/deployment need a later scoped milestone. Stop after this session's push and handoff.

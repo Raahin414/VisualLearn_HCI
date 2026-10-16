@@ -6,48 +6,31 @@ import {
   ArrowRight,
   BookOpen,
   Check,
-  Headphones,
   Lightbulb,
   RotateCcw,
 } from "lucide-react";
 import { lesson, type Condition, conditions } from "@/lib/content/lesson";
+import { readDemoProgress } from "@/lib/content/demo-progress";
+import { NarrationPlayer } from "./narration-player";
 import { WaterDiagram } from "./water-diagram";
 import { Button } from "@/components/ui/button";
 const STORAGE_KEY = "visuallearn-demo-v1";
-type Progress = { segment: number; condition: Condition; visited: number[] };
-function readProgress(): Progress {
-  try {
-    const p = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
-    if (
-      p &&
-      Number.isInteger(p.segment) &&
-      p.segment >= 0 &&
-      p.segment < lesson.segments.length &&
-      conditions.includes(p.condition) &&
-      Array.isArray(p.visited) &&
-      p.visited.every(
-        (v: unknown) =>
-          Number.isInteger(v) &&
-          Number(v) >= 0 &&
-          Number(v) < lesson.segments.length,
-      )
-    )
-      return p;
-  } catch {}
-  return { segment: 0, condition: "medium", visited: [0] };
-}
 export function LessonPlayer() {
-  const [progress, setProgress] = useState<Progress>({
-    segment: 0,
-    condition: "medium",
-    visited: [0],
-  });
+  const [progress, setProgress] = useState<ReturnType<typeof readDemoProgress>>(
+    {
+      segment: 0,
+      condition: "medium",
+      visited: [0],
+    },
+  );
   const [ready, setReady] = useState(false);
-  const [audioFailed, setAudioFailed] = useState(false);
-  const audio = useRef<HTMLAudioElement>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
-    const saved = readProgress();
+    let raw: string | null = null;
+    try {
+      raw = localStorage.getItem(STORAGE_KEY);
+    } catch {}
+    const saved = readDemoProgress(raw);
     queueMicrotask(() => {
       setProgress(saved);
       setReady(true);
@@ -61,8 +44,6 @@ export function LessonPlayer() {
   }, [progress, ready]);
   const segment = lesson.segments[progress.segment];
   function navigate(index: number) {
-    audio.current?.pause();
-    setAudioFailed(false);
     setProgress((p) => ({
       ...p,
       segment: index,
@@ -71,12 +52,10 @@ export function LessonPlayer() {
     requestAnimationFrame(() => heading.current?.focus());
   }
   function reset() {
-    audio.current?.pause();
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch {}
     setProgress({ segment: 0, condition: "medium", visited: [0] });
-    setAudioFailed(false);
   }
   return (
     <>
@@ -167,38 +146,15 @@ export function LessonPlayer() {
             <WaterDiagram condition={progress.condition} active={segment.id} />
             <p className="diagram-caption">{segment.diagramDescription}</p>
           </div>
-          <div className="audio-bar">
-            <span className="audio-label">
-              <Headphones size={15} />
-              Listen & learn
-            </span>
-            <audio
-              key={segment.id}
-              ref={audio}
-              src={segment.audioSrc}
-              controls
-              preload="metadata"
-              aria-label={`Narration: ${segment.shortTitle}`}
-              onError={() => setAudioFailed(true)}
-            />
-            <button
-              className="audio-replay"
-              onClick={() => {
-                if (audio.current) {
-                  audio.current.currentTime = 0;
-                  void audio.current.play().catch(() => setAudioFailed(true));
-                }
-              }}
-            >
-              <RotateCcw size={14} />
-              Replay
-            </button>
-          </div>
-          {audioFailed && (
-            <p className="form-error" role="status">
-              Audio could not load. The complete transcript is available below.
-            </p>
-          )}
+          <NarrationPlayer
+            key={segment.id}
+            src={segment.audioSrc}
+            title={segment.shortTitle}
+          />
+          <p className="lesson-feedback" role="status">
+            {progress.condition[0].toUpperCase() + progress.condition.slice(1)}{" "}
+            visual density · same explanation and narration in every version.
+          </p>
           <details className="transcript" open>
             <summary>
               <BookOpen size={16} /> Read the full explanation
@@ -225,7 +181,7 @@ export function LessonPlayer() {
               <ArrowLeft size={16} /> Previous
             </Button>
             <span>Chapter {progress.segment + 1} of 5</span>
-            {progress.segment < 4 ? (
+            {progress.segment < lesson.segments.length - 1 ? (
               <Button onClick={() => navigate(progress.segment + 1)}>
                 Next chapter <ArrowRight size={16} />
               </Button>
@@ -237,6 +193,11 @@ export function LessonPlayer() {
               </Button>
             )}
           </div>
+          {progress.segment < lesson.segments.length - 1 && (
+            <p className="next-preview">
+              Up next: {lesson.segments[progress.segment + 1].shortTitle}
+            </p>
+          )}
         </article>
       </main>
     </>

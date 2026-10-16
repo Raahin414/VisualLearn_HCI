@@ -10,6 +10,7 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "playwright test",
+    "test:e2e:production": "playwright test --config=playwright.production.config.ts",
     "db:validate": "vitest run tests/database.test.ts",
     "db:migrate": "node --env-file-if-exists=.env.local scripts/migrate.mjs",
     "verify-content": "node scripts/verify-content.mjs"
