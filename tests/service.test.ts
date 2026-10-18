@@ -2,10 +2,10 @@ import { PGlite } from "@electric-sql/pglite";
 import { readFile } from "node:fs/promises";
 import { beforeAll, afterAll, describe, it, expect } from "vitest";
 import { StudyService, type SQL } from "@/lib/study/service";
-import { questionBanks } from "@/lib/assessments/questions.server";
+import { answerKey } from "@/lib/assessments/questions.server";
 import { exportQueries, studyStats } from "@/lib/admin/exports";
-const correct = (form: "A" | "B" | "C") =>
-  Object.fromEntries(questionBanks[form].map((q) => [q.id, q.correctAnswer]));
+const correct = (form: "A" | "B" | "C") => answerKey(form);
+const scenario = "SYNTHETIC: evaporation turns liquid water into vapor.";
 const consent = {
   ageBand: "18-30",
   language: "English",
@@ -42,6 +42,9 @@ describe("Synthetic E1 lifecycle using real PostgreSQL semantics", () => {
     db = new PGlite();
     await db.exec(
       await readFile("supabase/migrations/001_research_foundation.sql", "utf8"),
+    );
+    await db.exec(
+      await readFile("supabase/migrations/002_assessment_v2_rating.sql", "utf8"),
     );
     await db.exec(await readFile("supabase/seed.sql", "utf8"));
     service = new StudyService(db as unknown as SQL, () => clock);
@@ -97,12 +100,13 @@ describe("Synthetic E1 lifecycle using real PostgreSQL semantics", () => {
     await expect(tx((s) => s.getLesson(id))).rejects.toThrow(/only during/);
   });
   it("persists immediate answers once, withholds scores and validates survey", async () => {
-    await expect(tx(s=>s.submitAssessment(id,'immediate',{answers:correct('B'),freeRecall:' '.repeat(40)}))).rejects.toThrow();
+    await expect(tx(s=>s.submitAssessment(id,'immediate',{answers:correct('B'),freeRecall:' '.repeat(40),scenario}))).rejects.toThrow();
     const result = await tx((s) =>
       s.submitAssessment(id, "immediate", {
         answers: correct("B"),
         freeRecall:
           "SYNTHETIC explanation of the processes and how they connect.",
+        scenario,
       }),
     );
     expect(result).not.toHaveProperty("correct");
@@ -156,6 +160,7 @@ describe("Synthetic E1 lifecycle using real PostgreSQL semantics", () => {
         answers: correct("C"),
         freeRecall:
           "SYNTHETIC delayed explanation of the repeating water cycle.",
+        scenario,
       }),
     );
     await tx((s) =>

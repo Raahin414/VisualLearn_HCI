@@ -9,6 +9,8 @@ export default defineConfig({
   },
   test: {
     include: ["tests/**/*.test.ts", "tests/**/*.test.tsx"],
+    // Needs Docker; run with `npm run test:pg`.
+    exclude: ["tests/postgres/**", "node_modules/**"],
     environment: "node",
   },
 });

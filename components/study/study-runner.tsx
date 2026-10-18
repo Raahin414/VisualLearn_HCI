@@ -2,14 +2,18 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { AssessmentForm } from "@/components/assessments/assessment-form";
-import type { AssessmentDraft } from "@/lib/assessments/draft";
+import type {
+  AssessmentDraft,
+  PublicQuestion,
+} from "@/lib/assessments/draft";
+import { SurveyForm } from "@/components/surveys/survey-form";
+import type { SurveyDraft } from "@/lib/assessments/survey-draft";
 import { NarrationPlayer } from "@/components/learning/narration-player";
 import { FollowupStatus } from "./followup-status";
 import { safeSessionStorage } from "@/lib/browser-storage";
 import { Button } from "@/components/ui/button";
 import { WaterDiagram } from "@/components/learning/water-diagram";
 import { lesson, type Condition } from "@/lib/content/lesson";
-import { f3Items } from "@/lib/assessments/surveys";
 import { EventQueue } from "@/lib/telemetry/client-queue";
 import type { StudyState } from "@/lib/study/lifecycle";
 type Snapshot = {
@@ -22,8 +26,9 @@ type Snapshot = {
 };
 type Form = {
   submitted: boolean;
-  questions?: { id: string; stem: string; options: string[] }[];
+  questions?: PublicQuestion[];
   freeRecallPrompt?: string | null;
+  scenarioPrompt?: string | null;
 };
 async function api(action: string, input?: unknown) {
   const response = await fetch(`/api/study/${action}`, {
@@ -38,6 +43,8 @@ async function api(action: string, input?: unknown) {
   return data;
 }
 export type StudyTransport = typeof api;
+// The return token is removed from the URL once read, so it is used only once.
+let pendingRecovery: Promise<unknown> | null = null;
 export function StudyRunner({
   transport = api,
   localDemo = false,
@@ -85,8 +92,13 @@ export function StudyRunner({
         const token = window.location.hash.slice(1);
         if (token) {
           history.replaceState(null, "", window.location.pathname);
-          await transport("recover", { token });
+          pendingRecovery = transport("recover", { token }).finally(() => {
+            pendingRecovery = null;
+          });
         }
+        // A re-run effect (e.g. React strict mode) must wait for the same
+        // recovery instead of loading the session before its cookie exists.
+        if (pendingRecovery) await pendingRecovery;
         if (active) await reload();
       } catch (e) {
         if (active)
@@ -184,6 +196,7 @@ export function StudyRunner({
         ...(form?.freeRecallPrompt
           ? { freeRecall: draft.freeRecall.trim() }
           : {}),
+        ...(form?.scenarioPrompt ? { scenario: draft.scenario.trim() } : {}),
       });
       queue.current?.add("answer_submitted");
       await reload();
@@ -191,38 +204,16 @@ export function StudyRunner({
       setBusy(false);
     }
   }
-  async function submitSurvey(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const values = new FormData(e.currentTarget);
-    const immediate = snapshot!.state === "immediate_test_complete";
-    let answers: Record<string, unknown>;
-    if (immediate) {
-      answers = Object.fromEntries(
-        f3Items.map(([key]) => [
-          key,
-          values.get(key) === "not_applicable"
-            ? "not_applicable"
-            : Number(values.get(key)),
-        ]),
-      );
-      answers.mentalEffort = Number(values.get("mentalEffort"));
-      answers.confusing = String(values.get("confusing") || "");
-      answers.helpful = String(values.get("helpful") || "");
-    } else {
-      answers = {
-        reviewed: values.get("reviewed"),
-        sources: values.getAll("sources"),
-        discussed: values.get("discussed"),
-        confidence: Number(values.get("confidence")),
-        recallEffort: Number(values.get("recallEffort")),
-        issues: String(values.get("issues") || ""),
-      };
-    }
-    await act(async () => {
-      await transport(`survey/${immediate ? "F3" : "F5"}`, answers);
+  async function submitSurvey(answers: SurveyDraft) {
+    const form = snapshot!.state === "immediate_test_complete" ? "F3" : "F5";
+    setBusy(true);
+    try {
+      await transport(`survey/${form}`, answers);
       queue.current?.add("survey_submitted");
       await reload();
-    });
+    } finally {
+      setBusy(false);
+    }
   }
   const Main = localDemo ? "section" : "main";
   if (withdrawn)
@@ -359,7 +350,8 @@ export function StudyRunner({
                 key={snapshot.state}
                 questions={form.questions}
                 freeRecallPrompt={form.freeRecallPrompt}
-                draftKey={`visuallearn-${localDemo ? "simulation" : "study"}-${snapshot.publicCode}-${snapshot.state}-v1`}
+                scenarioPrompt={form.scenarioPrompt}
+                draftKey={`visuallearn-${localDemo ? "simulation" : "study"}-${snapshot.publicCode}-${snapshot.state}-v2`}
                 onSubmit={submitAssessment}
               />
             </>
@@ -370,93 +362,14 @@ export function StudyRunner({
               <p className="lead">
                 Study-designed questionnaire. Answer based on your experience.
               </p>
-              <form onSubmit={submitSurvey} className="study-form">
-                {snapshot.state === "immediate_test_complete" ? (
-                  <>
-                    {f3Items.map(([key, text]) => (
-                      <Scale
-                        key={key}
-                        name={key}
-                        label={text}
-                        na={["audio", "motion", "color"].includes(key)}
-                      />
-                    ))}
-                    <Scale
-                      name="mentalEffort"
-                      label="How much mental effort did this lesson require?"
-                      max={9}
-                    />
-                    <label>
-                      Which part was confusing or distracting, if any?
-                      <textarea name="confusing" maxLength={2000} />
-                    </label>
-                    <label>
-                      What helped you understand the lesson most?
-                      <textarea name="helpful" maxLength={2000} />
-                    </label>
-                  </>
-                ) : (
-                  <>
-                    <label>
-                      Since the lesson, did you review the topic anywhere?
-                      <select name="reviewed" required defaultValue="">
-                        <option value="" disabled>
-                          Select one
-                        </option>
-                        <option value="yes">Yes</option>
-                        <option value="no">No</option>
-                        <option value="unsure">Unsure</option>
-                      </select>
-                    </label>
-                    <fieldset>
-                      <legend>If yes, what did you use?</legend>
-                      {[
-                        ["this_website", "This website"],
-                        ["notes", "Notes"],
-                        [
-                          "another_website_or_video",
-                          "Another website or video",
-                        ],
-                        ["discussion", "Discussion"],
-                        ["other", "Other"],
-                        ["prefer_not_to_say", "Prefer not to say"],
-                      ].map(([v, label]) => (
-                        <label key={v} className="check-field">
-                          <input type="checkbox" name="sources" value={v} />
-                          {label}
-                        </label>
-                      ))}
-                    </fieldset>
-                    <label>
-                      Since the lesson, did you discuss the material with
-                      anyone?
-                      <select name="discussed" required>
-                        <option value="no">No</option>
-                        <option value="yes">Yes</option>
-                        <option value="prefer_not_to_say">
-                          Prefer not to say
-                        </option>
-                      </select>
-                    </label>
-                    <Scale
-                      name="confidence"
-                      label="How confident are you in what you just remembered?"
-                    />
-                    <Scale
-                      name="recallEffort"
-                      max={9}
-                      label="How mentally effortful was recalling the material just now?"
-                    />
-                    <label>
-                      Anything affected your ability to complete this test?
-                      <textarea name="issues" maxLength={2000} />
-                    </label>
-                  </>
-                )}
-                <Button disabled={busy} type="submit">
-                  Submit questionnaire
-                </Button>
-              </form>
+              <SurveyForm
+                key={snapshot.state}
+                form={
+                  snapshot.state === "immediate_test_complete" ? "F3" : "F5"
+                }
+                draftKey={`visuallearn-${localDemo ? "simulation" : "study"}-${snapshot.publicCode}-${snapshot.state}-survey-v2`}
+                onSubmit={submitSurvey}
+              />
             </>
           ) : snapshot.state === "waiting_60m" ? (
             <>
@@ -587,43 +500,5 @@ export function StudyRunner({
         </>
       )}
     </Main>
-  );
-}
-function Scale({
-  name,
-  label,
-  max = 5,
-  na = false,
-}: {
-  name: string;
-  label: string;
-  max?: number;
-  na?: boolean;
-}) {
-  return (
-    <fieldset className="scale-field">
-      <legend>{label}</legend>
-      <p>
-        {max === 9
-          ? "1 Very little · 9 Very much"
-          : name === "confidence"
-            ? "1 Not at all · 5 Extremely"
-            : "1 Strongly disagree · 2 Disagree · 3 Neither · 4 Agree · 5 Strongly agree"}
-      </p>
-      <div>
-        {Array.from({ length: max }, (_, i) => (
-          <label key={i}>
-            <input type="radio" name={name} value={i + 1} required />
-            {i + 1}
-          </label>
-        ))}
-        {na && (
-          <label>
-            <input type="radio" name={name} value="not_applicable" />
-            N/A
-          </label>
-        )}
-      </div>
-    </fieldset>
   );
 }

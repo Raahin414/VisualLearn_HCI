@@ -8,6 +8,9 @@ describe("PostgreSQL migration and data boundaries", () => {
     await db.exec(
       await readFile("supabase/migrations/001_research_foundation.sql", "utf8"),
     );
+    await db.exec(
+      await readFile("supabase/migrations/002_assessment_v2_rating.sql", "utf8"),
+    );
     await db.exec(await readFile("supabase/seed.sql", "utf8"));
   }, 30000);
   afterAll(async () => {

@@ -17,7 +17,11 @@ async function boundedBody(request: Request) {
   let bytes = 0;
   const chunks: Uint8Array[] = [];
   while (true) {
-    const { done, value } = await reader.read();
+    // A browser that navigates away mid-request aborts the body stream; that
+    // is a client disconnect, not a server failure.
+    const { done, value } = await reader.read().catch(() => {
+      throw new StudyError("CLIENT_ABORTED", "The request was interrupted.", 400);
+    });
     if (done) break;
     bytes += value.length;
     if (bytes > 65536) {
@@ -180,7 +184,11 @@ async function handle(request: NextRequest, ctx: Context) {
         },
         400,
       );
-    console.error("Study operation failed without recording request content.");
+    // Error class and SQLSTATE only: never request bodies, tokens or IDs.
+    console.error("Study operation failed without recording request content.", {
+      kind: error instanceof Error ? error.name : typeof error,
+      code: (error as { code?: unknown })?.code,
+    });
     return json(
       {
         error: {

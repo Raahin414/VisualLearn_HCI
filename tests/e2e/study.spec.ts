@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { completeWritten } from "./helpers";
 // UI contract fixture only. Database ownership/timing/scoring are independently
 // exercised in service.test.ts; this never enrolls a human or reaches research DB.
 test("SYNTHETIC participant UI handles assessment, lesson, questionnaires and return", async ({
@@ -79,6 +80,8 @@ test("SYNTHETIC participant UI handles assessment, lesson, questionnaires and re
       state = "waiting_60m";
     } else if (action === "survey/F5") {
       expect(body.reviewed).toBe("no");
+      expect(body.discussed).toBe("no");
+      expect(body.sources).toEqual([]);
       state = "finished";
     } else if (action === "return-token")
       data = { token: "SYNTHETIC-return-secret" };
@@ -98,10 +101,8 @@ test("SYNTHETIC participant UI handles assessment, lesson, questionnaires and re
   for (let i = 0; i < 4; i++)
     await page.getByRole("button", { name: "Next chapter" }).click();
   await page.getByRole("button", { name: "Complete lesson" }).click();
+  await completeWritten(page);
   await page.getByLabel("Choice A").check();
-  await page
-    .getByLabel("SYNTHETIC: explain the processes you recall.")
-    .fill("SYNTHETIC response with sufficient explanatory length.");
   await page.getByRole("button", { name: "Submit assessment" }).click();
   for (const name of [
     "clarity",
@@ -136,13 +137,14 @@ test("SYNTHETIC participant UI handles assessment, lesson, questionnaires and re
   await page
     .getByRole("button", { name: "Check follow-up availability" })
     .click();
+  await completeWritten(page, "SYNTHETIC delayed");
   await page.getByLabel("Choice A").check();
-  await page
-    .getByLabel("SYNTHETIC: explain the processes you recall.")
-    .fill("SYNTHETIC delayed response with sufficient explanatory length.");
   await page.getByRole("button", { name: "Submit assessment" }).click();
   await page
     .getByLabel("Since the lesson, did you review the topic anywhere?")
+    .selectOption("no");
+  await page
+    .getByLabel("Since the lesson, did you discuss the material with anyone?")
     .selectOption("no");
   await page.locator('input[name="confidence"]').first().check();
   await page.locator('input[name="recallEffort"]').first().check();

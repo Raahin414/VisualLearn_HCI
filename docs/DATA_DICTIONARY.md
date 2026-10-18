@@ -1,19 +1,21 @@
 # Research data dictionary
 
-All timestamp columns are UTC `timestamptz`. IDs are opaque UUIDs internally; exported participant_id/session_id/attempt_id are consistent SHA-256-derived keys. No names, email, exact birthdate, IP address or full user-agent are collected in study tables. Free-text responses may contain volunteered identifiers and require review before release.
+The authoritative, column-by-column dictionary is generated from code (`lib/admin/codebook.ts`) and downloaded by authorized researchers as `data_dictionary.md` and `codebook.json` (items, keys, rubrics, survey options). The connected test suite fails if any exported column is undocumented. This page summarises the datasets.
 
-| Dataset | Main fields / interpretation |
+All timestamps are UTC. Exported `participant_id`, `session_id` and `attempt_id` are `VL_` + 24 hex characters of SHA-256 of the internal UUID: stable for joins, not the database IDs. No names, emails, exact birthdates, IP addresses, user-agent strings, public participant codes, return tokens or researcher identities are exported. Written responses are verbatim and may contain volunteered identifiers; review them before sharing. **Withdrawn participants are excluded from every file.**
+
+| Dataset | Grain and main fields |
 |---|---|
-| participants_deidentified | participant_id, age_band, language, consent_version, consent_at, created_at; withdrawn rows excluded |
-| assignments | participant_id, experiment_id, arm_key, randomization_version, assigned_at; withdrawals remain in allocation counts but not exports |
-| sessions | session_id, participant_id, state, content/protocol/stimulus versions and SHA-256 hashes, accommodations, timestamps |
-| assessment_attempts | attempt_id, session_id, timepoint (`pre`,`immediate`,`plus_60m`; `plus_7d` reserved), form key/version, open/submit times, correct, max_score, scoring/rubric versions |
-| item_responses | attempt_id, session_id, timepoint, answers_json (question ID → option index), free_recall (unscored verbatim text). One row per attempt; explode answers_json for item analysis |
-| free_recall_ratings | attempt_id, rater_code, rubric_version, five sub_scores (0–2), total_score (0–10), rated_at; table exists, blind-rater UI pending |
-| surveys | session_id, F3 or F5, version, answers_json, submitted_at. F3 Likert 1–5 and N/A; mentalEffort separate 1–9. F5 recallEffort separate 1–9 |
-| followup_status | session_id, timepoint, due/deadline, status, completed_at. Default strict +60–90min; no late scores accepted yet. Missing follow-up is never zero-imputed |
-| events | session_id, allowlisted event_type, optional segment_id, elapsed_ms (page-lifetime monotonic clock), client_time, authoritative server_received_at, bounded payload |
+| participants_deidentified | One row per participant: age band, language, language comfort (1–5), prior familiarity (1–5), consent version and time |
+| assignments | One row per participant: experiment, arm (low/medium/high), randomization version, time |
+| sessions | One row per session: state, content/protocol/stimulus versions and SHA-256 hashes, follow-up window, timestamps |
+| assessment_attempts | One row per form opened: timepoint (pre/immediate/plus_60m), form and version, opened/submitted, duration, correct (0–8), scoring and rubric versions |
+| item_responses | One row per item answered: item id, type (mcq/ordering/labeling), skill, objective, response, auto score (0/1) |
+| written_responses | One row per written answer: free recall or scenario text, rubric version, character count |
+| free_recall_ratings | One row per rater × response: rater code `R-…`, response kind, per-criterion 0–2 scores, total |
+| rating_adjudications | One row per resolved disagreement: agreed sub-scores and total, adjudicator code |
+| surveys | One row per questionnaire: F3 (Likert 1–5 with N/A, mental effort 1–9) or F5 (review, sources only if reviewed, discussion, confidence 1–5, recall effort 1–9) |
+| followup_status | One row per scheduled follow-up: due (+60 min from server lesson completion), deadline, status (not_started shown as expired after the deadline) |
+| events | One row per accepted telemetry event: allowlisted type, chapter, elapsed time, client and server times, bounded payload |
 
-CSV cells that could execute spreadsheet formulas are prefixed with an apostrophe. JSON columns use escaped JSON. Exports are audited. A browser event is a behavior observation, not a gaze or cognitive-attention measure. Queue caps can drop old events; missing telemetry is not inactivity. Client elapsed time resets on reload; use client/server timestamps and segment transitions for cross-page interpretation.
-
-F0 contains language comfort, prior familiarity and consent booleans, but the current participant export does not expose its full JSON. Additional approved demographic/accommodation/device and item-level expanded export columns remain to finalize. Codebook JSON is not yet generated.
+CSV cells that start like spreadsheet formulas are prefixed with an apostrophe. JSON columns are escaped JSON. Every download is written to the audit log. Telemetry events are behavior observations, not attention measures; queue caps can drop events and missing telemetry is not inactivity. Missing follow-ups are never zero-filled.

@@ -1,6 +1,29 @@
-# Verification record — 2026-10-16
+# Verification record — 2026-10-18
 
-## Local stabilization milestone after 9562e94
+## E1 foundation milestone after c812d73
+
+Executed on Linux, Node 24.22.0 / npm 11.19.1, Docker 29.8.0. All participants and researcher accounts were SYNTHETIC. No hosted service was used.
+
+| Executed check | Kind | Result |
+|---|---|---|
+| `npm run verify-content` | Static | PASS: 5 segments, 327.0 s WAVs; lesson JSON and WAV hashes unchanged; manifest re-frozen for 4 changed and 4 new assessment/UI sources (`density-v3-draft`) |
+| `npm run lint`, `npm run typecheck` | Static | PASS, no errors or warnings |
+| `npm run test` | Unit (incl. PGlite service lifecycle) | PASS: 48 tests / 7 files |
+| `npm run db:validate` | PGlite schema | PASS: 5 tests |
+| `npm run test:pg` | **Real PostgreSQL 17** (Docker, loopback, tmpfs), app transaction code, non-owner login | PASS: 13 tests. Mutation check: replacing the allocation advisory lock with a sleep made 30 concurrent allocations `[10, 13, 9]` and the test failed; restored lock gives `11/11/10` |
+| `npm run test:e2e` | Browser, development server; simulator has no HTTP mocks, `study.spec` is a labeled HTTP-mock contract | PASS: 15 tests (25.9 s) incl. axe/keyboard/overflow for ordering and labeling at 360/1280 px |
+| `npm run build`, `npm run check:bundle` | Production build, asset scan | PASS; 21 learner assets contain the assessment UI and none of the keys, rationales, rubric anchors or secret names (keys present only in server chunks) |
+| `npm run test:e2e:production` | Browser, production server | PASS: 15 tests (15.1 s), strict 404 for `/dev/study` |
+| `npm start` smoke | Production server | Public routes 200, `/dev/study` 404, `/api/admin/stats` 401, enrollment 503 NOT_CONFIGURED |
+| `verify-staging.mjs` on pristine local Supabase | **Real Supabase stack** (Postgres 17.11, GoTrue, PostgREST, Kong) | PASS: 19/19 (private ledger, RLS, no API-role grants, E2–E8 disabled, enrollment closed, runtime login non-owner/no DDL/no auth.users, REST refuses schema, sign-up and anonymous sign-in disabled) |
+| `npm run test:connected` | **Real app + local Supabase Auth + PostgreSQL**, two browsers, no mocks | PASS: 16/16 (2.4 min), no server errors logged. Time advanced only by shifting SYNTHETIC rows in the local DB |
+| Spec / whitespace / secrets | Review | Spec SHA-256 unchanged (`4c4d7e95…a5`); `git diff --check` clean; local credentials only in ignored `.local/` and `.env.local` |
+
+Failures found during this run and fixed (not counted as passes): anon could insert into `public.visuallearn_migrations` on Supabase; return-link recovery race; runtime-role script rejected by Supabase's non-superuser `postgres`; `[auth.email] enable_signup=false` disabled password sign-in; client disconnects logged as 500; several test-helper races. An HS256 token-expiry check silently skipped because local Auth signs ES256; it was replaced by a real-expiry test rather than reported as passing.
+
+Not verified: hosted Supabase project and Auth, hosting/HTTPS, backups and restore, Firefox/Safari/real mobile devices, manual screen-reader audit, human usability, psychometric equivalence and rubric reliability, the Python analysis script on exported data.
+
+## Local stabilization milestone after 9562e94 (2026-10-16)
 
 | Executed check | Result |
 |---|---|

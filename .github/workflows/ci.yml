@@ -1,5 +1,13 @@
 name: VisualLearn checks
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      connected:
+        description: Also run the local-Supabase connected SYNTHETIC suite
+        type: boolean
+        default: false
 jobs:
   verify:
     runs-on: ubuntu-latest
@@ -15,9 +23,12 @@ jobs:
       - run: npm run typecheck
       - run: npm run test
       - run: npm run db:validate
+      # Real PostgreSQL 17 in a disposable loopback container (Docker on the runner).
+      - run: npm run test:pg
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
       - run: npm run build
+      - run: npm run check:bundle
       - run: npm run test:e2e:production
       - uses: actions/upload-artifact@v4
         if: always()
@@ -26,3 +37,21 @@ jobs:
           path: |
             test-results/
             docs/screenshots/
+  connected:
+    if: github.event_name == 'workflow_dispatch' && inputs.connected
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      # Local Supabase (Auth + PostgreSQL) only; no hosted credentials are used.
+      - run: npm run test:connected
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: connected-checks
+          path: test-results/

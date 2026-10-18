@@ -3,9 +3,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { AssessmentForm } from "./assessment-form";
-import type { AssessmentDraft } from "@/lib/assessments/draft";
+import type {
+  AssessmentDraft,
+  PublicQuestion,
+} from "@/lib/assessments/draft";
 import { Button } from "@/components/ui/button";
-type PublicQuestion = { id: string; stem: string; options: string[] };
 export function PracticeQuiz({ questions }: { questions: PublicQuestion[] }) {
   const [result, setResult] = useState<{
     correct: number;

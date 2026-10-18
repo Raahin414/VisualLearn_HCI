@@ -50,6 +50,10 @@ const manifest = {
       "components/study/study-runner.tsx",
       "components/assessments/assessment-form.tsx",
       "lib/assessments/draft.ts",
+      "components/assessments/item-inputs.tsx",
+      "components/surveys/survey-form.tsx",
+      "lib/assessments/survey-draft.ts",
+      "lib/assessments/written-prompts.ts",
     ].map(async (path) => ({
       path,
       sha256: hash(

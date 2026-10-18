@@ -12,8 +12,8 @@ export async function POST(request: Request) {
   try {
     const text = await request.text();
     if (text.length > 4096) return new Response(null, { status: 413 });
-    const result = scoreAnswers("P", JSON.parse(text));
-    return NextResponse.json(result, {
+    const { correct, total } = scoreAnswers("P", JSON.parse(text));
+    return NextResponse.json({ correct, total }, {
       headers: { "Cache-Control": "no-store" },
     });
   } catch {

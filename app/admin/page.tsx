@@ -1,9 +1,15 @@
+import { cookies } from "next/headers";
 import { AdminWorkspace } from "@/components/admin/workspace";
-import { requireAdmin } from "@/lib/security/admin";
+import {
+  adminMfaCookie,
+  requireAdmin,
+  verifyAdminToken,
+} from "@/lib/security/admin";
 import { transaction } from "@/lib/db/client";
-import { studyStats } from "@/lib/admin/exports";
+import { studyStats, type StudyStats } from "@/lib/admin/exports";
 import type { SQL } from "@/lib/study/service";
 export const dynamic = "force-dynamic";
+export const metadata = { robots: { index: false, follow: false } };
 export default async function Admin() {
   const configured = !!(
     process.env.SUPABASE_URL &&
@@ -11,14 +17,21 @@ export default async function Admin() {
     process.env.ADMIN_ALLOWLIST &&
     process.env.DATABASE_URL
   );
-  let stats: Awaited<ReturnType<typeof studyStats>> | undefined;
-  if (configured)
+  let stats: StudyStats | undefined;
+  let mfa: "enroll" | "verify" | null = null;
+  if (configured) {
     try {
       await requireAdmin();
-      stats = await transaction((client) =>
-        studyStats(client as unknown as SQL),
-      );
-    } catch {}
+      stats = await transaction((client) => studyStats(client as unknown as SQL));
+    } catch {
+      const pending = (await cookies()).get(adminMfaCookie)?.value;
+      if (pending)
+        try {
+          const user = await verifyAdminToken(pending, { requireAal2: false });
+          mfa = user.verifiedTotp.length ? "verify" : "enroll";
+        } catch {}
+    }
+  }
   return (
     <main id="main" className="container prose-page">
       <div className="eyebrow">RESEARCHER ACCESS</div>
@@ -27,6 +40,7 @@ export default async function Admin() {
         configured={configured}
         signedIn={!!stats}
         initialStats={stats}
+        initialMfa={mfa}
       />
     </main>
   );

@@ -24,8 +24,22 @@ function memory() {
     },
   };
 }
+// Any complete (not necessarily correct) answer of the right shape.
 const answers = (form: "A" | "B" | "C") =>
-  Object.fromEntries(banks[form].map((q) => [q.id, 0]));
+  Object.fromEntries(
+    banks[form].map((q) => [
+      q.id,
+      q.type === "ordering"
+        ? q.steps.map((_, i) => i)
+        : q.type === "labeling"
+          ? q.markers.map(() => 0)
+          : 0,
+    ]),
+  );
+const written = {
+  freeRecall: "SYNTHETIC explanation with sufficient length.",
+  scenario: "SYNTHETIC scenario explanation with sufficient length.",
+};
 const f3 = {
   clarity: 4,
   overload: 2,
@@ -52,15 +66,16 @@ describe("Assessment drafts and demo progress", () => {
     expect(readDraft("not json", banks.A)).toEqual({
       answers: {},
       freeRecall: "",
+      scenario: "",
     });
   });
   it("finds missing answers and rejects whitespace recall", () => {
     expect(
-      validateDraft({ answers: {}, freeRecall: "" }, banks.A)?.questionId,
+      validateDraft({ answers: {}, freeRecall: "", scenario: "" }, banks.A)?.questionId,
     ).toBe("A-1");
     expect(
       validateDraft(
-        { answers: answers("B"), freeRecall: " ".repeat(30) },
+        { answers: answers("B"), freeRecall: " ".repeat(30), scenario: "" },
         banks.B,
         true,
       )?.questionId,
@@ -70,6 +85,7 @@ describe("Assessment drafts and demo progress", () => {
         {
           answers: answers("B"),
           freeRecall: "A sufficiently long explanation.",
+          scenario: "",
         },
         banks.B,
         true,
@@ -108,7 +124,7 @@ describe("Isolated SYNTHETIC browser simulation", () => {
     expect(model.getRecord()!.lessonCompletedAt).toBe(completed);
     await model.request("assessment/immediate", {
       answers: answers("B"),
-      freeRecall: "SYNTHETIC explanation with sufficient length.",
+      ...written,
     });
     await expect(model.request("survey/F3", {})).rejects.toThrow();
     await model.request("survey/F3", f3);
@@ -127,7 +143,7 @@ describe("Isolated SYNTHETIC browser simulation", () => {
     ).toHaveLength(8);
     await restored.request("assessment/plus_60m", {
       answers: answers("C"),
-      freeRecall: "SYNTHETIC delayed explanation with sufficient length.",
+      ...written,
     });
     await restored.request("survey/F5", {
       reviewed: "no",
@@ -138,7 +154,7 @@ describe("Isolated SYNTHETIC browser simulation", () => {
     });
     expect(restored.getRecord()!.state).toBe("finished");
     expect(JSON.stringify(restored.getRecord())).not.toMatch(
-      /correctAnswer|score|rationale/,
+      /correctAnswer|correctCycle|correctLabels|score|rationale/,
     );
     restored.reset();
     expect(storage.getItem(LOCAL_DEMO_KEY)).toBeNull();
@@ -155,7 +171,7 @@ describe("Isolated SYNTHETIC browser simulation", () => {
     await model.request("complete", {});
     await model.request("assessment/immediate", {
       answers: answers("B"),
-      freeRecall: "A sufficiently long SYNTHETIC recall response.",
+      ...written,
     });
     await model.request("survey/F3", f3);
     model.advanceTo("expired");

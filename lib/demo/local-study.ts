@@ -4,11 +4,19 @@ import { followupEligibility, followupWindow } from "@/lib/study/lifecycle";
 import { f3Schema, f5Schema } from "@/lib/assessments/surveys";
 import { eventBatchSchema } from "@/lib/telemetry/schema";
 import { validateDraft, type PublicQuestion } from "@/lib/assessments/draft";
-export const LOCAL_DEMO_KEY = "visuallearn-SYNTHETIC-local-study-v1";
+import { writtenPrompts } from "@/lib/assessments/written-prompts";
+export const LOCAL_DEMO_KEY = "visuallearn-SYNTHETIC-local-study-v2";
 const submission = z
   .object({
-    answers: z.record(z.string(), z.number().int().min(0).max(3)),
+    answers: z.record(
+      z.string(),
+      z.union([
+        z.number().int().min(0).max(7),
+        z.array(z.number().int().min(0).max(7)).max(8),
+      ]),
+    ),
     freeRecall: z.string().trim().max(6000).optional(),
+    scenario: z.string().trim().max(3000).optional(),
   })
   .strict();
 const storedSubmission = submission.extend({ submittedAt: z.iso.datetime() });
@@ -25,7 +33,7 @@ const states = [
 const recordSchema = z
   .object({
     kind: z.literal("SYNTHETIC"),
-    version: z.literal(1),
+    version: z.literal(2),
     publicCode: z.string().startsWith("SYNTHETIC-"),
     condition: z.enum(conditions),
     state: z.enum(states),
@@ -48,6 +56,13 @@ const recordSchema = z
 export type LocalStudyRecord = z.infer<typeof recordSchema>;
 export type DemoBanks = Record<"A" | "B" | "C", PublicQuestion[]>;
 const stages = { pre: "A", immediate: "B", plus_60m: "C" } as const;
+function safeJson(raw: string): unknown {
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
 type StorageLike = Pick<Storage, "getItem" | "setItem" | "removeItem">;
 /** Browser-only simulation. No database, authentication or grading substitute. */
 export class LocalStudy {
@@ -59,12 +74,19 @@ export class LocalStudy {
     private banks: DemoBanks,
     private clock: () => number = Date.now,
   ) {
+    let raw: string | null = null;
     try {
-      const raw = storage.getItem(LOCAL_DEMO_KEY);
-      if (raw) this.record = recordSchema.parse(JSON.parse(raw));
+      raw = storage.getItem(LOCAL_DEMO_KEY);
     } catch {
       this.storageAvailable = false;
     }
+    // An unreadable or older fixture is discarded rather than migrated.
+    const parsed = raw ? recordSchema.safeParse(safeJson(raw)) : null;
+    if (parsed?.success) this.record = parsed.data;
+    else if (parsed)
+      try {
+        storage.removeItem(LOCAL_DEMO_KEY);
+      } catch {}
   }
   subscribe(listener: () => void) {
     this.listeners.add(listener);
@@ -91,7 +113,7 @@ export class LocalStudy {
       throw new Error("Reset the simulated session before starting another.");
     this.record = {
       kind: "SYNTHETIC",
-      version: 1,
+      version: 2,
       publicCode: `SYNTHETIC-${crypto.randomUUID().slice(0, 8).toUpperCase()}`,
       condition,
       state: "enrolled",
@@ -223,18 +245,24 @@ export class LocalStudy {
           );
       }
       const questions = this.banks[stages[stage]];
-      const freeRecallPrompt =
-        stage === "pre"
-          ? null
-          : stage === "immediate"
-            ? "Without looking back, describe the water cycle in your own words. Include the processes you remember and how they connect."
-            : "Without replaying the lesson, explain how water can move from a lake to a cloud and back to the ground. Name the processes you recall.";
+      const { freeRecall: freeRecallPrompt, scenario: scenarioPrompt } =
+        writtenPrompts[stage];
       if (input === undefined)
-        return { submitted: false, questions, freeRecallPrompt };
+        return {
+          submitted: false,
+          questions,
+          freeRecallPrompt,
+          scenarioPrompt,
+        };
       const data = submission.parse(input);
       const error = validateDraft(
-        { answers: data.answers, freeRecall: data.freeRecall || "" },
+        {
+          answers: data.answers,
+          freeRecall: data.freeRecall || "",
+          scenario: data.scenario || "",
+        },
         questions,
+        stage !== "pre",
         stage !== "pre",
       );
       if (error) throw new Error(error.message);

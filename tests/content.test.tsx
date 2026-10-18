@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { WaterDiagram } from "@/components/learning/water-diagram";
 import { lesson, conditions, densityConfig } from "@/lib/content/lesson";
 import {
+  answerKey,
   publicQuestions,
   questionBanks,
   scoreAnswers,
@@ -41,16 +42,15 @@ describe("Canonical content and stimulus invariants", () => {
   it("never serializes keys or rationales into learner questions", () => {
     for (const form of ["A", "B", "C"] as const) {
       const publicJson = JSON.stringify(publicQuestions(form));
-      expect(publicJson).not.toContain("correctAnswer");
-      expect(publicJson).not.toContain("rationale");
+      expect(publicJson).not.toMatch(
+        /correctAnswer|correctCycle|correctLabels|rationale|estimatedDifficulty/,
+      );
       expect(questionBanks[form]).toHaveLength(8);
     }
   });
   it("scores complete responses on the server and rejects invented/missing answers", () => {
-    const correct = Object.fromEntries(
-      questionBanks.B.map((q) => [q.id, q.correctAnswer]),
-    );
-    expect(scoreAnswers("B", correct)).toEqual({ correct: 8, total: 8 });
+    const correct = answerKey("B");
+    expect(scoreAnswers("B", correct)).toMatchObject({ correct: 8, total: 8 });
     expect(() => scoreAnswers("B", {})).toThrow();
     expect(() => scoreAnswers("B", { ...correct, "B-fake": 0 })).toThrow();
     expect(() => scoreAnswers("B", { ...correct, "B-1": 10 })).toThrow();

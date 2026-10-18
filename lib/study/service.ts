@@ -4,17 +4,24 @@ import { z } from "zod";
 import { lesson } from "@/lib/content/lesson";
 import manifest from "@/content/asset-manifest.json";
 import {
+  BANK_VERSION,
   questionBanks,
   publicQuestions,
   scoreAnswers,
 } from "@/lib/assessments/questions.server";
+import { RUBRIC_VERSION, rubrics } from "@/lib/assessments/rubrics.server";
+import { writtenPrompts } from "@/lib/assessments/written-prompts";
 import {
   enrollmentSchema,
   followupWindow,
   followupEligibility,
   type StudyState,
 } from "./lifecycle";
-import { f3Schema, f5Schema } from "@/lib/assessments/surveys";
+import {
+  f3Schema,
+  f5Schema,
+  SURVEY_VERSION,
+} from "@/lib/assessments/surveys";
 import { eventBatchSchema } from "@/lib/telemetry/schema";
 import { hashToken, newReturnToken } from "@/lib/security/tokens";
 
@@ -57,13 +64,17 @@ const bankHash = digest({
   A: questionBanks.A,
   B: questionBanks.B,
   C: questionBanks.C,
+  writtenPrompts,
+  rubrics,
 });
+export const STIMULUS_VERSION = "density-v3-draft";
 const stageForms = { pre: "A", immediate: "B", plus_60m: "C" } as const;
 export type Timepoint = keyof typeof stageForms;
 const submissionSchema = z
   .object({
     answers: z.unknown(),
     freeRecall: z.string().trim().min(20).max(6000).optional(),
+    scenario: z.string().trim().min(20).max(3000).optional(),
   })
   .strict();
 
@@ -174,7 +185,7 @@ export class StudyService {
         lesson.version,
         manifest.contentSha256,
         e.protocol_version,
-        "density-v2-draft",
+        STIMULUS_VERSION,
         mediaHash,
         bankHash,
         stimulusHash,
@@ -224,17 +235,13 @@ export class StudyService {
     if (timepoint === "plus_60m") await this.requireFollowup(id);
     await this.db.query(
       "insert into visuallearn.assessment_attempts(session_id,timepoint,form_key,form_version,opened_at) values($1,$2,$3,$4,$5) on conflict(session_id,timepoint) do nothing",
-      [id, timepoint, form, "1.0.0-draft", this.now()],
+      [id, timepoint, form, BANK_VERSION, this.now()],
     );
     return {
       submitted: false,
       questions: publicQuestions(form),
-      freeRecallPrompt:
-        timepoint === "immediate"
-          ? "Without looking back, describe the water cycle in your own words. Include the processes you remember and how they connect."
-          : timepoint === "plus_60m"
-            ? "Without replaying the lesson, explain how water can move from a lake to a cloud and back to the ground. Name the processes you recall."
-            : null,
+      freeRecallPrompt: writtenPrompts[timepoint].freeRecall,
+      scenarioPrompt: writtenPrompts[timepoint].scenario,
     };
   }
   async submitAssessment(id: string, timepoint: Timepoint, input: unknown) {
@@ -247,10 +254,15 @@ export class StudyService {
       return { accepted: true, alreadySubmitted: true };
     await this.assessment(id, timepoint);
     const data = submissionSchema.parse(input);
-    if (timepoint !== "pre" && !data.freeRecall)
+    if (timepoint !== "pre" && (!data.freeRecall || !data.scenario))
       throw new StudyError(
-        "FREE_RECALL_REQUIRED",
-        "Please enter your explanation.",
+        "WRITTEN_REQUIRED",
+        "Please complete both written explanations.",
+      );
+    if (timepoint === "pre" && (data.freeRecall || data.scenario))
+      throw new StudyError(
+        "INVALID_ANSWERS",
+        "The baseline form has no written questions.",
       );
     let result: ReturnType<typeof scoreAnswers>;
     try {
@@ -262,7 +274,7 @@ export class StudyService {
       );
     }
     await this.db.query(
-      "update visuallearn.assessment_attempts set answers_json=$3,free_recall=$4,correct=$5,max_score=$6,submitted_at=$7,rubric_version=$8 where session_id=$1 and timepoint=$2 and submitted_at is null",
+      "update visuallearn.assessment_attempts set answers_json=$3,free_recall=$4,correct=$5,max_score=$6,submitted_at=$7,rubric_version=$8,scenario_response=$9,item_scores=$10,scoring_version=$11 where session_id=$1 and timepoint=$2 and submitted_at is null",
       [
         id,
         timepoint,
@@ -271,7 +283,10 @@ export class StudyService {
         result.correct,
         result.total,
         this.now(),
-        timepoint === "pre" ? null : "1.0.0-draft",
+        timepoint === "pre" ? null : RUBRIC_VERSION,
+        data.scenario ?? null,
+        JSON.stringify(result.itemScores),
+        `objective-${BANK_VERSION}`,
       ],
     );
     let next: StudyState;
@@ -401,7 +416,7 @@ export class StudyService {
     const data = (form === "F3" ? f3Schema : f5Schema).parse(input);
     await this.db.query(
       "insert into visuallearn.survey_submissions(session_id,form_key,form_version,answers_json,submitted_at) values($1,$2,$3,$4,$5)",
-      [id, form, "1.0.0-draft", JSON.stringify(data), this.now()],
+      [id, form, SURVEY_VERSION, JSON.stringify(data), this.now()],
     );
     await this.db.query(
       "update visuallearn.sessions set state=$2 where id=$1",

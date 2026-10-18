@@ -1,4 +1,6 @@
 import { z } from "zod";
+// F5 v2 requires an explicit "discussed" answer instead of a preselected "No".
+export const SURVEY_VERSION = "2.0.0-draft";
 const likert = z.number().int().min(1).max(5);
 const optionalLikert = z.union([likert, z.literal("not_applicable")]);
 export const f3Schema = z
@@ -17,7 +19,15 @@ export const f3Schema = z
     helpful: z.string().max(2000).optional(),
   })
   .strict();
-export const f5Schema = z
+export const f5Sources = [
+  ["this_website", "This website"],
+  ["notes", "Notes"],
+  ["another_website_or_video", "Another website or video"],
+  ["discussion", "Discussion with someone"],
+  ["other", "Other"],
+  ["prefer_not_to_say", "Prefer not to say"],
+] as const;
+export const f5Base = z
   .object({
     reviewed: z.enum(["yes", "no", "unsure"]),
     sources: z
@@ -37,11 +47,14 @@ export const f5Schema = z
     recallEffort: z.number().int().min(1).max(9),
     issues: z.string().max(2000).optional(),
   })
-  .strict()
-  .refine((x) => x.reviewed !== "yes" || x.sources.length > 0, {
+  .strict();
+export const f5Schema = f5Base.refine(
+  (x) => x.reviewed !== "yes" || x.sources.length > 0,
+  {
     message: "Choose a source when review is reported.",
     path: ["sources"],
-  });
+  },
+);
 export const f3Items = [
   ["clarity", "The lesson was easy to follow."],
   ["overload", "There was too much information on the screen at once."],
@@ -59,21 +72,3 @@ export const f3Items = [
     "I would be willing to learn another topic using this interface.",
   ],
 ] as const;
-export const freeRecallRubric = {
-  version: "1.0.0-draft",
-  reviewStatus: "supervisor-review-required",
-  criteria: [
-    "Evaporation identified and explained",
-    "Condensation identified and explained",
-    "Precipitation identified and explained",
-    "Collection/runoff identified and explained",
-    "Causal connections and cyclicity",
-  ],
-  anchors: {
-    0: "Missing or incorrect",
-    1: "Partial or unclear",
-    2: "Accurate",
-  },
-  maxScore: 10,
-  spellingPenalty: false,
-};

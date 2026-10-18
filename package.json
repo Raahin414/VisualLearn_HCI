@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev --hostname 127.0.0.1",
     "build": "next build",
+    "check:bundle": "node scripts/check-client-bundle.mjs",
     "start": "next start --hostname 127.0.0.1",
     "lint": "eslint .",
     "typecheck": "next typegen && tsc --noEmit",
@@ -12,8 +13,11 @@
     "test:e2e": "playwright test",
     "test:e2e:production": "playwright test --config=playwright.production.config.ts",
     "db:validate": "vitest run tests/database.test.ts",
+    "test:pg": "node scripts/pg-harness.mjs test",
+    "test:connected": "node scripts/supabase-harness.mjs",
     "db:migrate": "node --env-file-if-exists=.env.local scripts/migrate.mjs",
-    "verify-content": "node scripts/verify-content.mjs"
+    "verify-content": "node scripts/verify-content.mjs",
+    "verify:staging": "node --env-file-if-exists=.env.staging.local scripts/verify-staging.mjs"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.5.0",

@@ -1,61 +1,84 @@
 "use client";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-const datasets = [
-  "participants_deidentified",
-  "assignments",
-  "sessions",
-  "assessment_attempts",
-  "item_responses",
-  "free_recall_ratings",
-  "surveys",
-  "followup_status",
-  "events",
-];
-type Stats = {
-  balance: { age_band: string; arm_key: string; n: number }[];
-  funnel: { state: string; n: number }[];
-  performance: {
-    timepoint: string;
-    arm_key: string;
-    n: number;
-    mean_percent: string;
-  }[];
-  quality: { awaiting_submission: number; expired: number };
-};
+import type { StudyStats } from "@/lib/admin/exports";
+import { Dashboard } from "./dashboard";
+import { RatingPanel } from "./rating-panel";
+async function post(path: string, body: unknown) {
+  const r = await fetch(path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok)
+    throw new Error(
+      typeof data.error === "string"
+        ? data.error
+        : data.error?.message || "Request failed.",
+    );
+  return data;
+}
 export function AdminWorkspace({
   configured,
   signedIn,
   initialStats,
+  initialMfa,
 }: {
   configured: boolean;
   signedIn: boolean;
-  initialStats?: Stats;
+  initialStats?: StudyStats;
+  initialMfa: "enroll" | "verify" | null;
 }) {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  async function login(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  const [mfa, setMfa] = useState(initialMfa);
+  const [enrollment, setEnrollment] = useState<{
+    factorId: string;
+    qrCode?: string;
+    secret: string;
+  } | null>(null);
+  const [tab, setTab] = useState<"overview" | "rating" | "exports">("overview");
+  async function run(task: () => Promise<void>) {
     setBusy(true);
     setError("");
-    const form = new FormData(e.currentTarget);
     try {
-      const r = await fetch("/api/admin/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: form.get("email"),
-          password: form.get("password"),
-        }),
-      });
-      const data = await r.json();
-      if (!r.ok) throw new Error(data.error);
-      window.location.reload();
+      await task();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Unable to sign in.");
+      setError(e instanceof Error ? e.message : "Request failed.");
+    } finally {
       setBusy(false);
     }
   }
+  async function login(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const form = new FormData(e.currentTarget);
+    await run(async () => {
+      const data = await post("/api/admin/login", {
+        email: form.get("email"),
+        password: form.get("password"),
+      });
+      if (data.signedIn) window.location.reload();
+      else setMfa(data.mfa);
+    });
+  }
+  async function verify(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const code = String(new FormData(e.currentTarget).get("code") || "").trim();
+    await run(async () => {
+      await post("/api/admin/mfa", {
+        action: "verify",
+        code,
+        ...(enrollment ? { factorId: enrollment.factorId } : {}),
+      });
+      window.location.reload();
+    });
+  }
+  const signOut = () =>
+    run(async () => {
+      await post("/api/admin/logout", {});
+      window.location.reload();
+    });
   if (!configured)
     return (
       <>
@@ -71,10 +94,84 @@ export function AdminWorkspace({
         </div>
       </>
     );
+  const errorBox = error && (
+    <p role="alert" className="form-error">
+      {error}
+    </p>
+  );
+  if (!signedIn && mfa)
+    return (
+      <div className="study-form">
+        <h2>Two-step verification</h2>
+        {mfa === "enroll" && !enrollment ? (
+          <>
+            <p>
+              Researcher accounts must use an authenticator app. Set one up to
+              continue. This is required before any study data is shown.
+            </p>
+            <Button
+              disabled={busy}
+              onClick={() =>
+                run(async () =>
+                  setEnrollment(await post("/api/admin/mfa", { action: "enroll" })),
+                )
+              }
+            >
+              Set up authenticator
+            </Button>
+          </>
+        ) : (
+          <form className="study-form" onSubmit={verify}>
+            {enrollment && (
+              <>
+                <p>
+                  Scan this code with your authenticator app, or enter the
+                  setup key manually.
+                </p>
+                {enrollment.qrCode && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={enrollment.qrCode}
+                    alt="Authenticator setup QR code"
+                    width={180}
+                    height={180}
+                  />
+                )}
+                <label>
+                  Setup key
+                  <input readOnly value={enrollment.secret} />
+                </label>
+              </>
+            )}
+            <label>
+              Six-digit code from your authenticator
+              <input
+                name="code"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                pattern="\d{6}"
+                maxLength={6}
+                required
+              />
+            </label>
+            <Button disabled={busy} type="submit">
+              {busy ? "Verifying…" : "Verify and continue"}
+            </Button>
+          </form>
+        )}
+        {errorBox}
+        <Button variant="ghost" disabled={busy} onClick={signOut}>
+          Cancel and sign out
+        </Button>
+      </div>
+    );
   if (!signedIn)
     return (
       <form className="study-form" onSubmit={login}>
-        <p>Sign in with an authorized Supabase researcher account.</p>
+        <p>
+          Sign in with an authorized Supabase researcher account. A second
+          factor (authenticator app) is required.
+        </p>
         <label>
           Email
           <input name="email" type="email" required autoComplete="username" />
@@ -88,11 +185,7 @@ export function AdminWorkspace({
             autoComplete="current-password"
           />
         </label>
-        {error && (
-          <p role="alert" className="form-error">
-            {error}
-          </p>
-        )}
+        {errorBox}
         <Button disabled={busy} type="submit">
           {busy ? "Signing in…" : "Sign in"}
         </Button>
@@ -102,78 +195,74 @@ export function AdminWorkspace({
   return (
     <>
       <p className="lead">
-        Database-backed research overview. Descriptive summaries only.
+        Database-backed research overview. Descriptive summaries only; no
+        significance tests or causal claims.
       </p>
-      <h2>Allocation by age and condition</h2>
-      <table className="data-table">
-        <thead>
-          <tr>
-            <th>Age band</th>
-            <th>Condition</th>
-            <th>Participants</th>
-          </tr>
-        </thead>
-        <tbody>
-          {stats.balance.map((r) => (
-            <tr key={r.age_band + r.arm_key}>
-              <td>{r.age_band}</td>
-              <td>{r.arm_key}</td>
-              <td>{r.n}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      {!stats.balance.length && (
-        <p>No eligible participant assignments have been recorded.</p>
-      )}
-      <h2>Session stages</h2>
-      <table className="data-table">
-        <thead>
-          <tr>
-            <th>Current stage</th>
-            <th>Sessions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {stats.funnel.map((r) => (
-            <tr key={r.state}>
-              <td>{r.state}</td>
-              <td>{r.n}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <h2>Observed assessment performance</h2>
-      <table className="data-table">
-        <thead>
-          <tr>
-            <th>Timepoint</th>
-            <th>Condition</th>
-            <th>N</th>
-            <th>Mean %</th>
-          </tr>
-        </thead>
-        <tbody>
-          {stats.performance.map((r) => (
-            <tr key={r.timepoint + r.arm_key}>
-              <td>{r.timepoint}</td>
-              <td>{r.arm_key}</td>
-              <td>{r.n}</td>
-              <td>{r.mean_percent}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <p>
-        Incomplete attempts: {stats.quality.awaiting_submission}. Expired
-        follow-ups: {stats.quality.expired}.
-      </p>
+      <div className="admin-tabs" role="group" aria-label="Workspace sections">
+        {(
+          [
+            ["overview", "Overview & quality"],
+            ["rating", "Blind scoring"],
+            ["exports", "Exports & codebook"],
+          ] as const
+        ).map(([key, label]) => (
+          <Button
+            key={key}
+            variant="outline"
+            aria-pressed={tab === key}
+            onClick={() => setTab(key)}
+          >
+            {label}
+          </Button>
+        ))}
+      </div>
+      {tab === "overview" && <Dashboard stats={stats} />}
+      {tab === "rating" && <RatingPanel />}
+      {tab === "exports" && <Exports />}
+      {errorBox}
+      <Button variant="outline" disabled={busy} onClick={signOut}>
+        Sign out
+      </Button>
+    </>
+  );
+}
+const datasets = [
+  "participants_deidentified",
+  "assignments",
+  "sessions",
+  "assessment_attempts",
+  "item_responses",
+  "written_responses",
+  "free_recall_ratings",
+  "rating_adjudications",
+  "surveys",
+  "followup_status",
+  "events",
+];
+function Exports() {
+  return (
+    <section>
       <h2>De-identified research exports</h2>
       <p>
-        Withdrawn records are excluded. Free text needs manual disclosure review
-        before sharing. Export actions are audited.
+        Withdrawn participants are excluded from every file. Written responses
+        are verbatim and need disclosure review before sharing. Every download
+        is recorded in the audit log.
       </p>
       <div className="export-links">
+        {(
+          [
+            ["json", "codebook.json"],
+            ["md", "data_dictionary.md"],
+          ] as const
+        ).map(([format, file]) => (
+          <a
+            key={format}
+            href={`/api/admin/codebook?format=${format}`}
+            className="text-link"
+          >
+            {file} ↓
+          </a>
+        ))}
         {datasets.map((name) => (
           <a
             key={name}
@@ -184,15 +273,6 @@ export function AdminWorkspace({
           </a>
         ))}
       </div>
-      <Button
-        variant="outline"
-        onClick={async () => {
-          await fetch("/api/admin/logout", { method: "POST" });
-          window.location.reload();
-        }}
-      >
-        Sign out
-      </Button>
-    </>
+    </section>
   );
 }

@@ -1,6 +1,6 @@
 # Privacy and research activation limits
 
-The public lesson stores its chapter, visited chapters and density in localStorage. Unsent objective/recall drafts use tab-scoped sessionStorage and are removed after successful submission. This is browser recovery, not database autosave; closing the tab can lose unsent work. Practice answers go to a scoring operation that does not persist them. No analytics SDK or research telemetry runs in the public demo.
+The public lesson stores its chapter, visited chapters and density in localStorage. Unsent assessment answers, written responses and F3/F5 questionnaire drafts use tab-scoped sessionStorage and are removed after successful submission. This is browser recovery, not database autosave; closing the tab can lose unsent work. Practice answers go to a scoring operation that does not persist them. No analytics SDK or research telemetry runs in the public demo.
 
 The `/dev/study` development-only fixture uses a separate SYNTHETIC localStorage namespace for one simulated session and never sends research API requests. Reset clears the fixture; a fresh synthetic ID isolates any remaining tab draft keys. Do not enter identifying data into development tools. Production returns 404 for this route.
 
@@ -10,4 +10,4 @@ Study events are allowlisted, bounded and deduplicated per session. The browser 
 
 Withdrawal marks the participant, closes the session and follow-ups, revokes return tokens and excludes records from exports. Physical deletion and backup expiry depend on the approved consent/retention policy and remain unresolved. No invented retention period or institutional contact is shown.
 
-Administrator authentication uses Supabase-verified accounts and a server UUID allowlist. Existing implementation needs staged authentication and access testing, MFA workflow completion and institutional review before sensitive use. Backend database credentials never go to browsers. Access logs at the deployment provider are separate infrastructure and need operational retention configuration.
+Administrator authentication uses Supabase-verified accounts, a server UUID allowlist and mandatory TOTP MFA (aal2) in production. Session cookies are HttpOnly, SameSite=Strict and expire with the token (at most one hour); sign-out revokes the Supabase session. This was verified against a local Supabase Auth server, not yet a hosted project, and still needs institutional review before sensitive use. Blind raters are recorded as pseudonymous codes, never account identities. Backend database credentials never go to browsers. Access logs at the deployment provider are separate infrastructure and need operational retention configuration.

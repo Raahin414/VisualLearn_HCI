@@ -72,3 +72,17 @@ Executed:
 Remaining: questionnaire draft recovery, richer item types/scenario scoring, blind-rater UI, codebook/analytics, local PostgreSQL races and complete scientific review. The simulation is not proof of persistence/authentication/grading, and tab drafts are not server autosave. No real records/results or approvals were invented.
 
 Next 3 tasks: (1) mixed assessment interactions and questionnaire draft recovery, (2) local PostgreSQL concurrency when Docker is available, (3) local researcher codebook/item exports and blind scoring. Supabase/deployment need a later scoped milestone. Stop after this session's push and handoff.
+
+## Session 3 — E1 foundation after c812d73 (2026-10-18)
+
+User scope: nine ordered tasks — finish assessments, verify PostgreSQL, Supabase staging, security, connected study, researcher tools, external reviews, hosting, then test/document/push. Prioritise a reliable E1; no new experiments or courses.
+
+Audit: clean tree on `feat/visuallearn-foundation` at `c812d73`; spec hash unchanged. Docker engine now available (29.8.0). Node 24.22.0 installed via nvm for this repo. No Supabase CLI login, no hosted project, Vercel token invalid: hosted staging and hosting could not be created and nothing was published or deployed.
+
+Completed (files): assessment v2 (`lib/assessments/{questions.server,rubrics.server,written-prompts,draft,survey-draft,surveys}.ts`, `components/assessments/*`, `components/surveys/survey-form.tsx`, `components/study/study-runner.tsx`); migration `002`, private ledger (`scripts/migrate.mjs`), runtime role (`supabase/roles/runtime_role.sql`), local Supabase config; MFA researcher auth (`lib/security/admin*.ts`, `app/api/admin/*`); dashboard, rating, codebook, exports (`lib/admin/*`, `components/admin/*`); harnesses and auditor (`scripts/{pg-harness,supabase-harness,verify-staging,check-client-bundle}.mjs`); tests (`tests/assessment-v2.test.ts`, `tests/postgres`, `tests/connected`, e2e updates); CI; docs including `REVIEW_PACKETS.md` and the staging/hosting runbook.
+
+Executed: see [QA](QA.md) — all suites pass (48 unit, 5 PGlite, 13 PostgreSQL, 15 dev + 15 production browser, bundle scan, 19/19 verifier, 16/16 connected). Real defects fixed are listed in QA and DECISIONS.
+
+Blockers: hosted Supabase/hosting need the owner's account; every external review and approval in `REVIEW_PACKETS.md` is outstanding; minors blocked.
+
+Next 3 tasks: (1) owner creates the staging project and runs DEPLOYMENT §2 with `npm run verify:staging`; (2) educator/supervisor reviews, then version the banks if changed; (3) choose a host, deploy staging, repeat the SYNTHETIC workflow and a backup-restore drill. Recruitment stays closed.

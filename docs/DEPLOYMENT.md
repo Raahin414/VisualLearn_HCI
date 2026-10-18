@@ -1,22 +1,40 @@
 # Deployment and operations
 
-The app has not been deployed. Public demo needs a Node.js Next.js host; research additionally needs PostgreSQL and Supabase Auth. Use HTTPS and the correct APP_BASE_URL; cookies are Secure in production. Do not enable enrollment during setup.
+**Status (2026-10-18):** nothing is deployed and no hosted Supabase project exists. Every step below was rehearsed against the real Supabase stack running locally (`npm run test:connected`), which is not the same as a hosted project. Real enrollment stays disabled throughout staging.
 
-1. Create an authorized staging Supabase project. Keep staging separate from production. Install dependencies with `npm ci`.
-2. Configure ignored local/deployment environment values from `.env.example`; generate a random SESSION_SECRET of at least 32 bytes. Never expose it or DATABASE_URL to client components.
-3. Run `npm run db:migrate` using an authorized migration role. It creates `visuallearn`, a nologin backend group, RLS policies and disabled registry seeds. Actual hosted migration execution is pending credentials. If managed permissions prohibit role creation, adapt grants in a reviewed follow-up migration; never disable RLS as a workaround.
-4. Provision a non-owner runtime login, grant `visuallearn_backend` membership, and switch DATABASE_URL to that login. Restrict database connectivity. Confirm that Supabase anon/authenticated roles cannot read the private schema. Do not add `visuallearn` to exposed API schemas.
-5. Configure Supabase Auth users and ADMIN_ALLOWLIST using user UUIDs. The server checks bearer tokens at Supabase `/auth/v1/user` on each admin request. Admin sessions expire within an hour. MFA challenge UX is not implemented; require and test an institution-approved access setup before sensitive use.
-6. Run lint, types, unit/integration, E2E, content verification and production build. Exercise synthetic connected participants, multi-client allocation, reconnect, delayed test windows, exports and withdrawal. Label every test participant SYNTHETIC outside the production study.
-7. Approve and freeze lesson/media/question hashes, protocol and instruments, withdrawal/retention policy, study contact and consent. Enrollment requires both STUDY_ENABLED and explicit approved database metadata. Minors and E2–E8 stay unavailable.
-8. Deploy staging with HTTPS. Back up the database and verify restore. Avoid logging request bodies, cookies, return tokens or query parameters. Return links use fragments and referrers are disabled. Do not promise email/SMS reminders.
+## 1. Local rehearsal (no accounts needed)
 
-## Rollback
+Requires Docker and Node 24. `npm run test:pg` runs the migration CLI and concurrency tests against a disposable PostgreSQL 17 container. `npm run test:connected` starts local Supabase (Postgres, Auth/GoTrue, PostgREST, Kong) with `supabase/config.toml`, resets it, migrates with `npm run db:migrate`, runs the staging verifier, creates SYNTHETIC researcher accounts and drives the app in Chromium. Set `SUPABASE_CLI` to a local CLI binary or let it use `npx supabase@2`. The local stack uses Supabase's public development keys; nothing in it is a secret or a hosted credential.
 
-Close enrollment immediately with STUDY_ENABLED=false and E1 status closed. Existing participants can finish saved sessions; new enrollment cannot proceed. Roll back the application to the last compatible commit and preserve the database. Never drop research tables to roll back a code deploy. Restore an encrypted backup to a separate database if recovery is needed. A destructive down migration is intentionally not supplied.
+## 2. Hosted staging (separate Supabase project, SYNTHETIC data only)
 
-## Collection limitations
+1. Create a **new** Supabase project named for staging (for example `visuallearn-staging`). Never reuse it for production research. Record the region and the institution's data-location requirement.
+2. Auth settings (dashboard → Authentication): disable public sign-ups and anonymous sign-ins; keep the email provider on for password sign-in; enable **TOTP MFA** (enroll + verify); JWT expiry ≤ 3600 s; minimum password length ≥ 12.
+3. Keep the `visuallearn` and `visuallearn_ops` schemas **out** of Data API → Exposed schemas (defaults are `public`, `graphql_public`).
+4. Migrate with the project's `postgres` connection string, from a trusted machine:
+   `DATABASE_URL='<postgres connection>' npm run db:migrate`
+   It creates the private schemas, RLS, the backend group and eight **disabled draft** experiments. Do not run the SYNTHETIC open-E1 fixture (`tests/postgres/synthetic-open-e1.sql`) against any hosted project.
+5. Runtime login: run `supabase/roles/runtime_role.sql` in the SQL editor, then `alter role visuallearn_app with login password '<generated 32+ byte secret>'`. The app's `DATABASE_URL` uses `visuallearn_app` (direct or session-pooler connection with TLS), never `postgres`.
+6. Researcher accounts: create each researcher in Authentication → Users (invite or create with a strong password). Copy their user UUIDs into `ADMIN_ALLOWLIST`. Each researcher enrolls an authenticator at first sign-in; the app refuses the dashboard without aal2.
+7. Secrets: store `DATABASE_URL`, `SESSION_SECRET` (32+ random bytes), `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `ADMIN_ALLOWLIST` and `APP_BASE_URL` in the hosting provider's encrypted environment settings and in an ignored `.env.staging.local` for verification. Never commit populated files. The service-role key is not used by the app; do not configure it in the host.
+8. Verify: copy `.env.staging.example` to `.env.staging.local`, fill it, and run `npm run verify:staging`. All checks must pass, including "Real enrollment closed". Save the output in `docs/QA.md`.
 
-Runtime app authorization supplies participant ownership; the private schema is inaccessible to public roles. The backend role can access all research rows and must remain server-only. Exports exclude withdrawn participants and replace join IDs consistently; free text still requires disclosure review. Withdrawal currently marks records and revokes access; final deletion requires the approved retention policy. Rate-limit buckets should be pruned periodically after operational policy review.
+## 3. Hosting (after staging verification passes)
 
-Npm audit currently reports transitive development-only glob/braces advisories in eslint-config-next, with no compatible patched braces release available from the registry during this run. Production dependency audit is separate. Avoid executing lint with untrusted arbitrary glob patterns and recheck advisories before deployment. Do not force-downgrade Next.js to silence an unrelated development advisory.
+Any Node.js host that runs `next build`/`next start` behind HTTPS works; the choice of provider is a project decision not yet made. Requirements:
+
+- HTTPS only; `APP_BASE_URL` equals the exact public origin (mutations fail closed otherwise). Cookies are `Secure` in production.
+- Environment variables from step 2.7 with `STUDY_ENABLED=false`. `NODE_ENV=production` forces researcher MFA and disables `/dev/study` (it must return 404; `npm run test:e2e:production` checks this locally).
+- Request logging must not record bodies, cookies, query strings or URL fragments. Return links carry the token in the fragment, which browsers do not send.
+- Deploy staging first and repeat the full workflow there with SYNTHETIC participants: two concurrent enrollments, refresh, return link in a new browser, duplicate submission, early/expired follow-up (wait the real hour, or use a separate staging-only database copy for time shifts), researcher MFA sign-in/out, every export, withdrawal.
+- A successful deployment does not open recruitment.
+
+## 4. Backups, restoration and rollback
+
+- Enable the provider's automated backups (Supabase daily backups; PITR if the plan allows). Test a **restore into a separate project** before any participant data exists, then rerun `npm run verify:staging` against the restored copy. Record the date and result.
+- Close enrollment immediately with `STUDY_ENABLED=false` and E1 `status='closed'`. Existing participants can finish saved sessions.
+- Roll back the application to the last compatible commit; keep the database. Migrations are forward-only and never dropped to roll back code. Restore an encrypted backup into a separate database if recovery is needed.
+
+## 5. Known limitations
+
+Runtime authorization supplies participant ownership; the backend role can read all research rows and must stay server-only. Exports exclude withdrawn participants and use consistent hashed join keys; written responses still need disclosure review. Physical deletion awaits the approved retention policy. The public enrollment/recovery limiter is one shared bucket (60 requests per minute across all visitors); review it before any large recruitment. Rate-limit rows should be pruned periodically. Development-only lint dependencies may carry transitive advisories; recheck `npm audit` before deployment.
