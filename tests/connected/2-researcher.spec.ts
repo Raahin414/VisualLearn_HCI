@@ -3,27 +3,11 @@
 // scoring. Runs after 1-participant.spec.ts created SYNTHETIC data.
 import { createHash } from "node:crypto";
 import { test, expect, type BrowserContext, type Page } from "@playwright/test";
-import { BASE, db, freshTotp, harness } from "./support";
+import { BASE, db, harness, passMfa, secrets, signIn } from "./support";
 test.describe.configure({ mode: "serial" });
 const [one, two] = harness.researchers;
-const secrets: Record<string, string> = {};
 let ctxOne: BrowserContext;
 let pageOne: Page;
-async function signIn(page: Page, who: { email: string; password: string }) {
-  await page.goto("/admin");
-  await page.getByLabel("Email").fill(who.email);
-  await page.getByLabel("Password").fill(who.password);
-  await page.getByRole("button", { name: "Sign in" }).click();
-}
-async function passMfa(page: Page, who: { email: string }) {
-  if (!secrets[who.email]) {
-    await page.getByRole("button", { name: "Set up authenticator" }).click();
-    secrets[who.email] = await page.getByLabel("Setup key").inputValue();
-  }
-  await page.getByLabel("Six-digit code from your authenticator").fill(await freshTotp(secrets[who.email]));
-  await page.getByRole("button", { name: "Verify and continue" }).click();
-  await expect(page.getByRole("heading", { name: "Allocation by age band and condition" })).toBeVisible();
-}
 const adminGet = (page: Page, path: string) => page.request.get(`${BASE}/api/admin/${path}`);
 test.afterAll(async () => {
   await ctxOne?.close().catch(() => {});

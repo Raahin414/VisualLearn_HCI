@@ -41,6 +41,7 @@ For real database and authentication checks, see the connected suites under [Che
 - `/api/study/*`: authenticated same-origin operations using signed HttpOnly cookies, bounded bodies, validation, rate limits and transactions. `/study/session`: participant flow.
 - `components/assessments/assessment-form.tsx` and `item-inputs.tsx`: shared accessible progress, staged written part, ordering selects, neutral labeling diagram, scoped tab drafts, validation, first-missing-answer focus and retry-safe submission. `components/surveys/survey-form.tsx`: F3/F5 with the same draft model.
 - `/dev/study`: development-only browser fixture transport for the same participant screens, synthetic checkpoint overview and isolated clock controls. No research DB fallback is used.
+- `/admin/accept`: completes researcher invitations and password recovery (then MFA). `npm run dev:staging` runs the app locally against hosted staging with enrollment off.
 - `/admin`: Supabase Auth sign-in, UUID allowlist, mandatory TOTP MFA, dashboard (allocation, funnel, scores, retention, follow-up status, data quality, versions, rating coverage), blind scoring with adjudication, audited item-level exports, `codebook.json` and `data_dictionary.md`. No public participant data.
 - `tests/`: unit, PGlite schema tests, real PostgreSQL concurrency tests (`tests/postgres`), Playwright/axe browser tests (`tests/e2e`) and the connected SYNTHETIC suite (`tests/connected`). PGlite is test-only, never a live research storage fallback.
 

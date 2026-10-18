@@ -39,6 +39,7 @@ export function AdminWorkspace({
     secret: string;
   } | null>(null);
   const [tab, setTab] = useState<"overview" | "rating" | "exports">("overview");
+  const [forgot, setForgot] = useState<"closed" | "open" | "sent">("closed");
   async function run(task: () => Promise<void>) {
     setBusy(true);
     setError("");
@@ -165,6 +166,43 @@ export function AdminWorkspace({
         </Button>
       </div>
     );
+  if (!signedIn && forgot !== "closed")
+    return (
+      <form
+        className="study-form"
+        onSubmit={(e) => {
+          e.preventDefault();
+          const email = new FormData(e.currentTarget).get("email");
+          void run(async () => {
+            await post("/api/admin/recover", { email });
+            setForgot("sent");
+          });
+        }}
+      >
+        <h2>Reset your password</h2>
+        {forgot === "sent" ? (
+          <p role="status">
+            If that address belongs to a researcher account, a reset link is on
+            its way. Open it in this browser. You will need your authenticator
+            app.
+          </p>
+        ) : (
+          <>
+            <label>
+              Email
+              <input name="email" type="email" required autoComplete="username" />
+            </label>
+            {errorBox}
+            <Button disabled={busy} type="submit">
+              {busy ? "Sending…" : "Send reset link"}
+            </Button>
+          </>
+        )}
+        <Button variant="ghost" type="button" onClick={() => setForgot("closed")}>
+          Back to sign-in
+        </Button>
+      </form>
+    );
   if (!signedIn)
     return (
       <form className="study-form" onSubmit={login}>
@@ -188,6 +226,16 @@ export function AdminWorkspace({
         {errorBox}
         <Button disabled={busy} type="submit">
           {busy ? "Signing in…" : "Sign in"}
+        </Button>
+        <Button
+          variant="ghost"
+          type="button"
+          onClick={() => {
+            setError("");
+            setForgot("open");
+          }}
+        >
+          Forgot password?
         </Button>
       </form>
     );

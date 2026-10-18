@@ -6,6 +6,7 @@ import { expect, type BrowserContext, type Page } from "@playwright/test";
 import { answerAll, completeWritten } from "../e2e/helpers";
 export { answerAll, completeWritten };
 export const BASE = "http://127.0.0.1:3100";
+type Invite = { id: string; email: string; link: string };
 export const harness = JSON.parse(
   readFileSync(path.resolve(process.cwd(), ".local/connected.json"), "utf8"),
 ) as {
@@ -14,6 +15,9 @@ export const harness = JSON.parse(
   researchers: { id: string; email: string; password: string }[];
   outsider: { email: string; password: string };
   jwtSecret: string;
+  serviceKey: string;
+  anonKey: string;
+  invites: { invited: Invite; outsider: Invite; root: Invite };
 };
 if (!/@127\.0\.0\.1:/.test(harness.ownerUrl))
   throw new Error("Connected tests only run against the local Supabase stack.");
@@ -100,4 +104,21 @@ export async function freshTotp(secret: string) {
     }
     await new Promise((r) => setTimeout(r, 1000));
   }
+}
+
+export const secrets: Record<string, string> = {};
+export async function signIn(page: Page, who: { email: string; password: string }) {
+  await page.goto("/admin");
+  await page.getByLabel("Email").fill(who.email);
+  await page.getByLabel("Password").fill(who.password);
+  await page.getByRole("button", { name: "Sign in" }).click();
+}
+export async function passMfa(page: Page, who: { email: string }) {
+  if (!secrets[who.email]) {
+    await page.getByRole("button", { name: "Set up authenticator" }).click();
+    secrets[who.email] = await page.getByLabel("Setup key").inputValue();
+  }
+  await page.getByLabel("Six-digit code from your authenticator").fill(await freshTotp(secrets[who.email]));
+  await page.getByRole("button", { name: "Verify and continue" }).click();
+  await expect(page.getByRole("heading", { name: "Allocation by age band and condition" })).toBeVisible();
 }

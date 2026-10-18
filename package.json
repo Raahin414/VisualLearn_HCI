@@ -17,7 +17,8 @@
     "test:connected": "node scripts/supabase-harness.mjs",
     "db:migrate": "node --env-file-if-exists=.env.local scripts/migrate.mjs",
     "verify-content": "node scripts/verify-content.mjs",
-    "verify:staging": "node --env-file-if-exists=.env.staging.local scripts/verify-staging.mjs"
+    "verify:staging": "node --env-file-if-exists=.env.staging.local scripts/verify-staging.mjs",
+    "dev:staging": "node scripts/dev-staging.mjs"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.5.0",

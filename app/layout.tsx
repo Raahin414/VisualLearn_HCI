@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { SiteHeader } from "@/components/site-header";
+import { AuthLinkForwarder } from "@/components/admin/auth-link-forwarder";
 import "./globals.css";
 export const metadata: Metadata = {
   title: {
@@ -15,6 +16,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
+        <AuthLinkForwarder />
         <a className="skip-link" href="#main">
           Skip to content
         </a>

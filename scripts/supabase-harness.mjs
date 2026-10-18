@@ -50,7 +50,25 @@ async function createUser(label) {
 }
 const researchers = [await createUser("researcher-one"), await createUser("researcher-two")];
 const outsider = await createUser("not-allowlisted");
-const allowlist = researchers.map((r) => r.id).join(",");
+// Real invitation links, exactly as Supabase emails them (admin generate_link).
+async function invite(label, redirect) {
+  const email = `${label}@synthetic.invalid`;
+  const r = await fetch(`${authUrl}/auth/v1/admin/generate_link`, {
+    method: "POST",
+    headers: { apikey: service, Authorization: `Bearer ${service}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ type: "invite", email, redirect_to: redirect }),
+  });
+  const data = await r.json();
+  if (!r.ok || !data.action_link) throw new Error(`Could not invite ${email}: ${JSON.stringify(data)}`);
+  return { id: data.id ?? data.user?.id, email, link: data.action_link };
+}
+const invites = {
+  invited: await invite("invited-researcher", "http://127.0.0.1:3100/admin/accept"),
+  outsider: await invite("invited-not-allowlisted", "http://127.0.0.1:3100/admin/accept"),
+  // Lands on the site root, as links do when only the Site URL is configured.
+  root: await invite("invited-site-root", "http://127.0.0.1:3100/"),
+};
+const allowlist = [...researchers.map((r) => r.id), invites.invited.id, invites.root.id].join(",");
 // Staging verifier against the pristine (closed) local project.
 run("node", ["scripts/verify-staging.mjs"], {
   DATABASE_URL: ownerUrl,
@@ -64,7 +82,7 @@ await owner.end();
 await mkdir(new URL("../.local/", import.meta.url), { recursive: true });
 await writeFile(
   new URL("../.local/connected.json", import.meta.url),
-  JSON.stringify({ ownerUrl, appUrl, authUrl, anonKey: status.ANON_KEY, jwtSecret: status.JWT_SECRET, researchers, outsider, allowlist }),
+  JSON.stringify({ ownerUrl, appUrl, authUrl, anonKey: status.ANON_KEY, jwtSecret: status.JWT_SECRET, serviceKey: service, researchers, outsider, invites, allowlist }),
   { mode: 0o600 },
 );
 const result = spawnSync(

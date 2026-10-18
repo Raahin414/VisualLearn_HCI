@@ -1,5 +1,17 @@
 # Verification record — 2026-10-18
 
+## Follow-up: hosted staging and researcher invitations
+
+| Executed check | Kind | Result |
+|---|---|---|
+| `npm run verify:staging` on `visuallearn-staging` | **Hosted Supabase**, read-only | PASS 19/19 after migration, runtime login, Auth push and redirect update |
+| `npm run test:connected` | Local Supabase Auth + PostgreSQL | PASS: original 16/16 unchanged; new `3-invite.spec.ts` 6/6 (run separately after a test-helper fix) |
+| `npm run test:e2e`, `npm run test:e2e:production` | Browser | PASS 16/16 each (adds accept-page axe/overflow check) |
+| lint, typecheck, `npm run test`, build, `check:bundle` | Static/unit/build | PASS; 48 unit tests; 22 learner assets clean |
+
+Not verified: a researcher accepting a real emailed invite on staging, any SYNTHETIC participant run against hosted staging, backups/restore, hosting.
+
+
 ## E1 foundation milestone after c812d73
 
 Executed on Linux, Node 24.22.0 / npm 11.19.1, Docker 29.8.0. All participants and researcher accounts were SYNTHETIC. No hosted service was used.

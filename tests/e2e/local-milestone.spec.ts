@@ -267,3 +267,18 @@ for (const width of [360, 1280])
     });
     await page.getByRole("button", { name: "Reset simulated session" }).click();
   });
+test("researcher accept page fails safely without a link and is accessible at 360px", async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 800 });
+  await page.goto("/admin/accept");
+  await expect(page.getByRole("heading", { name: "Link unavailable" })).toBeVisible();
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
+  ).toBe(true);
+  const results = await new AxeBuilder({ page })
+    .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+    .analyze();
+  expect(results.violations.map((v) => v.id)).toEqual([]);
+  // A participant return-link fragment is never mistaken for an auth link.
+  await page.goto("/study/session#abcDEF123_-abcDEF123_-abcDEF123_-abcDEF123_");
+  expect(new URL(page.url()).pathname).toBe("/study/session");
+});

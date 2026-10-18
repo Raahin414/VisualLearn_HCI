@@ -1,0 +1,28 @@
+# Hosted STAGING project settings (visuallearn-staging, ref tyoplurznjqdngacvfke).
+# Applied with: supabase config push --workdir staging --project-ref <ref>
+# Only declared properties are pushed. SYNTHETIC data only; never production.
+# The private research schemas stay out of the Data API.
+project_id = "visuallearn-staging"
+
+[api]
+schemas = ["public", "graphql_public"]
+
+[auth]
+# No hosted app yet: invitation/recovery links return to a local app started
+# with `npm run dev:staging`. Replace with the hosted HTTPS URL after deployment.
+site_url = "http://127.0.0.1:3000"
+additional_redirect_urls = ["http://127.0.0.1:3000/admin/accept"]
+# Researcher accounts are created by an administrator; no public sign-up.
+enable_signup = false
+enable_anonymous_sign_ins = false
+jwt_expiry = 3600
+minimum_password_length = 12
+password_requirements = "lower_upper_letters_digits"
+
+[auth.email]
+# Provider stays on for researcher password sign-in.
+enable_signup = true
+
+[auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true

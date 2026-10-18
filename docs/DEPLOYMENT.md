@@ -1,6 +1,6 @@
 # Deployment and operations
 
-**Status (2026-10-18):** nothing is deployed and no hosted Supabase project exists. Every step below was rehearsed against the real Supabase stack running locally (`npm run test:connected`), which is not the same as a hosted project. Real enrollment stays disabled throughout staging.
+**Status (2026-10-18):** hosted **staging exists**: Supabase project `visuallearn-staging` (ref `tyoplurznjqdngacvfke`, organization IAT, region ap-south-1). Steps 2.1–2.6 and 2.8 below are done and `npm run verify:staging` passes 19/19. Auth settings are versioned in `staging/supabase/config.toml` and applied with `supabase config push --workdir staging --project-ref tyoplurznjqdngacvfke`. The app itself is **not deployed**; real enrollment is disabled.
 
 ## 1. Local rehearsal (no accounts needed)
 
@@ -15,7 +15,7 @@ Requires Docker and Node 24. `npm run test:pg` runs the migration CLI and concur
    `DATABASE_URL='<postgres connection>' npm run db:migrate`
    It creates the private schemas, RLS, the backend group and eight **disabled draft** experiments. Do not run the SYNTHETIC open-E1 fixture (`tests/postgres/synthetic-open-e1.sql`) against any hosted project.
 5. Runtime login: run `supabase/roles/runtime_role.sql` in the SQL editor, then `alter role visuallearn_app with login password '<generated 32+ byte secret>'`. The app's `DATABASE_URL` uses `visuallearn_app` (direct or session-pooler connection with TLS), never `postgres`.
-6. Researcher accounts: create each researcher in Authentication → Users (invite or create with a strong password). Copy their user UUIDs into `ADMIN_ALLOWLIST`. Each researcher enrolls an authenticator at first sign-in; the app refuses the dashboard without aal2.
+6. Researcher accounts: invite each researcher (Authentication → Users, or the Auth admin `invite` endpoint with `redirect_to=<app>/admin/accept`). Copy their user UUIDs into `ADMIN_ALLOWLIST`. The invite link opens `/admin/accept`, where the researcher sets a password and then must enroll an authenticator; the app refuses the dashboard without aal2. "Forgot password?" on `/admin` sends a recovery link to the same page; researchers with MFA must enter a code before the password changes. Until the app is hosted, links return to `http://127.0.0.1:3000`, so the recipient runs `npm run dev:staging` (needs the staging env file; restricted runtime login, enrollment forced off). Supabase's built-in mailer sends only a few emails per hour; configure custom SMTP before inviting many people.
 7. Secrets: store `DATABASE_URL`, `SESSION_SECRET` (32+ random bytes), `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `ADMIN_ALLOWLIST` and `APP_BASE_URL` in the hosting provider's encrypted environment settings and in an ignored `.env.staging.local` for verification. Never commit populated files. The service-role key is not used by the app; do not configure it in the host.
 8. Verify: copy `.env.staging.example` to `.env.staging.local`, fill it, and run `npm run verify:staging`. All checks must pass, including "Real enrollment closed". Save the output in `docs/QA.md`.
 
@@ -23,6 +23,7 @@ Requires Docker and Node 24. `npm run test:pg` runs the migration CLI and concur
 
 Any Node.js host that runs `next build`/`next start` behind HTTPS works; the choice of provider is a project decision not yet made. Requirements:
 
+- After deploying, set `site_url` and `additional_redirect_urls` in `staging/supabase/config.toml` to the HTTPS origin (`…/admin/accept`) and push them.
 - HTTPS only; `APP_BASE_URL` equals the exact public origin (mutations fail closed otherwise). Cookies are `Secure` in production.
 - Environment variables from step 2.7 with `STUDY_ENABLED=false`. `NODE_ENV=production` forces researcher MFA and disables `/dev/study` (it must return 404; `npm run test:e2e:production` checks this locally).
 - Request logging must not record bodies, cookies, query strings or URL fragments. Return links carry the token in the fragment, which browsers do not send.
