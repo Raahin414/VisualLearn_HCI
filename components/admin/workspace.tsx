@@ -134,8 +134,18 @@ export function AdminWorkspace({
                   <img
                     src={enrollment.qrCode}
                     alt="Authenticator setup QR code"
-                    width={180}
-                    height={180}
+                    width={240}
+                    height={240}
+                    // White quiet zone so phone cameras can scan the dense code.
+                    style={{
+                      background: "#ffffff",
+                      padding: 16,
+                      border: "1px solid var(--line)",
+                      borderRadius: 8,
+                      boxSizing: "content-box",
+                      maxWidth: "calc(100% - 34px)",
+                      height: "auto",
+                    }}
                   />
                 )}
                 <label>

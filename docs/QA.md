@@ -9,6 +9,8 @@
 | `npm run test:e2e`, `npm run test:e2e:production` | Browser | PASS 16/16 each (adds accept-page axe/overflow check) |
 | lint, typecheck, `npm run test`, build, `check:bundle` | Static/unit/build | PASS; 48 unit tests; 22 learner assets clean |
 
+**QR code fix (2026-10-19, reported by the project owner):** Supabase Auth returns the TOTP QR as raw SVG markup (~360 KB), which the page placed directly in `<img src>`, so it showed as a broken image. The earlier test only checked visibility. Now the server re-encodes it as a base64 SVG data URL (`lib/security/qr-image.ts`, 3 unit tests), the image gets a white quiet zone, and the connected test asserts the image decodes. Full connected suite: 22/22 in one run (isolated copy on port 3100, because the owner's `dev:staging` server occupied port 3000). Development and production browser suites were not rerun for this admin-only change for the same reason; stimulus hashes are unchanged.
+
 Not verified: a researcher accepting a real emailed invite on staging, any SYNTHETIC participant run against hosted staging, backups/restore, hosting.
 
 

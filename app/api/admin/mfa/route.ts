@@ -10,6 +10,7 @@ import {
   verifyAdminToken,
 } from "@/lib/security/admin";
 import { adminRateLimited } from "@/lib/security/admin-limit";
+import { qrImage } from "@/lib/security/qr-image";
 const input = z.discriminatedUnion("action", [
   z.object({ action: z.literal("enroll") }).strict(),
   z
@@ -59,7 +60,7 @@ export async function POST(request: NextRequest) {
       if (!enrolled.ok || typeof enrolled.data.id !== "string" || !totp?.secret)
         return fail("Authenticator enrollment is unavailable.", 502);
       return NextResponse.json(
-        { factorId: enrolled.data.id, qrCode: totp.qr_code, secret: totp.secret },
+        { factorId: enrolled.data.id, qrCode: qrImage(totp.qr_code), secret: totp.secret },
         { headers: { "Cache-Control": "no-store" } },
       );
     }

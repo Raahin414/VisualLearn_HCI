@@ -46,7 +46,14 @@ test("a password alone (aal1) cannot open the dashboard; TOTP enrollment is requ
   await ctxOne.clearCookies({ name: "visuallearn_admin" });
   await pageOne.getByRole("button", { name: "Set up authenticator" }).click();
   secrets[one.email] = await pageOne.getByLabel("Setup key").inputValue();
-  await expect(pageOne.getByRole("img", { name: "Authenticator setup QR code" })).toBeVisible();
+  const qr = pageOne.getByRole("img", { name: "Authenticator setup QR code" });
+  await expect(qr).toBeVisible();
+  // The image must actually decode, not merely exist as a broken <img>.
+  await expect
+    .poll(() => qr.evaluate((i: HTMLImageElement) => i.complete && i.naturalWidth > 0))
+    .toBe(true);
+  expect(await qr.getAttribute("src")).toMatch(/^data:image\/svg\+xml;base64,/);
+  await qr.screenshot({ path: "test-results/totp-qr.png" });
   await pageOne.getByLabel("Six-digit code from your authenticator").fill("000000");
   await pageOne.getByRole("button", { name: "Verify and continue" }).click();
   await expect(pageOne.locator(".form-error")).toContainText("not accepted");
