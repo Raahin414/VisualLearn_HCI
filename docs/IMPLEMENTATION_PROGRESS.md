@@ -144,3 +144,19 @@ Executed: see [QA](QA.md) — all suites pass (48 unit, 5 PGlite, 13 PostgreSQL,
 Blockers: hosted Supabase/hosting need the owner's account; every external review and approval in `REVIEW_PACKETS.md` is outstanding; minors blocked.
 
 Next 3 tasks: (1) owner creates the staging project and runs DEPLOYMENT §2 with `npm run verify:staging`; (2) educator/supervisor reviews, then version the banks if changed; (3) choose a host, deploy staging, repeat the SYNTHETIC workflow and a backup-restore drill. Recruitment stays closed.
+
+## Staging researcher invitations — 2026-10-22
+
+User scope: resend the expired Rameez invitation and send Tajuddin an invitation. Branch `feat/visuallearn-foundation`, HEAD `9ecc795`; no commit or push requested.
+
+Used the saved Supabase CLI session for the existing staging project. Targeted Auth admin lookup confirmed Rameez's account was unconfirmed and Tajuddin had no account. Both POST `/auth/v1/invite` requests returned HTTP 200: Rameez at 14:03:00 UTC and Tajuddin at 14:03:03 UTC. This confirms Supabase accepted the sends; inbox delivery and recipient acceptance are not verified. Redirect remains `http://127.0.0.1:3000/admin/accept`.
+
+Added Tajuddin's returned UUID to `ADMIN_ALLOWLIST` in the ignored `.env.staging.local` and `.env.staging.rameez.local`; no credentials or invite tokens were printed or committed. Both files remain ignored. Original specification SHA-256 remains `4c4d7e957ce6149940aaeb7bae1ac12a4fbfd76222fa83f57b6c34fe408c12a5`. No application code changed; application suites were not rerun.
+
+Next: (1) recipients run `npm run dev:staging` with their authorized local configuration before opening their new emails, (2) complete password and TOTP setup, (3) verify researcher access after acceptance. Rameez's existing configuration copy needs the updated allowlist if Tajuddin will use that local app. Hosting and research approvals remain outstanding; recruitment stays closed.
+
+## Raahin's separate staging configuration — 2026-10-22
+
+User requested a separate env file. Created `visuallearn_dev_raahin` with only `visuallearn_backend` membership, the existing 15-second statement and 30-second idle-transaction limits, and a 30-day login expiry (2026-11-21 14:13:53 UTC). Created ignored `.env.staging.raahin.local` with mode 600 and exactly the five app settings used by Rameez's setup; the database password and session secret are unique. No owner connection or service-role key is included.
+
+Executed the existing `scripts/verify-staging.mjs` against hosted PostgreSQL/Supabase with Raahin's runtime URL: **19/19 PASS**, including non-owner privileges, denied DDL/auth-user access, private schemas, closed enrollment and all three allowlisted Auth UUIDs. No app code, stimuli, research records, commits or pushes changed. Handoff: privately give him the file, save it as `.env.staging.local` in his checkout, then `npm ci` and `npm run dev:staging` before accepting the invite. Next: deliver configuration privately, complete password/TOTP setup, verify his researcher sign-in. Research approvals and hosting remain outstanding.
