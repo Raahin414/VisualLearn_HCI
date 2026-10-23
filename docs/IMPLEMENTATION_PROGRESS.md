@@ -160,3 +160,11 @@ Next: (1) recipients run `npm run dev:staging` with their authorized local confi
 User requested a separate env file. Created `visuallearn_dev_raahin` with only `visuallearn_backend` membership, the existing 15-second statement and 30-second idle-transaction limits, and a 30-day login expiry (2026-11-21 14:13:53 UTC). Created ignored `.env.staging.raahin.local` with mode 600 and exactly the five app settings used by Rameez's setup; the database password and session secret are unique. No owner connection or service-role key is included.
 
 Executed the existing `scripts/verify-staging.mjs` against hosted PostgreSQL/Supabase with Raahin's runtime URL: **19/19 PASS**, including non-owner privileges, denied DDL/auth-user access, private schemas, closed enrollment and all three allowlisted Auth UUIDs. No app code, stimuli, research records, commits or pushes changed. Handoff: privately give him the file, save it as `.env.staging.local` in his checkout, then `npm ci` and `npm run dev:staging` before accepting the invite. Next: deliver configuration privately, complete password/TOTP setup, verify his researcher sign-in. Research approvals and hosting remain outstanding.
+
+## Invitations resent; Taj's new email — 2026-10-23
+
+User scope: resend staging invites to Rameez and Taj, with Taj's new address raahinmawani@gmail.com. The service-role key was read by the owner's own shell (`supabase projects api-keys`) and never printed. Both POST `/auth/v1/invite` requests returned HTTP 200 at 18:56 UTC: Rameez's existing account `18404643-…`; a new account for Taj, `611eb745-399e-4421-8b49-9f383d8d900c`. Redirect remains `http://127.0.0.1:3000/admin/accept`. Delivery and acceptance are not verified.
+
+The owner replaced Taj's old, never-accepted UUID `aa42a500-…` (tajuddinraahin@gmail.com) with the new UUID in `ADMIN_ALLOWLIST` in all three ignored staging env files (own, Rameez's, Raahin's). The old Auth user still exists in staging and is no longer allowlisted. No app code, stimuli or research records changed; suites were not rerun.
+
+Next: send the updated env files privately; recipients restart `npm run dev:staging`, then accept the invite and enroll TOTP. Optionally delete the old Auth user.
