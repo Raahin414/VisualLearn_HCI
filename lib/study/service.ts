@@ -67,7 +67,7 @@ const bankHash = digest({
   writtenPrompts,
   rubrics,
 });
-export const STIMULUS_VERSION = "density-v3-draft";
+export const STIMULUS_VERSION = "density-v4-draft";
 const stageForms = { pre: "A", immediate: "B", plus_60m: "C" } as const;
 export type Timepoint = keyof typeof stageForms;
 const submissionSchema = z

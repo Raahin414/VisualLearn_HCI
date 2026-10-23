@@ -1,5 +1,7 @@
 # Draft E1 stimulus audit
 
+M1 shared shell (`density-v4-draft`, 2026-10-24): shared typography, form surfaces, spacing, focus and metadata readability change uniformly. The canonical JSON, WAVs, objective/question wording, lesson SVG source and assessment diagram color tokens remain unchanged. The manifest now also hashes the root layout, site header, public lesson player and shared button primitive. A shared status fix reads cached native audio metadata/error state at mount; callback buttons wait for hydration while native links remain usable. These fixes emit no new telemetry or playback commands. Before and after screenshots are retained in `docs/screenshots/m1-before/` and `docs/screenshots/m1-after/`; completed verification is recorded in QA. These changes are draft and do not grant research approval.
+
 Canonical source: five Water Cycle segments, version 1.0.0-draft. Text, order, objectives, full audio bytes, essential diagram labels, colors and shell controls are identical across density variants. The single `densityConfig` controls only two SVG groups. No extra conditions are randomized together.
 
 | Tier | Essential landscape + four process labels/arrows | Supportive group | Decorative group |

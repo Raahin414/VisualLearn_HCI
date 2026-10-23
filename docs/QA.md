@@ -1,5 +1,26 @@
 # Verification record — 2026-10-18
 
+## M1 academic interface — 2026-10-24
+
+Node 24.22.1/npm 11.21.1, Docker 29.6.2. `npm ci` PASS: 414 packages installed, 0 audit findings. No dependency versions changed.
+
+| Check | Actual result |
+|---|---|
+| Content/spec integrity | PASS: original specification, all WAVs, lesson JSON, objectives, item banks and lesson SVG unchanged; reviewed shared sources frozen as `density-v4-draft` |
+| Unit/service | PASS: 51 tests/8 files, including PGlite-backed tests |
+| Dedicated schema command | PASS: 5 PGlite tests (also included in the full test command) |
+| Lint/typecheck | PASS; production build also typechecks the added browser tests |
+| Real PostgreSQL 17 | PASS: 13 tests against the final shared audio/status sources |
+| Development Chromium | PASS: 21/21 (4.5 min), including the final shared button hydration fix; real demo/practice and browser-only SYNTHETIC simulation; existing participant HTTP-mock contract remains separately labeled |
+| Audio regressions | PASS: real media before delayed application JS reports ready; a mocked 404 media response leaves the real transcript available and disables replay |
+| Production build/bundle | PASS: 22 browser assets clean |
+| Production Chromium/smoke | PASS: 21/21 (2.6 min); `/` 200, `/dev/study` 404, `/api/admin/stats` 401 |
+| Local Supabase connected workflow | PASS: 22/22 (6.1 min), real Auth/MFA and PostgreSQL, no HTTP mocks; verifier 19/19; includes signed-in dashboard axe/keyboard checks and screenshots at 360/768/1280 |
+
+WCAG 2.2 AA tags added to existing public/assessment tests and new form/simulator three-width checks; all executed axe checks require zero violations. Keyboard checks include skip navigation, quiz error focus and the connected dashboard's horizontal table scrolling. Before images: `docs/screenshots/m1-before/`; after images: `docs/screenshots/m1-after/` plus the refreshed root screenshot matrix. No MFA setup key/QR is captured in these design artifacts. Manual screen-reader/real-device validation remains open.
+
+Visual-review corrections: preserve chapter number widths in the mobile scroll row. New narration assertion first failed with metadata already loaded but "Loading narration…" persisting for 15 seconds; a mount-time native-state synchronization fixed the missed pre-hydration event. The earlier 19-test development pass predates this added assertion. A verification pipeline was intentionally stopped after build/bundle, before production tests, to fix that newly reproduced status bug. A subsequent connected run had 19 passes, one lost-click failure after MFA reload and two dependent skips; the UI remained on the overview for 180 seconds. The shared button primitive now disables callback/form buttons until hydration; native links remain functional. The final 21/21 dev, 21/21 production and 22/22 connected passes include this fix. The anonymous screenshot helper initially timed out on network-idle during development; it was corrected to wait for actual control readiness, then captured all three widths.
+
 ## Windows baseline — 2026-10-24
 
 Node 24.22.1/npm 11.21.1 via an isolated npm runner; Docker Desktop 29.6.2. System defaults remain Node 22/npm 10. No hosted project used.

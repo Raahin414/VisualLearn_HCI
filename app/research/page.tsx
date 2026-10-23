@@ -5,9 +5,7 @@ export default function Research() {
     <main id="main" className="container page-content">
       <div className="eyebrow">VISUALLEARN RESEARCH</div>
       <h1 className="page-title">
-        Better questions.
-        <br />
-        <em>Careful evidence.</em>
+        Research studies
       </h1>
       <p className="lead">
         A platform for studying learning interfaces. Protocols are draft;

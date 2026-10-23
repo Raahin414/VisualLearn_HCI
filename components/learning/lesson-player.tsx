@@ -85,8 +85,10 @@ export function LessonPlayer() {
           <p>{progress.visited.length} of 5 chapters visited</p>
           <nav className="chapter-list">
             {lesson.segments.map((s, i) => (
-              <button
+              <Button
                 key={s.id}
+                variant="ghost"
+                disabled={!ready}
                 className={`chapter-button ${i === progress.segment ? "active" : ""}`}
                 onClick={() => navigate(i)}
                 aria-current={i === progress.segment ? "step" : undefined}
@@ -100,7 +102,7 @@ export function LessonPlayer() {
                   )}
                 </span>
                 <span>{s.shortTitle}</span>
-              </button>
+              </Button>
             ))}
           </nav>
           <div className="density-picker">
@@ -136,7 +138,7 @@ export function LessonPlayer() {
               THE WATER CYCLE / CHAPTER{" "}
               {String(progress.segment + 1).padStart(2, "0")}
             </span>
-            <span>TAKE YOUR TIME. STAY CURIOUS.</span>
+            <span>NARRATION AND FULL TRANSCRIPT</span>
           </div>
           <div className="eyebrow">{segment.eyebrow.toUpperCase()}</div>
           <h1 ref={heading} tabIndex={-1}>

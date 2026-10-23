@@ -2,7 +2,7 @@ export default function About() {
   return (
     <main id="main" className="container prose-page">
       <div className="eyebrow">OUR APPROACH</div>
-      <h1>Make room for understanding.</h1>
+      <h1>About VisualLearn</h1>
       <p className="lead">
         VisualLearn connects clear explanations, original diagrams and room to
         reflect.

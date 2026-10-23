@@ -7,9 +7,9 @@ test("homepage, catalog and course navigation are functional", async ({
 }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toContainText(
-    "understanding",
+    "Science,",
   );
-  await page.getByRole("link", { name: "Find your next discovery" }).click();
+  await page.getByRole("link", { name: "Explore the lesson", exact: true }).click();
   await expect(page).toHaveURL(/\/courses$/);
   await page.locator(".catalog-card").click();
   // A cold development server may compile this route after the click.
@@ -23,6 +23,36 @@ test("homepage, catalog and course navigation are functional", async ({
     "A journey without an end",
   );
 });
+test("narration reports ready when metadata arrives before hydration", async ({ page }) => {
+  let releaseScripts!: () => void;
+  const scriptsReady = new Promise<void>((resolve) => { releaseScripts = resolve; });
+  // Deliver the real HTML/audio first, then the real application scripts.
+  // This reproduces cached media with delayed hydration without faking events.
+  await page.route("**/_next/static/**/*.js", async (route) => {
+    await scriptsReady;
+    await route.continue();
+  });
+  try {
+    await page.goto("/demo/water-cycle", { waitUntil: "commit" });
+    await expect.poll(() => page.locator("audio").evaluate((audio) => (audio as HTMLAudioElement).readyState)).toBeGreaterThanOrEqual(1);
+    await expect(page.getByRole("button", { name: "Replay", exact: true })).toBeDisabled();
+    releaseScripts();
+    await expect(page.locator(".media-status")).toContainText("Narration ready");
+    await expect(page.getByRole("button", { name: "Replay", exact: true })).toBeEnabled();
+  } finally {
+    releaseScripts();
+  }
+});
+
+test("unavailable narration leaves the transcript usable and replay disabled", async ({ page }) => {
+  await page.route("**/audio/water-cycle/*.wav", (route) => route.fulfill({ status: 404, body: "" }));
+  await page.goto("/demo/water-cycle");
+  await expect(page.locator(".narration-player .form-error")).toContainText("Audio could not load");
+  await expect(page.getByRole("button", { name: "Replay", exact: true })).toBeDisabled();
+  await expect(page.locator(".transcript-content")).toBeVisible();
+  await expect(page.locator(".transcript-content")).toContainText("Water moves between");
+});
+
 test("density changes only declared SVG layers and survives refresh", async ({
   page,
 }) => {
@@ -142,7 +172,7 @@ for (const width of [360, 768, 1280])
         ),
       ).toBe(true);
       const results = await new AxeBuilder({ page })
-        .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+        .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
         .analyze();
       expect(
         results.violations.map((v) => ({
@@ -158,6 +188,8 @@ for (const width of [360, 768, 1280])
       page.getByRole("link", { name: "Skip to content" }),
     ).toBeFocused();
     await page.getByRole("heading", { level: 1 }).click();
+    await expect.poll(() => page.locator("audio").evaluate((audio) => (audio as HTMLAudioElement).readyState)).toBeGreaterThanOrEqual(1);
+    await expect(page.locator(".media-status")).toContainText("Narration ready");
     const target = path.resolve("docs/screenshots");
     await mkdir(target, { recursive: true });
     for (const condition of ["low", "medium", "high"]) {

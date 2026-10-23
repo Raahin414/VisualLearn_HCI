@@ -118,7 +118,7 @@ test("SYNTHETIC participant UI handles assessment, lesson, questionnaires and re
     await page.locator(`input[name="${name}"]`).first().check();
   await page.locator('input[name="motion"][value="not_applicable"]').check();
   expect(
-    (await new AxeBuilder({ page }).withTags(["wcag2aa", "wcag21aa"]).analyze())
+    (await new AxeBuilder({ page }).withTags(["wcag2aa", "wcag21aa", "wcag22aa"]).analyze())
       .violations,
   ).toEqual([]);
   await page.getByRole("button", { name: "Submit questionnaire" }).click();

@@ -2,6 +2,8 @@
 // TOTP MFA, the UUID allowlist, database-backed dashboard, exports and blind
 // scoring. Runs after 1-participant.spec.ts created SYNTHETIC data.
 import { createHash } from "node:crypto";
+import { mkdir } from "node:fs/promises";
+import AxeBuilder from "@axe-core/playwright";
 import { test, expect, type BrowserContext, type Page } from "@playwright/test";
 import { BASE, db, harness, passMfa, secrets, signIn } from "./support";
 test.describe.configure({ mode: "serial" });
@@ -75,6 +77,25 @@ test("the dashboard matches the database and keeps withdrawn participants out", 
   expect(stats.retention.reduce((n: number, r: { paired: number }) => n + r.paired, 0)).toBe(1);
   await expect(pageOne.getByRole("heading", { name: "Retention: immediate vs one hour" })).toBeVisible();
   await expect(pageOne.getByRole("heading", { name: "Data quality" })).toBeVisible();
+  await mkdir("docs/screenshots/m1-after", { recursive: true });
+  for (const width of [360, 768, 1280]) {
+    await pageOne.setViewportSize({ width, height: 900 });
+    expect(await pageOne.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    const versions = pageOne.getByRole("region", { name: "Versions in use", exact: true });
+    await versions.focus();
+    if (await versions.evaluate((region) => region.scrollWidth > region.clientWidth)) {
+      await pageOne.keyboard.press("ArrowRight");
+      await expect.poll(() => versions.evaluate((region) => region.scrollLeft)).toBeGreaterThan(0);
+      await versions.evaluate((region) => { region.scrollLeft = 0; });
+    }
+    const result = await new AxeBuilder({ page: pageOne })
+      .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
+      .analyze();
+    expect(result.violations).toEqual([]);
+    // Authenticated dashboard only: no MFA QR or setup key is present.
+    await pageOne.screenshot({ path: `docs/screenshots/m1-after/dashboard-${width}.png`, fullPage: true });
+  }
+  await pageOne.setViewportSize({ width: 1280, height: 900 });
 });
 test("exports equal database rows, exclude the withdrawn participant and carry no identifiers", async () => {
   const withdrawn = await db.query(
@@ -135,6 +156,11 @@ async function rateAll(page: Page, kind: "free_recall" | "scenario", value: numb
   await expect(none).toBeVisible();
 }
 test("two blinded raters score written responses and disagreements reach adjudication", async ({ browser }) => {
+  // Obtain a fresh real MFA session: the preceding three-width audit can
+  // consume much of the local stack's deliberately short 90-second JWT.
+  await ctxOne.clearCookies();
+  await signIn(pageOne, one);
+  await passMfa(pageOne, one);
   await pageOne.getByRole("button", { name: "Blind scoring" }).click();
   const shown = await pageOne.locator("section").filter({ hasText: "Blind scoring of written responses" }).innerText();
   expect(shown).not.toMatch(/\b(low|medium|high)\b|18-30|arm_key|VL-|SYNTHETIC-LOCAL-CONSENT/);
@@ -162,6 +188,9 @@ test("two blinded raters score written responses and disagreements reach adjudic
   await ctxTwo.close();
 });
 test("tampered tokens are refused and sign-out revokes the Supabase session", async () => {
+  await ctxOne.clearCookies();
+  await signIn(pageOne, one);
+  await passMfa(pageOne, one);
   const session = (await ctxOne.cookies()).find((c) => c.name === "visuallearn_admin")!;
   const setToken = async (value: string) => {
     await ctxOne.clearCookies({ name: "visuallearn_admin" });

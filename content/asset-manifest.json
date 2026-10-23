@@ -59,7 +59,19 @@
     },
     {
       "path": "app/globals.css",
-      "sha256": "2be009c80fc841079dec58679ef923fc9c11848222d83a82245e1b8d2cadd99e"
+      "sha256": "15304de45c3d88388d362ae7dc6efcb5cfc62edbe69e50565e77494ad4965404"
+    },
+    {
+      "path": "app/layout.tsx",
+      "sha256": "a20b495c512e1fc955bd93f6d7a4fce65a71d0656da717e9ba04cb8bdcb0cd2a"
+    },
+    {
+      "path": "components/site-header.tsx",
+      "sha256": "e6c7ac06eb6d5c71a6c9459d95ec55826dd0ad34a270251a4b4f1d20408881cf"
+    },
+    {
+      "path": "components/ui/button.tsx",
+      "sha256": "b3fef973b7201c0c7e675733586c43915fcd629630d8dc165141208bfb4467ed"
     },
     {
       "path": "lib/assessments/surveys.ts",
@@ -67,7 +79,11 @@
     },
     {
       "path": "components/learning/narration-player.tsx",
-      "sha256": "30b366fa7ff29ac1946089768bff0a726e0d54ccf59c0632db03e4470e155e62"
+      "sha256": "76c5dde25b532a0201a9343427e0003fd1eef589d63443fdbe949068fe8b49c4"
+    },
+    {
+      "path": "components/learning/lesson-player.tsx",
+      "sha256": "a1eb1c47dc66630f74780213c30281e3f8b5172f623f465bf4c10cccbbd92c1c"
     },
     {
       "path": "components/study/study-runner.tsx",

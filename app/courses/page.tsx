@@ -4,15 +4,12 @@ import { WaterDiagram } from "@/components/learning/water-diagram";
 export default function Courses() {
   return (
     <main id="main" className="container page-content">
-      <div className="eyebrow">A GOOD PLACE TO WONDER</div>
+      <div className="eyebrow">LESSON CATALOG</div>
       <h1 className="page-title">
-        Explore a little.
-        <br />
-        <em>Understand a lot.</em>
+        Science lessons
       </h1>
       <p className="lead">
-        One thoughtful lesson. Five connected discoveries. Start with the world
-        around you.
+        Start with the Water Cycle: five narrated chapters, diagrams and a practice quiz.
       </p>
       <div className="catalog-grid">
         <Link className="catalog-card" href="/courses/water-cycle">
@@ -37,10 +34,10 @@ export default function Courses() {
         </Link>
         <div className="catalog-note">
           <span className="big-number">01</span>
-          <h2>Start with a single idea.</h2>
+          <h2>One complete lesson</h2>
           <p>
-            We’re beginning with one complete science lesson so every detail
-            gets the care it deserves. More topics can grow from here.
+            Read each chapter, listen to its narration and use the transcript at any time.
+            The practice quiz is separate from research participation.
           </p>
         </div>
       </div>

@@ -220,7 +220,7 @@ test("simulation empty state is usable at 360px", async ({ page }) => {
     ),
   ).toBe(true);
   const results = await new AxeBuilder({ page })
-    .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+    .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
     .analyze();
   expect(
     results.violations.map((v) => ({
@@ -254,7 +254,7 @@ for (const width of [360, 1280])
       ),
     ).toBe(true);
     const results = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+      .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
       .analyze();
     expect(
       results.violations.map((v) => ({
@@ -275,7 +275,7 @@ test("researcher accept page fails safely without a link and is accessible at 36
     await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
   ).toBe(true);
   const results = await new AxeBuilder({ page })
-    .withTags(["wcag2a", "wcag2aa", "wcag21aa"])
+    .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
     .analyze();
   expect(results.violations.map((v) => v.id)).toEqual([]);
   // A participant return-link fragment is never mistaken for an auth link.

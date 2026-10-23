@@ -2,6 +2,8 @@
 
 Windows baseline maintenance (2026-10-24) changes test process launching, timing budgets and the disposable database port only. No research schema, scoring rule, export column or retention rule changes.
 
+M1 advances the recorded shared-shell stimulus version to `density-v4-draft` and expands the source hash manifest to the layout/header/public lesson player/shared button primitive. Existing session version/hash fields carry this change; no new data fields are introduced. Cached narration status synchronization and button hydration readiness emit no new telemetry events.
+
 The authoritative, column-by-column dictionary is generated from code (`lib/admin/codebook.ts`) and downloaded by authorized researchers as `data_dictionary.md` and `codebook.json` (items, keys, rubrics, survey options). The connected test suite fails if any exported column is undocumented. This page summarises the datasets.
 
 All timestamps are UTC. Exported `participant_id`, `session_id` and `attempt_id` are `VL_` + 24 hex characters of SHA-256 of the internal UUID: stable for joins, not the database IDs. No names, emails, exact birthdates, IP addresses, user-agent strings, public participant codes, return tokens or researcher identities are exported. Written responses are verbatim and may contain volunteered identifiers; review them before sharing. **Withdrawn participants are excluded from every file.**

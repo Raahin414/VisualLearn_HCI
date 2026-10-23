@@ -8,6 +8,19 @@
   --soft: #edf0e5;
   --accent: #e9b96d;
   --font-sans: Arial, Helvetica, sans-serif;
+  --surface: #ffffff;
+  --radius-control: 4px;
+  --radius-panel: 8px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --text-small: 0.8125rem;
+  --text-body: 1rem;
+  --text-lead: 1.125rem;
+  --focus: #155e63;
 }
 * {
   box-sizing: border-box;
@@ -16,7 +29,7 @@ body {
   margin: 0;
   background: var(--paper);
   color: var(--ink);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
   font-size: 15px;
   line-height: 1.6;
 }
@@ -50,8 +63,9 @@ select:focus-visible,
 input:focus-visible,
 textarea:focus-visible,
 audio:focus-visible,
-summary:focus-visible {
-  outline: 3px solid #bc7432;
+summary:focus-visible,
+.table-scroll:focus-visible {
+  outline: 3px solid var(--focus);
   outline-offset: 4px;
 }
 h1,
@@ -65,7 +79,7 @@ h2 {
   font-family: Georgia, "Times New Roman", serif;
   font-weight: 400;
   line-height: 1.12;
-  letter-spacing: -1.3px;
+  letter-spacing: -0.025em;
 }
 h3 {
   line-height: 1.3;
@@ -227,11 +241,9 @@ svg {
 .hero-art {
   background: #eef1e7;
   border: 1px solid #d9e2d4;
-  border-radius: 19px;
+  border-radius: var(--radius-panel);
   position: relative;
-  transform: rotate(-1deg);
   padding: 22px 20px 14px;
-  box-shadow: 0 16px 40px #314f3610;
 }
 .hero-art > svg {
   width: 100%;
@@ -285,23 +297,6 @@ svg {
 }
 .art-arrow {
   margin-left: auto;
-}
-.floating-note {
-  position: absolute;
-  right: -22px;
-  bottom: 92px;
-  background: #fffcf4;
-  border: 1px solid #e2dfcc;
-  box-shadow: 0 8px 20px #3d563214;
-  border-radius: 8px;
-  transform: rotate(4deg);
-  padding: 12px 15px;
-  font-size: 10px;
-}
-.floating-note span {
-  font-size: 18px;
-  color: #c39445;
-  margin-right: 7px;
 }
 .principles-strip {
   border-top: 1px solid var(--line);
@@ -718,6 +713,7 @@ svg {
   margin: 27px 0;
 }
 .chapter-button {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -731,6 +727,7 @@ svg {
   min-height: 55px;
 }
 .chapter-button > span:first-child {
+  flex-shrink: 0;
   font-size: 10px;
   border: 1px solid #c9d3c3;
   width: 26px;
@@ -993,9 +990,6 @@ svg {
   .hero h1 {
     font-size: 54px;
   }
-  .floating-note {
-    right: -8px;
-  }
   .header-inner {
     gap: 24px;
   }
@@ -1056,10 +1050,6 @@ svg {
   .hero-art {
     max-width: 560px;
     transform: none;
-  }
-  .floating-note {
-    bottom: 90px;
-    right: -6px;
   }
   .principles {
     gap: 20px;
@@ -1677,6 +1667,180 @@ progress::-webkit-progress-value {
 }
 .table-scroll {
   overflow-x: auto;
+}
+/* Shared academic interface. These rules are condition-independent;
+   the lesson SVG tiers and assessment diagram tokens above stay unchanged. */
+input, select, textarea, button, summary {
+  scroll-margin-block: 100px;
+}
+.button,
+.lesson-nav > .button,
+.lesson-sidebar .button,
+.button-sm,
+.button-icon,
+.chapter-button,
+.quiz-option,
+.scale-field label,
+.density-picker select,
+.dev-actions select,
+.study-form input:not([type="radio"]):not([type="checkbox"]),
+.study-form select,
+.study-form textarea,
+.return-panel input,
+.recall-field textarea,
+.order-row select {
+  border-radius: var(--radius-control);
+}
+.featured-course,
+.catalog-card,
+.outline-card,
+.research-card,
+.quiz-card,
+.written-step,
+.assessment-progress,
+.return-panel,
+.followup-status,
+.demo-metrics > div,
+.audio-bar {
+  border-radius: var(--radius-panel);
+}
+.button,
+.site-header nav,
+.lesson-nav > .button,
+.lesson-sidebar .button,
+.research-link,
+.text-link,
+.section-heading .text-link,
+.breadcrumb,
+.chapter-button > span:last-child,
+.density-picker label,
+.density-picker select,
+.audio-label,
+.audio-replay,
+.lesson-nav > span,
+.demo-strip,
+.media-status,
+.assessment-progress > div,
+.assessment-progress span,
+.scale-field p,
+.scale-field label,
+.data-table,
+.export-links .text-link,
+.demo-metrics span,
+.fine-print,
+.followup-status .fine-print,
+.hero-note {
+  font-size: var(--text-small);
+}
+.eyebrow,
+.research-card .eyebrow,
+.art-top,
+.course-tag,
+.pill,
+.course-meta,
+.lesson-kicker,
+.diagram-caption,
+.key-idea span,
+.demo-strip strong {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+}
+.hero h1 {
+  font-size: clamp(2.75rem, 5vw, 3.75rem);
+  letter-spacing: -0.035em;
+  line-height: 1.08;
+}
+.hero h1 > span {
+  font-style: normal;
+}
+.hero-copy > p,
+.lead {
+  font-size: var(--text-lead);
+  line-height: 1.7;
+}
+.hero-actions {
+  gap: var(--space-3);
+}
+.art-caption strong,
+.principles span {
+  font-size: 0.875rem;
+}
+.art-caption div > span,
+.principles p,
+.course-info p,
+.approach-note p,
+.catalog-card p,
+.research-card p,
+.site-footer {
+  font-size: var(--text-small);
+  line-height: 1.7;
+}
+.principles {
+  gap: var(--space-8);
+}
+.study-form {
+  max-width: 44rem;
+  gap: var(--space-6);
+}
+.study-form input:not([type="radio"]):not([type="checkbox"]),
+.study-form select,
+.study-form textarea,
+.recall-field textarea,
+.order-row select,
+.return-panel input {
+  background: var(--surface);
+  border-color: #85968a;
+}
+.quiz-card,
+.written-step,
+.scale-field,
+.return-panel {
+  background: var(--surface);
+}
+.quiz-option:hover,
+.scale-field label:hover {
+  border-color: var(--teal);
+}
+.quiz-option:focus-within,
+.scale-field label:focus-within {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+.data-table th {
+  font-size: var(--text-small);
+  font-weight: 700;
+}
+.data-table td {
+  font-variant-numeric: tabular-nums;
+}
+.table-scroll {
+  margin: var(--space-4) 0 var(--space-8);
+}
+.admin-tabs {
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--line);
+  gap: var(--space-2);
+}
+.dev-toolbar {
+  background: var(--soft);
+  border-top: 3px solid var(--teal);
+}
+.site-footer {
+  align-items: center;
+  gap: var(--space-6);
+}
+.site-footer div {
+  flex-wrap: wrap;
+  align-items: center;
+}
+@media (max-width: 760px) {
+  .hero h1 { font-size: 2.75rem; }
+  .hero { gap: var(--space-8); }
+  .principles { grid-template-columns: 1fr; gap: var(--space-6); }
+  .principles > div { grid-template-columns: 28px 1fr; column-gap: var(--space-3); }
+  .principles svg { grid-row: 1 / 3; }
+  .site-footer { align-items: flex-start; }
+  .lesson-kicker { letter-spacing: 0.04em; }
 }
 @media (max-width: 640px) {
   .order-row {

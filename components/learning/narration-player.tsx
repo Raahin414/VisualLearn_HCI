@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { Headphones, RotateCcw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 type AudioEvent =
   "audio_started" | "audio_paused" | "audio_completed" | "audio_replayed";
 export function NarrationPlayer({
@@ -19,7 +20,23 @@ export function NarrationPlayer({
   const [failed, setFailed] = useState(false);
   useEffect(() => {
     const element = audio.current;
-    return () => element?.pause();
+    let active = true;
+    // Cached metadata/error events can fire before hydration attaches handlers.
+    // Read the real media state once; do not start playback or emit telemetry.
+    if (element?.error || (element && element.readyState >= 1))
+      queueMicrotask(() => {
+        if (!active) return;
+        if (element.error) {
+          setFailed(true);
+          setStatus("Audio could not load. The complete transcript is available below.");
+        } else {
+          setStatus("Narration ready · press play to listen");
+        }
+      });
+    return () => {
+      active = false;
+      element?.pause();
+    };
   }, []);
   useEffect(() => {
     if (pauseWhen) audio.current?.pause();
@@ -64,8 +81,9 @@ export function NarrationPlayer({
             );
           }}
         />
-        <button
+        <Button
           type="button"
+          variant="ghost"
           className="audio-replay"
           disabled={failed}
           onClick={() => {
@@ -84,7 +102,7 @@ export function NarrationPlayer({
         >
           <RotateCcw size={14} />
           Replay
-        </button>
+        </Button>
       </div>
       <p role="status" className={failed ? "form-error" : "media-status"}>
         {status}

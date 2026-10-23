@@ -11,7 +11,7 @@ function Table({
   empty: string;
 }) {
   return (
-    <div className="table-scroll">
+    <div className="table-scroll" role="region" aria-label={caption} tabIndex={0}>
       <table className="data-table">
         <caption className="sr-only">{caption}</caption>
         <thead>

@@ -1,5 +1,17 @@
 # Implementation handoff — 2026-10-16
 
+## M1 handoff — 2026-10-24
+
+Follows verified/pushed baseline `9b0d509`, branch `feat/visuallearn-foundation`. Implemented shared academic type/spacing/radius/focus tokens, readable metadata/control text, consistent form surfaces, keyboard-scrollable dashboard regions, simpler public copy and removal of decorative rotations/shadows/emoji. Fixed two real hydration defects: cached native audio metadata/error events could precede handlers and leave stale loading status; immediately after MFA, a tab button could be clicked before its callback existed. Shared buttons now wait for hydration (native links still work); replay/chapter controls use that primitive and chapter navigation waits for saved progress. No playback command or telemetry is emitted by readiness synchronization.
+
+Frozen reviewed source hashes under `density-v4-draft`, adding layout/header/public player/button sources. Canonical JSON, objectives, question/written/survey wording, lesson SVG tiers and all five WAVs remain byte-identical to `9b0d509`. The original specification SHA-256 remains `4c4d7e957ce6149940aaeb7bae1ac12a4fbfd76222fa83f57b6c34fe408c12a5`. No migration/dependency/export/schema changes.
+
+Executed: `npm ci` PASS (414 packages, audit 0); `verify-content` PASS; `test` PASS 51/8 files (includes PGlite); dedicated `db:validate` PASS 5; lint/types PASS; real PostgreSQL `test:pg` PASS 13; final development Chromium PASS 21/21 (4.5 min); build/bundle PASS (22 assets); production Chromium PASS 21/21 (2.6 min), smoke 200/404/401; local Supabase verifier PASS 19/19 and connected real Auth/MFA/PG Chromium PASS 22/22 (6.1 min). Controlled browser regressions deliver real media before application JS and simulate a 404 only at the media boundary; the existing participant HTTP-mock contract remains distinct from real connected tests. Failed/interrupted runs and fixes are recorded in QA, not counted as passes.
+
+Reviewed screenshots at 360/768/1280: home, lesson variants, forms, anonymous auth/accept/simulator and authenticated SYNTHETIC dashboard. Stored before/after matrices under `docs/screenshots/`. No MFA setup key or QR captured in these artifacts. Axe includes WCAG 2.2 AA and requires zero violations; keyboard checks include skip links, assessment focus and dashboard horizontal scrolling. Other real devices/manual screen readers and every human scientific/ethics review remain unverified. No hosted changes performed.
+
+Next: M2 modality (same canonical script/audio, recruitment closed), M3 chunking, then M4 research mechanisms/analysis. Continue autonomously per the latest user scope; never invent approvals or activate real recruitment. Exact M1 checkpoint/push is obtained from the Git log and remote verification.
+
 ## Windows baseline handoff — 2026-10-24
 
 Latest user scope authorizes baseline fixes followed by M1–M6, separate verified/pushed milestones, with no recruitment or invented approvals. Onboarding read all tracked Markdown and the local Next.js CSS/client-boundary guides. Actual branch/origin baseline: `feat/visuallearn-foundation` at `9ecc795`; prompt-referenced newer hashes are absent. Preserved the existing launcher fix and generated screenshots.

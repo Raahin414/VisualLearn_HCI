@@ -1,5 +1,11 @@
 # VisualLearn progress
 
+## M1 shared academic UI — verified, 2026-10-24
+
+Baseline infrastructure was committed/pushed as `9b0d509` and the remote hash verified. M1 introduces shared type/spacing/radius/focus tokens, readable metadata, consistent form surfaces and simpler public copy, removing decorative rotations/shadows/emoji. It fixes cached narration status and prevents callback/form buttons being activated before hydration. Dashboard tables support keyboard scrolling. Draft stimulus version is `density-v4-draft`; layout/header/public player/button sources join the manifest. Canonical lesson JSON, objectives, WAVs, assessment wording and SVG tiers remain unchanged.
+
+Verified: clean install; 51 unit/service tests (including PGlite), dedicated 5-test schema run, lint/types, 13 real PostgreSQL tests, 21 development and 21 production browser tests, 22 clean browser assets, 19 local security checks and 22 connected Supabase tests. Axe includes WCAG 2.2 AA rules; 360/768/1280 screenshots are in `docs/screenshots/m1-before/` and `m1-after/`. Manual screen-reader/device and human research reviews remain open. M2 modality is next; E2–E8 remain unrecruitable.
+
 ## Windows baseline verification — 2026-10-24
 
 Current checkout is `9ecc795` on `feat/visuallearn-foundation`; the newer revisions named in the continuation prompts are not on origin. The Windows staging launcher and local test harnesses now launch installed CLIs directly. Browser suites use one worker and bounded longer timeouts for cold compilation on this machine. Local PostgreSQL uses port 15439 (override with `VISUALLEARN_PG_PORT`) because Windows reserves the previous port.
