@@ -4,6 +4,8 @@
 
 ## 1. Local rehearsal (no accounts needed)
 
+On Windows PowerShell use `npm.cmd` when script execution policy blocks `npm.ps1`. The installed CLI entrypoints are launched directly by the harnesses. PostgreSQL defaults to loopback port 15439; set `VISUALLEARN_PG_PORT` if that port is unavailable. Use Node 24/npm 11; the browser suites use one worker for reliable cold compilation on slower local disks. Do not run staging/dev/build servers concurrently against the same `.next` directory.
+
 Requires Docker and Node 24. `npm run test:pg` runs the migration CLI and concurrency tests against a disposable PostgreSQL 17 container. `npm run test:connected` starts local Supabase (Postgres, Auth/GoTrue, PostgREST, Kong) with `supabase/config.toml`, resets it, migrates with `npm run db:migrate`, runs the staging verifier, creates SYNTHETIC researcher accounts and drives the app in Chromium. Set `SUPABASE_CLI` to a local CLI binary or let it use `npx supabase@2`. The local stack uses Supabase's public development keys; nothing in it is a secret or a hosted credential.
 
 ## 2. Hosted staging (separate Supabase project, SYNTHETIC data only)

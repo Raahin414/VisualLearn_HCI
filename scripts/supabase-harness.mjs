@@ -7,7 +7,14 @@ import { randomBytes } from "node:crypto";
 import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import pg from "pg";
-const cli = process.env.SUPABASE_CLI ? [process.env.SUPABASE_CLI] : ["npx", "--yes", "supabase@2"];
+import { createRequire } from "node:module";
+import path from "node:path";
+const require = createRequire(import.meta.url);
+const cli = process.env.SUPABASE_CLI
+  ? [process.env.SUPABASE_CLI]
+  : process.env.npm_execpath
+    ? [process.execPath, path.join(path.dirname(process.env.npm_execpath), "npx-cli.js"), "--yes", "supabase@2"]
+    : ["npx", "--yes", "supabase@2"];
 const sb = (...args) =>
   execFileSync(cli[0], [...cli.slice(1), ...args], { encoding: "utf8", stdio: ["ignore", "pipe", "inherit"] });
 if (existsSync(new URL("../supabase/.temp/project-ref", import.meta.url)))
@@ -24,7 +31,8 @@ if (!/@127\.0\.0\.1:/.test(ownerUrl)) throw new Error("Expected a loopback local
 sb("db", "reset");
 const run = (cmd, args, env = {}) => {
   const r = spawnSync(cmd, args, { stdio: "inherit", env: { ...process.env, ...env } });
-  if (r.status) throw new Error(`${cmd} ${args.join(" ")} failed`);
+  if (r.error) throw r.error;
+  if (r.status !== 0) throw new Error(`${cmd} ${args.join(" ")} failed`);
 };
 run("node", ["scripts/migrate.mjs"], { DATABASE_URL: ownerUrl });
 const appPassword = randomBytes(24).toString("hex");
@@ -86,8 +94,8 @@ await writeFile(
   { mode: 0o600 },
 );
 const result = spawnSync(
-  "npx",
-  ["playwright", "test", "--config=playwright.connected.config.ts", ...process.argv.slice(2)],
+  process.execPath,
+  [require.resolve("@playwright/test/cli"), "test", "--config=playwright.connected.config.ts", ...process.argv.slice(2)],
   {
     stdio: "inherit",
     env: {

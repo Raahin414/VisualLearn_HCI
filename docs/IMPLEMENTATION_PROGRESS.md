@@ -1,5 +1,17 @@
 # Implementation handoff — 2026-10-16
 
+## Windows baseline handoff — 2026-10-24
+
+Latest user scope authorizes baseline fixes followed by M1–M6, separate verified/pushed milestones, with no recruitment or invented approvals. Onboarding read all tracked Markdown and the local Next.js CSS/client-boundary guides. Actual branch/origin baseline: `feat/visuallearn-foundation` at `9ecc795`; prompt-referenced newer hashes are absent. Preserved the existing launcher fix and generated screenshots.
+
+Fixed installed CLI launching on Windows for staging, PostgreSQL, Supabase and the connected web server; env parsing now accepts CRLF and quotes and safely appends a new secret line. Disposable PostgreSQL port changed to 15439 after Windows refused 55439. Ephemeral database passwords are passed in the child environment, not command arguments. Browser suites retain assertions, use one worker/longer budgets and explicitly wait for route navigation. No application research logic, migrations, canonical content, item banks, SVG tiers or WAVs changed.
+
+Executed with Node 24.22.1/npm 11.21.1 via isolated runner and Docker Desktop 29.6.2: `verify-content` PASS (5 segments, 327.0 s); `test` PASS 51/8 files; `db:validate` PASS 5 PGlite tests; lint/typecheck PASS; `test:pg` PASS 13 against real PostgreSQL 17; `test:e2e` PASS 16/16 (4.2 min); build and bundle scan PASS (22 assets); production smoke `/` 200, `/dev/study` 404, `/api/admin/stats` 401; `test:e2e:production` PASS 16/16 (1.3 min); local Supabase verifier PASS 19/19 and `test:connected` PASS 22/22 (4.6 min). Earlier failed setup/timing runs are detailed in QA and excluded from pass counts. Built-in env parser separately checked with CRLF/quoted fixture values. Original spec SHA-256 unchanged; syntax/whitespace checks pass.
+
+Before screenshots retained in `docs/screenshots/m1-before/` (home/lesson/assessment plus anonymous researcher auth, accept and simulator at three widths). No authenticated QR/keys captured. Latest staging summaries reconciled with later recorded project configuration; no hosted changes or current hosted verification performed.
+
+Next: M1 shared academic UI with versioned source hashes and unchanged canonical stimuli, then M2 modality and M3 chunking. Human approvals remain unresolved; app hosting and hosted participant/restore validation remain pending.
+
 Repository: https://github.com/Raahin414/VisualLearn_HCI. Initial remote was empty. Working branch: `feat/visuallearn-foundation`. Baseline commit: none (unborn repository); this run creates the first local checkpoint. Use `git log -1` for its exact commit; no GitHub push or deployment is implied.
 
 > Historical foundation record below. The **current local-stabilization session** follows baseline `9562e94` and is recorded at the end of this document. Current status is in root `PROGRESS.md`; the previous staging-first recommendation is deferred by the latest user scope.

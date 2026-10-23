@@ -1,5 +1,7 @@
 # VisualLearn roadmap
 
+Continuation sequence (2026-10-24): establish the full Windows baseline, then M1 shared academic UI, M2 modality, M3 chunking, M4 remaining research mechanisms/analysis, M5 hosting validation and M6 approval packets/pilot runbook. Human reviews remain open. The historical milestone table below is retained; hosted staging is recorded as created in later decisions, while app hosting remains pending.
+
 This is a staged roadmap, not a promise to conduct eight human studies. Follow the original specification and latest user scope. No recruitment before approved protocol, consent, content and infrastructure validation.
 
 | Milestone | Completion evidence | Status / dependencies |

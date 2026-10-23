@@ -12,10 +12,13 @@ test("homepage, catalog and course navigation are functional", async ({
   await page.getByRole("link", { name: "Find your next discovery" }).click();
   await expect(page).toHaveURL(/\/courses$/);
   await page.locator(".catalog-card").click();
+  // A cold development server may compile this route after the click.
+  await expect(page).toHaveURL(/\/courses\/water-cycle$/, { timeout: 30000 });
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
     "The Water Cycle.",
   );
   await page.getByRole("link", { name: /Start the lesson demo/ }).click();
+  await expect(page).toHaveURL(/\/demo\/water-cycle$/, { timeout: 30000 });
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
     "A journey without an end",
   );

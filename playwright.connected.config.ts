@@ -9,10 +9,11 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   timeout: 180_000,
+  expect: { timeout: 30000 },
   use: { baseURL: "http://127.0.0.1:3100", trace: "retain-on-failure" },
   projects: [{ name: "connected-chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: {
-    command: "npx next dev --hostname 127.0.0.1 --port 3100",
+    command: "node node_modules/next/dist/bin/next dev --hostname 127.0.0.1 --port 3100",
     url: "http://127.0.0.1:3100",
     reuseExistingServer: false,
     timeout: 180_000,

@@ -47,6 +47,7 @@ export async function enroll(page: Page) {
   await page.getByLabel("How familiar are you with the water cycle?").selectOption("2");
   for (const box of await page.locator('input[type="checkbox"]').all()) await box.check();
   await page.getByRole("button", { name: "Consent and begin baseline assessment" }).click();
+  await expect(page).toHaveURL(`${BASE}/study/session`, { timeout: 60000 });
   await expect(page.getByRole("heading", { name: "Before we begin." })).toBeVisible();
 }
 export async function finishLesson(page: Page) {

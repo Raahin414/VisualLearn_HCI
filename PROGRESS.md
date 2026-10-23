@@ -1,5 +1,13 @@
 # VisualLearn progress
 
+## Windows baseline verification — 2026-10-24
+
+Current checkout is `9ecc795` on `feat/visuallearn-foundation`; the newer revisions named in the continuation prompts are not on origin. The Windows staging launcher and local test harnesses now launch installed CLIs directly. Browser suites use one worker and bounded longer timeouts for cold compilation on this machine. Local PostgreSQL uses port 15439 (override with `VISUALLEARN_PG_PORT`) because Windows reserves the previous port.
+
+Verified: content/spec hashes, 51 unit/service tests, 5 PGlite schema tests, lint/typecheck, 13 real PostgreSQL tests, 16 development browser tests, production build, 22 clean browser assets, 16 production browser tests, production 200/404/401 boundaries, 19 local security checks and 22 connected Supabase browser tests. M1 has not started. Earlier failed runs are recorded in `docs/QA.md`.
+
+Hosted Supabase staging is **recorded as existing** in the later decisions/deployment entries. Older statements below and in historical handoffs saying no hosted project exists are superseded. Hosting, hosted participant workflows, backup/restore and human approvals remain unverified; recruitment remains closed.
+
 Current milestone (2026-10-18, after `c812d73`): reliable E1 Water Cycle foundation, verified locally. Branch `feat/visuallearn-foundation`. Original specification unchanged. **No hosted Supabase project, no deployment, no human research and no approvals.**
 
 ## Implemented and tested (local)

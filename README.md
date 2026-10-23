@@ -2,7 +2,7 @@
 
 An original visual learning experience and a draft HCI study platform. Built from an empty repository using the supplied [v2 implementation specification](VISUALLEARN_AGENT_IMPLEMENTATION_SPEC.md).
 
-**Status:** Runnable local MVP with a public lesson, v2 assessments (ordering, diagram labeling, written scenario and recall), questionnaire drafts, a development-only study simulation, and an E1 research workflow verified against real PostgreSQL and a local Supabase stack (Auth with MFA). No hosted staging or deployment exists yet. **Not approved for human research or ready for recruitment.** No human participants or research results are seeded. See [progress](PROGRESS.md), [roadmap](ROADMAP.md) and [decisions](docs/DECISIONS.md).
+**Status:** Runnable local MVP with a public lesson, v2 assessments (ordering, diagram labeling, written scenario and recall), questionnaire drafts, a development-only study simulation, and an E1 research workflow verified against real PostgreSQL and a local Supabase stack (Auth with MFA). Hosted Supabase staging is recorded as configured; the app is not deployed. **Not approved for human research or ready for recruitment.** No human participants or research results are seeded. See [progress](PROGRESS.md), [roadmap](ROADMAP.md) and [decisions](docs/DECISIONS.md).
 
 ## Run the public demo
 
@@ -85,8 +85,8 @@ Copy and diagrams are original. Scientific concepts were checked against [USGS W
 
 ## Current limits
 
-No hosted Supabase project, hosting account or credentials were available, so hosted migration, hosted Auth/MFA, backups/restore and deployment are unverified; the local Supabase rehearsal is the closest evidence. Content, instruments, rubrics, consent, narration rights, protocol, retention/deletion, debrief and ethics are unreviewed and unapproved ([review packets](docs/REVIEW_PACKETS.md)). Optional seven-day form D, physical deletion after withdrawal, approved debrief and analysis charts remain to implement. No claim of research readiness is made.
+Hosted staging configuration and its earlier 19/19 audit are recorded in the decisions; researcher invite acceptance, the hosted participant workflow, backup/restore and app deployment remain unverified. Content, instruments, rubrics, consent, narration rights, protocol, retention/deletion, debrief and ethics are unreviewed and unapproved ([review packets](docs/REVIEW_PACKETS.md)). Optional seven-day form D, physical deletion after withdrawal, approved debrief and analysis charts remain to implement. No claim of research readiness is made.
 
 ## Continuing work
 
-Read `AGENTS.md`, the specification and `PROGRESS.md`. Preserve demo/research isolation and update progress with actual outputs. Next: create the hosted staging project with the owner's account and follow [deployment](docs/DEPLOYMENT.md); obtain the external reviews. No live research before approval.
+Read `AGENTS.md`, the specification and `PROGRESS.md`. Preserve demo/research isolation and update progress with actual outputs. Continue the authorized milestone sequence in `ROADMAP.md`; use the existing hosted staging project only within the deployment milestone. No live research before approval.

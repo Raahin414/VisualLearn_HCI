@@ -6,8 +6,11 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { readFile, writeFile, mkdir, rm } from "node:fs/promises";
 import pg from "pg";
+import { createRequire } from "node:module";
+import path from "node:path";
+const require = createRequire(import.meta.url);
 const NAME = "visuallearn-synthetic-pg";
-const PORT = Number(process.env.VISUALLEARN_PG_PORT || 55439);
+const PORT = Number(process.env.VISUALLEARN_PG_PORT || 15439);
 const DB = "visuallearn_synthetic";
 const STATE = new URL("../.local/pg-harness.json", import.meta.url);
 const docker = (...args) =>
@@ -17,14 +20,14 @@ async function up() {
   const existing = docker("ps", "-aq", "--filter", `name=^${NAME}$`);
   if (existing) docker("rm", "-f", NAME);
   const owner = secret();
-  docker(
+  execFileSync("docker", [
     "run", "-d", "--rm", "--name", NAME,
     "--label", "visuallearn.synthetic=true",
     "-p", `127.0.0.1:${PORT}:5432`,
     "--tmpfs", "/var/lib/postgresql/data",
-    "-e", `POSTGRES_PASSWORD=${owner}`, "-e", `POSTGRES_DB=${DB}`,
+    "-e", "POSTGRES_PASSWORD", "-e", `POSTGRES_DB=${DB}`,
     "postgres:17-alpine",
-  );
+  ], { encoding: "utf8", env: { ...process.env, POSTGRES_PASSWORD: owner } });
   const ownerUrl = `postgres://postgres:${owner}@127.0.0.1:${PORT}/${DB}`;
   for (let i = 0; ; i++) {
     const client = new pg.Client({ connectionString: ownerUrl });
@@ -95,8 +98,8 @@ else if (mode === "up") {
     };
     status =
       mode === "connected"
-        ? run("npx", ["playwright", "test", "--config=playwright.connected.config.ts", ...process.argv.slice(3)], env)
-        : run("npx", ["vitest", "run", "--config", "vitest.pg.config.mts", ...process.argv.slice(3)], env);
+        ? run(process.execPath, [require.resolve("@playwright/test/cli"), "test", "--config=playwright.connected.config.ts", ...process.argv.slice(3)], env)
+        : run(process.execPath, [path.join(path.dirname(require.resolve("vitest/package.json")), "vitest.mjs"), "run", "--config", "vitest.pg.config.mts", ...process.argv.slice(3)], env);
   } finally {
     if (!process.env.KEEP_SYNTHETIC_PG) await down();
   }

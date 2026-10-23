@@ -1,5 +1,14 @@
 # Decisions and unresolved approvals
 
+## Windows continuation — 2026-10-24
+
+- The latest user scope authorizes autonomous milestone implementation and fixing baseline failures; it supersedes the earlier instruction to stop at a red baseline. No approval, recruitment or secrecy safeguards are relaxed. Milestones remain separate commits on `feat/visuallearn-foundation`.
+- Origin and the local checkout both point to `9ecc795`; prompt references to `7d605b8` and `7480151` are not available. Preserve and extend the actual checkout rather than inventing missing history.
+- Hosted staging exists according to the later entries below and `DEPLOYMENT.md`. Contradictory older summaries are historical, not evidence that the hosted project disappeared. Nothing hosted has been changed or reverified in this Windows continuation.
+- Launch installed Next.js/Playwright/Vitest entrypoints with `process.execPath` rather than spawning the Windows `npx` shim. Supabase supports a native `SUPABASE_CLI` or npm's JavaScript npx entrypoint. Child-spawn errors must not be mistaken for success. These tooling changes are reversible and do not change study behavior.
+- Use a single browser worker, a 120-second test budget and 15-second assertion budget on the slow Windows filesystem. Explicitly wait for route URLs before destination headings. Assertions and failure conditions are retained; no blanket retries or skipped tests are introduced.
+- Change the disposable PostgreSQL default port from 55439 to 15439; the old port is reserved by Windows. Keep loopback binding and the existing port override. Pass its ephemeral password through the process environment rather than a command argument, preventing exception output from including it. The failed disposable container was removed; no hosted credential was involved.
+
 Date: 2026-10-16. Branch: feat/visuallearn-foundation.
 
 - Use the requested Next.js/React/TypeScript/Tailwind stack in the supplied GitHub repository. Local implementation only; no alternative hosting service is provisioned.

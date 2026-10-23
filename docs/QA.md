@@ -1,5 +1,22 @@
 # Verification record — 2026-10-18
 
+## Windows baseline — 2026-10-24
+
+Node 24.22.1/npm 11.21.1 via an isolated npm runner; Docker Desktop 29.6.2. System defaults remain Node 22/npm 10. No hosted project used.
+
+| Check | Actual result |
+|---|---|
+| Content and original specification | PASS: 5 segments, 327.0 seconds of unchanged WAVs; original spec SHA-256 matches `4c4d7e95…a5` |
+| Unit/service and schema | PASS: 51 tests/8 files; separately 5 PGlite schema tests |
+| Lint/typecheck | PASS, including infrastructure fixes |
+| Real PostgreSQL 17 | PASS: 13 tests, non-owner runtime role, disposable local database on port 15439 |
+| Development Chromium | PASS: 16/16 with one worker; includes isolated browser simulator and separately labeled HTTP-mock contract |
+| Production build/bundle | PASS: 22 browser assets contain no research keys/rubrics/secret names |
+| Production Chromium | PASS: 16/16; smoke `/` 200, `/dev/study` 404, `/api/admin/stats` 401 |
+| Local Supabase | Security verifier PASS 19/19; connected Chromium PASS 22/22 (4.6 min), real Auth/MFA/invites/recovery/exports; no HTTP mocks |
+
+Failed runs, not counted as passes: original navigation heading assertion timed out after a cold route click (isolated rerun passed); a two-worker full run had 12 passes/4 timeouts in practice/simulator/axe; PostgreSQL initially failed on Windows-reserved port 55439; direct `npx` spawning was not portable, and the first direct Vitest subpath was not exported; nested `npx next` failed in the connected web-server configuration. The port, CLI launchers, explicit navigation waits and single-worker timing configuration address these distinct failures. Functional assertions remain intact. Generated Windows screenshots are retained; M1 before evidence is captured separately.
+
 ## Follow-up: hosted staging and researcher invitations
 
 | Executed check | Kind | Result |
