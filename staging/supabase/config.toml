@@ -7,14 +7,15 @@ project_id = "visuallearn-staging"
 [api]
 schemas = ["public", "graphql_public"]
 
+# Every connection string uses sslmode=require; refuse unencrypted clients.
+[db.ssl_enforcement]
+enabled = true
+
 [auth]
-# Hosted on Vercel (bom1). The local redirect stays only while per-person
-# `npm run dev:staging` logins exist; remove it when they are revoked.
+# Hosted on Vercel (bom1). Per-person dev logins are revoked, so links
+# return only to the hosted accept page.
 site_url = "https://visuallearn-staging.vercel.app"
-additional_redirect_urls = [
-  "https://visuallearn-staging.vercel.app/admin/accept",
-  "http://127.0.0.1:3000/admin/accept",
-]
+additional_redirect_urls = ["https://visuallearn-staging.vercel.app/admin/accept"]
 # Researcher accounts are created by an administrator; no public sign-up.
 enable_signup = false
 enable_anonymous_sign_ins = false

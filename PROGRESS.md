@@ -2,7 +2,7 @@
 
 ## M5 hosting — in progress, 2026-10-24
 
-App hosted on Vercel at https://visuallearn-staging.vercel.app (`bom1`), connected to hosted staging through the restricted runtime login; Supabase Auth `site_url`/redirects now point to it (the local redirect stays until per-person dev logins are revoked). Live checks: `/`, `/demo/water-cycle`, `/admin`, `/admin/accept` 200; `/dev/study` 404; `/api/admin/stats` 401; cross-origin POST 403; HSTS and `X-Frame-Options: DENY`; database-backed rate limit returned 429 on the 6th request. Remaining for M5: custom SMTP, researcher sign-in on the hosted URL, hosted SYNTHETIC workflow, backup-restore drill, revoking dev logins and enabling database SSL enforcement.
+App hosted on Vercel at https://visuallearn-staging.vercel.app (`bom1`), connected to hosted staging through the restricted runtime login; Supabase Auth `site_url`/redirects now point to it (the local redirect stays until per-person dev logins are revoked). Live checks: `/`, `/demo/water-cycle`, `/admin`, `/admin/accept` 200; `/dev/study` 404; `/api/admin/stats` 401; cross-origin POST 403; HSTS and `X-Frame-Options: DENY`; database-backed rate limit returned 429 on the 6th request. Both invited researchers had completed sign-in and TOTP enrollment. Per-person dev logins are revoked, the local redirect is removed and database SSL enforcement is on; the hosted app and `verify:staging` (21/21) pass afterwards. Remaining for M5: custom SMTP, hosted SYNTHETIC workflow and a backup-restore drill.
 
 ## Hosted staging at migration 005 — 2026-10-24
 
