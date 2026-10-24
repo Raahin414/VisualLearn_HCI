@@ -8,10 +8,13 @@ project_id = "visuallearn-staging"
 schemas = ["public", "graphql_public"]
 
 [auth]
-# No hosted app yet: invitation/recovery links return to a local app started
-# with `npm run dev:staging`. Replace with the hosted HTTPS URL after deployment.
-site_url = "http://127.0.0.1:3000"
-additional_redirect_urls = ["http://127.0.0.1:3000/admin/accept"]
+# Hosted on Vercel (bom1). The local redirect stays only while per-person
+# `npm run dev:staging` logins exist; remove it when they are revoked.
+site_url = "https://visuallearn-staging.vercel.app"
+additional_redirect_urls = [
+  "https://visuallearn-staging.vercel.app/admin/accept",
+  "http://127.0.0.1:3000/admin/accept",
+]
 # Researcher accounts are created by an administrator; no public sign-up.
 enable_signup = false
 enable_anonymous_sign_ins = false

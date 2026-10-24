@@ -1,6 +1,6 @@
 # Deployment and operations
 
-**Status (2026-10-18):** hosted **staging exists**: Supabase project `visuallearn-staging` (ref `tyoplurznjqdngacvfke`, organization IAT, region ap-south-1). Steps 2.1–2.6 and 2.8 below are done and `npm run verify:staging` passes 19/19. Auth settings are versioned in `staging/supabase/config.toml` and applied with `supabase config push --workdir staging --project-ref tyoplurznjqdngacvfke`. The app itself is **not deployed**; real enrollment is disabled.
+**Status (2026-10-18):** hosted **staging exists**: Supabase project `visuallearn-staging` (ref `tyoplurznjqdngacvfke`, organization IAT, region ap-south-1). Steps 2.1–2.6 and 2.8 below are done and `npm run verify:staging` passes 19/19. Auth settings are versioned in `staging/supabase/config.toml` and applied with `supabase config push --workdir staging --project-ref tyoplurznjqdngacvfke`. **Hosted app (2026-10-24):** Vercel project `visuallearn-staging` (team `trs20`, Hobby), region `bom1` (Mumbai, next to the database), production URL https://visuallearn-staging.vercel.app, deployed from a trusted checkout with `vercel deploy --prod` (the repository is not Git-connected). Real enrollment is disabled.
 
 ## 1. Local rehearsal (no accounts needed)
 
@@ -23,7 +23,7 @@ Requires Docker and Node 24. `npm run test:pg` runs the migration CLI and concur
 
 ## 3. Hosting (after staging verification passes)
 
-Any Node.js host that runs `next build`/`next start` behind HTTPS works; the choice of provider is a project decision not yet made. Requirements:
+Chosen host: Vercel (`vercel.json` pins `bom1`; `.vercelignore` keeps env files, tests, analysis and screenshots out of uploads; `package.json` engines pin Node 24). Production environment: `DATABASE_URL` (restricted `visuallearn_app` session-pooler login, sensitive), `SUPABASE_URL`, `SUPABASE_ANON_KEY` (sensitive), `ADMIN_ALLOWLIST`, `SESSION_SECRET` (new, sensitive), `APP_BASE_URL=https://visuallearn-staging.vercel.app`, `STUDY_ENABLED=false`, `PHYSICAL_DELETION_ENABLED=false`; no service-role key. Per-deployment URLs stay behind Vercel Authentication; only the production alias is public. For researcher links without the built-in mailer, the Auth admin `generate_link` endpoint (invite or recovery, `redirect_to=<app>/admin/accept`) returns the link directly; deliver it privately with link previews off, because scanners consume one-time links. Requirements:
 
 - After deploying, set `site_url` and `additional_redirect_urls` in `staging/supabase/config.toml` to the HTTPS origin (`…/admin/accept`) and push them.
 - HTTPS only; `APP_BASE_URL` equals the exact public origin (mutations fail closed otherwise). Cookies are `Secure` in production.
