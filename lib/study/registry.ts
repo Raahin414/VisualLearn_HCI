@@ -18,7 +18,7 @@ export const experiments = [
     name: "Information chunking",
     factor: "Simultaneous information",
     arms: ["chunked", "grouped", "all-at-once"],
-    technicalTesting: false,
+    technicalTesting: true,
   },
   {
     id: "E4",

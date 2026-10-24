@@ -10,7 +10,8 @@ export default async function Enroll({
   searchParams: Promise<{ study?: string }>;
 }) {
   const requested = (await searchParams).study ?? "E1";
-  if (requested !== "E1" && requested !== "E2") notFound();
+  if (requested !== "E1" && requested !== "E2" && requested !== "E3")
+    notFound();
   const experimentId = requested;
   let info: Awaited<ReturnType<StudyService["gate"]>> | null = null;
   if (

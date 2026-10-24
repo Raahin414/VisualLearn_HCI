@@ -8,6 +8,7 @@ import {
 } from "@/lib/assessments/surveys";
 import {
   presentationSchema,
+  visibleSegments,
   type DemoExperiment,
 } from "@/lib/study/presentation";
 import { eventBatchSchema } from "@/lib/telemetry/schema";
@@ -59,7 +60,7 @@ const recordSchema = z
     kind: z.literal("SYNTHETIC"),
     version: z.literal(3),
     publicCode: z.string().startsWith("SYNTHETIC-"),
-    experimentId: z.enum(["E1", "E2"]),
+    experimentId: z.enum(["E1", "E2", "E3"]),
     armKey: z.string().min(1).max(40),
     condition: z.enum(conditions).nullable(),
     presentation: presentationSchema,
@@ -82,6 +83,9 @@ const recordSchema = z
       F5: f5Schema.optional(),
     }),
     eventCount: z.number().int().nonnegative(),
+    activeTimeMs: z.number().int().nonnegative().default(0),
+    exposures: z.number().int().nonnegative().default(0),
+    seenEventIds: z.array(z.uuid()).max(2000).default([]),
   })
   .strict();
 export type LocalStudyRecord = z.infer<typeof recordSchema>;
@@ -166,7 +170,7 @@ export class LocalStudy {
     z.enum(conditions).parse(condition);
     this.startExperiment("E1", condition);
   }
-  startExperiment(experimentId: "E1" | "E2", armKey: string) {
+  startExperiment(experimentId: "E1" | "E2" | "E3", armKey: string) {
     const definition = this.experiments.find((e) => e.id === experimentId);
     const arm = definition?.arms.find((a) => a.key === armKey);
     if (!arm) throw new Error("Choose a registered simulated presentation.");
@@ -190,6 +194,9 @@ export class LocalStudy {
       submissions: {},
       surveys: {},
       eventCount: 0,
+      activeTimeMs: 0,
+      exposures: 0,
+      seenEventIds: [],
     };
     this.publish();
   }
@@ -271,7 +278,10 @@ export class LocalStudy {
         .strict()
         .parse(input);
       r.progress = segment;
-      r.visited = [...new Set([...r.visited, segment])];
+      r.visited = [
+        ...new Set([...r.visited, ...visibleSegments(r.presentation, segment)]),
+      ];
+      result = { saved: true, visited: r.visited };
     } else if (action === "complete") {
       if (!r.lessonCompletedAt) {
         if (
@@ -379,7 +389,30 @@ export class LocalStudy {
             ...new Set([...r.transcriptSegments, event.segmentId]),
           ];
         }
-      r.eventCount += events.length;
+      for (const event of events) {
+        if (r.seenEventIds.includes(event.clientEventId)) continue;
+        if (
+          event.eventType === "presentation_exposed" ||
+          event.eventType === "active_time"
+        ) {
+          const segment = lesson.segments.findIndex(
+            (segment) => segment.id === event.segmentId,
+          );
+          if (
+            r.presentation.kind !== "chunking" ||
+            segment < 0 ||
+            event.payload.groupIndex !==
+              r.presentation.groups.findIndex((group) =>
+                group.includes(segment),
+              )
+          )
+            throw new Error("Invalid simulated exposure event.");
+          if (event.eventType === "presentation_exposed") r.exposures++;
+          else r.activeTimeMs += event.payload.activeMs!;
+        }
+        r.seenEventIds = [...r.seenEventIds, event.clientEventId].slice(-2000);
+        r.eventCount++;
+      }
     } else if (action === "withdraw") {
       r.state = "withdrawn";
       result = { withdrawn: true };

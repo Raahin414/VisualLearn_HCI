@@ -30,8 +30,8 @@ try {
       await q("select version from visuallearn_ops.migrations order by 1")
     ).map((r) => r.version);
     check(
-      "Migrations 001-003 applied",
-      ["001", "002", "003"].every((x) => v.includes(x)),
+      "Migrations 001-004 applied",
+      ["001", "002", "003", "004"].every((x) => v.includes(x)),
       v.join(","),
     );
   }

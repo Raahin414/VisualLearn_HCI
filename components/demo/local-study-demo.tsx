@@ -20,7 +20,7 @@ export function LocalStudyDemo({
 }) {
   const [model, setModel] = useState<LocalStudy | null>(null);
   const [record, setRecord] = useState<LocalStudyRecord | null>(null);
-  const [experimentId, setExperimentId] = useState<"E1" | "E2">("E1");
+  const [experimentId, setExperimentId] = useState<"E1" | "E2" | "E3">("E1");
   const [armKey, setArmKey] = useState("medium");
   const definition = experiments.find((e) => e.id === experimentId)!;
   const [revision, setRevision] = useState(0);
@@ -94,7 +94,7 @@ export function LocalStudyDemo({
                 disabled={!model}
                 value={experimentId}
                 onChange={(e) => {
-                  const id = e.target.value as "E1" | "E2";
+                  const id = e.target.value as "E1" | "E2" | "E3";
                   setExperimentId(id);
                   setArmKey(
                     experiments.find((item) => item.id === id)!.arms[0].key,

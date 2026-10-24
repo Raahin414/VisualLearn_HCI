@@ -1,5 +1,13 @@
 # Implementation handoff — 2026-10-16
 
+## M3 handoff - 2026-10-24 (verified, recruitment closed)
+
+Follows pushed/remote-verified M2 50ca2a5. Implemented E3 canonical groups [1,1,1,1,1], [3,2] and [5], exact word/media parity, fixed-rate single-active narration, unique SVG definition IDs, server-derived group progress, closed pilot/version/time-policy gates, migration 004, UUID-deduplicated exposure/visible-time proxies and versioned export columns. Shared source revision is separated from presentation contract versions without rewriting old rows. The controlled obsolete-load regression is preserved; its ref-cleanup lint warning is removed using a stable callback.
+
+Executed: Node 24.22.1/npm 11.21.1 `npm ci` (414 packages, audit 0), `verify-content` (5 canonical segments, 327.0 seconds unchanged WAVs), `test` (62/10 files, includes PGlite), `db:validate` (5), lint/types (0 errors/warnings), native `test:pg` (15), development Chromium (29/29, 4.2 min), optimized build/bundle (22 clean assets), production Chromium (29/29, 1.5 min), pristine local security verifier (19/19), complete real local Supabase Auth/MFA/PostgreSQL Chromium (24/24, 7.2 min), production HTTP smoke (200/404/401). Focused E3 connected workflow also passed 1/1 (1.3 min). A missing import was caught/fixed before full verification; no incomplete run is counted as passing.
+
+Nine initial E3 screenshot captures cover 360/768/1280 in docs/screenshots/m3/. Automated axe/keyboard/overflow and exact canonical paragraph traversal pass in every arm. Browser media tests prove fixed 1x and one active narration in multi-block groups. Representative mobile/tablet/desktop layouts were visually reviewed. Migration 004 upgrade retains old source/presentation versions and null measurement metadata; actual zero counters are not confused with uncollected legacy metrics. Source/canonical/audio/spec and targeted credential-pattern review are required before the commit. No approvals, real recruitment or hosted changes occurred. Next: M4.
+
 ## M2 handoff - 2026-10-24 (verified, recruitment closed)
 
 Follows verified/pushed M1 `5882146`. Implemented centralized server modality projections, canonical four-arm renderer with recorded transcript accommodation and fixed 1x audio, closed pilot gates, additive migration 003, experiment-scoped summaries/exports, modality F3 N/A version and development-only simulator support. Canonical JSON/WAV/SVG/banks/rubrics and original specification remain unchanged.

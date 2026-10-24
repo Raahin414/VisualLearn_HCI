@@ -67,6 +67,9 @@ describe("SYNTHETIC E2 contract (PGlite, not hosted participants)", () => {
       "003_modality_foundation",
     ])
       await db.exec(await readFile(`supabase/migrations/${name}.sql`, "utf8"));
+    await db.exec(
+      await readFile("supabase/migrations/004_chunking_foundation.sql", "utf8"),
+    );
     await db.exec(await readFile("supabase/seed.sql", "utf8"));
   }, 30000);
   afterAll(async () => {

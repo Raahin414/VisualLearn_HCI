@@ -83,7 +83,7 @@ describe("Migrations and least-privilege runtime login", () => {
     const m = await owner.query(
       "select version from visuallearn_ops.migrations order by version",
     );
-    expect(m.rows.map((r) => r.version)).toEqual(["001", "002", "003"]);
+    expect(m.rows.map((r) => r.version)).toEqual(["001", "002", "003", "004"]);
     const e = await owner.query(
       "select id,enabled,status,consent_version from visuallearn.experiments order by id",
     );
@@ -481,6 +481,72 @@ describe("SYNTHETIC E2 concurrency over real PostgreSQL connections", () => {
     } finally {
       await owner.query(
         "update visuallearn.experiments set enabled=false,status='draft',pilot_reviewed=false,pilot_contract_version=null,content_approved=false,ethics_approved=false where id='E2'",
+      );
+    }
+  });
+});
+
+describe("SYNTHETIC E3 allocation over independent PostgreSQL connections", () => {
+  it("balances nine allocations, derives visits from the assigned group and deduplicates counters", async () => {
+    await owner.query(
+      "update visuallearn.experiments set enabled=true,pilot_reviewed=true,pilot_contract_version='chunking-v1-draft',study_time_policy='self-paced-no-minimum-v1',status='recruiting',content_approved=true,ethics_approved=true,consent_version='SYNTHETIC-LOCAL-CONSENT',consent_text='SYNTHETIC LOCAL TEST',study_contact='SYNTHETIC' where id='E3'",
+    );
+    try {
+      const ids = await Promise.all(
+        Array.from(
+          { length: 9 },
+          async () =>
+            (
+              await tx((s) =>
+                s.enroll(
+                  { ...consent, experimentId: "E3" },
+                  crypto.randomUUID(),
+                ),
+              )
+            ).sessionId,
+        ),
+      );
+      await Promise.all(
+        ids.map((id) =>
+          tx((s) => s.submitAssessment(id, "pre", { answers: answerKey("A") })),
+        ),
+      );
+      const counts = await owner.query(
+        "select a.arm_key,count(*)::int n from visuallearn.assignments a join visuallearn.sessions s on s.assignment_id=a.id where s.id=any($1) group by a.arm_key",
+        [ids],
+      );
+      expect(counts.rows).toHaveLength(3);
+      expect(counts.rows.every((row) => row.n === 3)).toBe(true);
+      const id = ids[0];
+      const view = await tx((s) => s.getLesson(id));
+      if (view.presentation.kind !== "chunking")
+        throw new Error("Wrong projection");
+      const progress = await tx((s) => s.progress(id, { segment: 0 }));
+      expect(progress.visited.sort()).toEqual(view.presentation.groups[0]);
+      const event = {
+        clientEventId: crypto.randomUUID(),
+        eventType: "active_time",
+        segmentId: "overview",
+        elapsedMs: 0,
+        clientTime: new Date().toISOString(),
+        payload: { groupIndex: 0, activeMs: 1800 },
+      };
+      await Promise.all(
+        Array.from({ length: 4 }, () => tx((s) => s.ingestEvents(id, [event]))),
+      );
+      const metric = (
+        await owner.query(
+          "select active_time_ms,presentation_version,stimulus_version from visuallearn.sessions where id=$1",
+          [id],
+        )
+      ).rows[0];
+      expect(Number(metric.active_time_ms)).toBe(1800);
+      expect(metric.presentation_version).toBe("chunking-v1-draft");
+      expect(metric.stimulus_version).toBe("shared-v6-draft");
+      await Promise.all(ids.map((id) => tx((s) => s.withdraw(id))));
+    } finally {
+      await owner.query(
+        "update visuallearn.experiments set enabled=false,status='draft',pilot_reviewed=false,pilot_contract_version=null,content_approved=false,ethics_approved=false,study_time_policy=null where id='E3'",
       );
     }
   });

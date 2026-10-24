@@ -280,6 +280,12 @@ export function AdminWorkspace({
         >
           E2: Modality (draft)
         </a>
+        <a
+          href="/admin?study=E3"
+          aria-current={stats.experimentId === "E3" ? "page" : undefined}
+        >
+          E3: Chunking (draft)
+        </a>
       </nav>
       <p>
         Overview scope: {stats.experimentId}. Exports contain all studies with

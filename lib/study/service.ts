@@ -25,10 +25,13 @@ import {
   MODALITY_SURVEY_VERSION,
 } from "@/lib/assessments/surveys";
 import {
+  SOURCE_VERSION,
   DENSITY_VERSION,
+  CHUNKING_VERSION,
   MODALITY_VERSION,
   presentationFor,
 } from "./presentation.server";
+import { visibleSegments } from "./presentation";
 import { eventBatchSchema } from "@/lib/telemetry/schema";
 import { hashToken, newReturnToken } from "@/lib/security/tokens";
 
@@ -62,7 +65,7 @@ type Session = {
   withdrawn_at: Date | null;
   public_code: string;
   arm_key: string | null;
-  experiment_id: "E1" | "E2";
+  experiment_id: "E1" | "E2" | "E3";
   presentation_version: string;
   lesson_opened_at: Date | null;
 };
@@ -77,7 +80,7 @@ const bankHash = digest({
   writtenPrompts,
   rubrics,
 });
-export const STIMULUS_VERSION = DENSITY_VERSION;
+export const STIMULUS_VERSION = SOURCE_VERSION;
 const stageForms = { pre: "A", immediate: "B", plus_60m: "C" } as const;
 export type Timepoint = keyof typeof stageForms;
 const submissionSchema = z
@@ -93,7 +96,7 @@ export class StudyService {
     private db: SQL,
     private now: () => Date = () => new Date(),
   ) {}
-  async gate(experimentId: "E1" | "E2" = "E1") {
+  async gate(experimentId: "E1" | "E2" | "E3" = "E1") {
     const { rows } = await this.db.query<{
       enabled: boolean;
       status: string;
@@ -106,6 +109,7 @@ export class StudyService {
       protocol_version: string;
       pilot_reviewed: boolean;
       pilot_contract_version: string | null;
+      study_time_policy: string | null;
     }>("select * from visuallearn.experiments where id=$1", [experimentId]);
     const e = rows[0];
     if (
@@ -124,12 +128,23 @@ export class StudyService {
         503,
       );
     if (
-      experimentId === "E2" &&
-      (!e.pilot_reviewed || e.pilot_contract_version !== MODALITY_VERSION)
+      experimentId !== "E1" &&
+      (!e.pilot_reviewed ||
+        e.pilot_contract_version !==
+          (experimentId === "E2" ? MODALITY_VERSION : CHUNKING_VERSION))
     )
       throw new StudyError(
         "PILOT_CLOSED",
-        "A reviewed modality pilot contract is required.",
+        "A reviewed presentation pilot contract is required.",
+        503,
+      );
+    if (
+      experimentId === "E3" &&
+      e.study_time_policy !== "self-paced-no-minimum-v1"
+    )
+      throw new StudyError(
+        "PILOT_CLOSED",
+        "A reviewed chunking time policy is required.",
         503,
       );
     return e;
@@ -204,18 +219,25 @@ export class StudyService {
       ],
     );
     const s = await this.db.query<{ id: string }>(
-      "insert into visuallearn.sessions(participant_id,content_version,content_sha256,protocol_version,stimulus_version,media_manifest_sha256,question_bank_sha256,stimulus_sha256,followup_window_minutes,experiment_id,presentation_version) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$5) returning id",
+      "insert into visuallearn.sessions(participant_id,content_version,content_sha256,protocol_version,stimulus_version,media_manifest_sha256,question_bank_sha256,stimulus_sha256,followup_window_minutes,experiment_id,presentation_version,exposure_measure_version,study_time_policy) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) returning id",
       [
         p.rows[0].id,
         lesson.version,
         manifest.contentSha256,
         e.protocol_version,
-        data.experimentId === "E1" ? STIMULUS_VERSION : MODALITY_VERSION,
+        STIMULUS_VERSION,
         mediaHash,
         bankHash,
         stimulusHash,
         e.followup_window_minutes,
         data.experimentId,
+        data.experimentId === "E1"
+          ? DENSITY_VERSION
+          : data.experimentId === "E2"
+            ? MODALITY_VERSION
+            : CHUNKING_VERSION,
+        data.experimentId === "E3" ? "visible-interval-v1" : null,
+        data.experimentId === "E3" ? e.study_time_policy : null,
       ],
     );
     return { sessionId: s.rows[0].id };
@@ -409,11 +431,15 @@ export class StudyService {
     const s = await this.session(id, true);
     if (s.state !== "lesson_active")
       throw new StudyError("STAGE_LOCKED", "The lesson is not active.", 409);
-    await this.db.query(
-      "update visuallearn.sessions set progress=$2,visited_segments=array(select distinct unnest(visited_segments||array[$2::integer])) where id=$1",
-      [id, data.segment],
+    const indices = visibleSegments(
+      presentationFor(s.experiment_id, s.arm_key),
+      data.segment,
     );
-    return { saved: true };
+    const result = await this.db.query<{ visited_segments: number[] }>(
+      "update visuallearn.sessions set progress=$2,visited_segments=array(select distinct unnest(visited_segments||$3::integer[]) order by 1) where id=$1 returning visited_segments",
+      [id, data.segment, indices],
+    );
+    return { saved: true, visited: result.rows[0].visited_segments };
   }
   async completeLesson(id: string) {
     const s = await this.session(id, true);
@@ -507,7 +533,9 @@ export class StudyService {
         !session.arm_key &&
         (e.eventType.startsWith("audio_") ||
           e.eventType === "diagram_interacted" ||
-          e.eventType === "accommodation_used")
+          e.eventType === "accommodation_used" ||
+          e.eventType === "presentation_exposed" ||
+          e.eventType === "active_time")
       )
         throw new StudyError(
           "STAGE_LOCKED",
@@ -549,6 +577,30 @@ export class StudyService {
             "This accommodation event is not valid for this study.",
           );
       }
+      if (
+        e.eventType === "presentation_exposed" ||
+        e.eventType === "active_time"
+      ) {
+        const assigned = presentationFor(
+          session.experiment_id,
+          session.arm_key,
+        );
+        const segment = lesson.segments.findIndex(
+          (segment) => segment.id === e.segmentId,
+        );
+        if (
+          assigned.kind !== "chunking" ||
+          !session.lesson_opened_at ||
+          segment < 0 ||
+          e.payload.groupIndex !==
+            assigned.groups.findIndex((group) => group.includes(segment)) ||
+          (e.eventType === "active_time" && !e.payload.activeMs)
+        )
+          throw new StudyError(
+            "INVALID_EXPOSURE_EVENT",
+            "This exposure event does not match the assigned presentation.",
+          );
+      }
       const inserted = await this.db.query<{ id: string }>(
         "insert into visuallearn.events(session_id,client_event_id,event_type,segment_id,elapsed_ms,client_time,payload) values($1,$2,$3,$4,$5,$6,$7) on conflict(session_id,client_event_id) do nothing returning id",
         [
@@ -561,6 +613,16 @@ export class StudyService {
           JSON.stringify(e.payload),
         ],
       );
+      if (inserted.rows.length && e.eventType === "presentation_exposed")
+        await this.db.query(
+          "update visuallearn.sessions set presentation_exposures=presentation_exposures+1 where id=$1",
+          [id],
+        );
+      if (inserted.rows.length && e.eventType === "active_time")
+        await this.db.query(
+          "update visuallearn.sessions set active_time_ms=active_time_ms+$2 where id=$1",
+          [id, e.payload.activeMs],
+        );
       if (inserted.rows.length && e.eventType === "accommodation_used")
         await this.db.query(
           "update visuallearn.sessions set accommodations=jsonb_set(accommodations,array[$2],coalesce(accommodations->$2,to_jsonb($3::text)),true) where id=$1",

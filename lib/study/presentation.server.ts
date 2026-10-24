@@ -3,6 +3,16 @@ import type { Presentation, DemoExperiment } from "./presentation";
 import { conditions } from "@/lib/content/lesson";
 export const MODALITY_VERSION = "modality-v1-draft";
 export const DENSITY_VERSION = "density-v5-draft";
+export const CHUNKING_VERSION = "chunking-v1-draft";
+export const SOURCE_VERSION = "shared-v6-draft";
+const chunking = {
+  chunked: [[0], [1], [2], [3], [4]],
+  grouped: [
+    [0, 1, 2],
+    [3, 4],
+  ],
+  "all-at-once": [[0, 1, 2, 3, 4]],
+};
 // Assignment keys/configuration stay on the server. Learners receive only the
 // rendering projection for their persisted assignment, never an arm selector.
 const modality = {
@@ -49,6 +59,12 @@ export function presentationFor(
       diagram,
     };
   }
+  if (experiment === "E3" && arm && Object.hasOwn(chunking, arm))
+    return {
+      kind: "chunking",
+      version: CHUNKING_VERSION,
+      groups: chunking[arm as keyof typeof chunking].map((group) => [...group]),
+    };
   throw new Error("Unsupported persisted study assignment");
 }
 /** Development page only; never serialize this catalogue to a research session. */
@@ -70,6 +86,15 @@ export function demoExperiments(): DemoExperiment[] {
         key,
         label: config.label,
         presentation: presentationFor("E2", key),
+      })),
+    },
+    {
+      id: "E3",
+      name: "Chunking (draft pilot)",
+      arms: Object.keys(chunking).map((key) => ({
+        key,
+        label: key,
+        presentation: presentationFor("E3", key),
       })),
     },
   ];

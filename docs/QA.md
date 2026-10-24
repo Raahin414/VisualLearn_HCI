@@ -170,3 +170,31 @@ Lint exits 0 with one exhaustive-deps warning about incrementing a ref in cleanu
 | Diff / targeted credential patterns | PASS including changed/new UTF-8 text; populated env/state files ignored |
 
 The single held-response regression is explicitly an HTTP contract fixture, not evidence of a connected backend. Public media-failure tests mock only the failing media boundary. Connected cases use real local services and actual TOTP, with only SYNTHETIC rows shifted for delayed eligibility. Screenshots were visually reviewed at mobile/tablet/desktop widths. Manual screen readers/devices, independent listening/objective equivalence, rights, pilot suitability and every human approval remain open. No hosted security/deployment/backup claim is made.
+
+
+## M3 chunking - 2026-10-24 (verified)
+
+Focused evidence: 5 E3 tests passed using PGlite/static rendering and the browser model. They cover closed/pilot/time-policy/minor guards, exact canonical partitions/text/media, unique SVG IDs, server-derived visits, UUID-deduplicated counters, frozen source-vs-contract versions, legacy migration preservation, study-scoped exports and model persistence. Existing 57 unit/service tests also passed before the new cases were added. Initial three-arm development browser audit passed (3/3, 53.5 seconds) with source paragraph parity, keyboard group navigation, refresh, no research requests and axe/overflow at 360/768/1280. Media exclusivity/rate checks were then added and await the full rerun. Type checking caught and fixed one missing visibleSegments import. Full native PostgreSQL/connected and clean-install suites are pending; no passing count is inferred from an incomplete run.
+
+
+### Final M3 verification
+
+| Check | Actual final result |
+|---|---|
+| Clean install | 414 packages; 0 audit findings; unchanged dependencies/lock |
+| Source/spec/audio | PASS: shared-v6 source freeze; canonical lesson and 327.0 seconds of WAV bytes unchanged; original spec unchanged |
+| Unit/service | 62/62 across 10 files, including PGlite and isolated model fixtures |
+| Dedicated PGlite schema | 5/5 |
+| Lint / type checking | PASS, 0 errors and 0 warnings; M2 cleanup-ref warning removed |
+| Real PostgreSQL 17 | 15/15, including 9 concurrent E3 allocations and concurrent duplicate activity events |
+| Development Chromium | 29/29, 4.2 min |
+| Production build / bundle | PASS, 22 learner assets without keys/rubrics/rationales/server secret names |
+| Production Chromium | 29/29, 1.5 min; /dev/study 404 |
+| Pristine local Supabase security | 19/19 |
+| Connected local Supabase Auth/MFA/PostgreSQL Chromium | 24/24, 7.2 min; no participant HTTP mocks |
+| Production HTTP smoke | `/` 200; `/dev/study` 404; `/api/admin/stats` 401 |
+| E3 layouts and accessibility | All 3 arms at 360/768/1280; zero axe WCAG 2.2 AA violations/overflow; keyboard group navigation |
+| Content and media | Exact full traversal paragraphs/order, identical sources/essential diagrams; unique SVG IDs; one active narration; fixed 1x |
+| Migration/version semantics | Legacy rows retain source/presentation versions; null measurement/policy metadata remains uncollected rather than measured zero |
+
+The focused real-connected E3 workflow passed 1/1 (1.3 min) before the full suite. It verifies all three assignments, exposure count 1 then 2 on actual refresh, server-derived group visits, positive bounded visible-time proxies, immediate/F3, early one-hour refusal, C/F5 completion and withdrawal. Pure model and HTTP-contract tests remain distinct from real database services. Representative screenshots were visually reviewed; screen-reader/device, independent listening, educational equivalence, pacing/viewport policy and scientific/ethics/rights approvals remain pending. No hosted deployment/security/backup claim is made.

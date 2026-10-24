@@ -35,3 +35,10 @@ The same canvas height is reserved at a given viewport in every arm. No supporti
 Orientation headings and shared progression/withdrawal controls remain available in all arms. Audio controls naturally add a different control surface; native media controls still vary by device. Audio-arm transcript use changes effective modality and must be considered in the reviewed analysis plan. Self-pacing, scrolling/reading/listening duration and accommodation use are unresolved design/analysis limits, not evidence of equal attentive exposure. No automatic exclusion rule or fixed minimum dwell time has been invented.
 
 Screenshots at 360/768/1280 are stored under `docs/screenshots/m2/` using browser-only SYNTHETIC fixtures. They represent the initial assigned presentation, before accommodation is requested. Axe and keyboard checks are engineering evidence only; screen-reader/device review, audio redistribution rights, objective equivalence and pilot suitability remain unapproved.
+
+
+## E3 chunking-v1-draft audit (engineering, not approval)
+
+The canonical five concept blocks are partitioned as [1,1,1,1,1], [3,2] or [5]. Each block retains the same heading/body/key idea/diagram description, essential low-tier diagram and WAV. No supportive/decorative density layer is added. SVG definition prefixes avoid duplicate IDs on multi-concept pages without changing shapes, labels, colors or meaning; default E1/E2 output keeps its existing IDs. All audio controls are fixed 1x and only one narration can play in a visible group.
+
+Source paragraph/media parity and complete canonical ordering are automated across every arm. Screenshots in `docs/screenshots/m3/` capture initial groups at 360/768/1280 using browser-only SYNTHETIC fixtures. Repeated orientation controls, scrolling, page transitions, simultaneous graphic area and native-media layout vary with grouping and viewport. No equal attentive exposure claim follows from equal total content. The proposed self-paced policy and client-visible-time/group-display proxies require independent review. Every human approval, actual pilot, device/screen-reader review and narration-rights determination remains open.

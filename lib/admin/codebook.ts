@@ -36,7 +36,7 @@ export const dataDictionary: Record<ExportName, Record<string, string>> = {
     experiment_id:
       "Registered experiment; E2 remains closed pending pilot and human review.",
     arm_key:
-      "Persisted arm within experiment_id; E1 low/medium/high; E2 text-only/audio-only/text-diagram/audio-diagram.",
+      "Persisted arm within experiment_id; E1 low/medium/high; E2 text-only/audio-only/text-diagram/audio-diagram; E3 chunked/grouped/all-at-once.",
     randomization_version:
       "Allocation algorithm version (age-stratified minimum allocation with random ties).",
     assigned_at: "Server UTC time of assignment, after baseline submission.",
@@ -47,6 +47,14 @@ export const dataDictionary: Record<ExportName, Record<string, string>> = {
     experiment_id:
       "Registered experiment; joins to participant and assignment study are enforced.",
     presentation_version: "Frozen rendering contract version at enrollment.",
+    study_time_policy:
+      "E3 self-paced-no-minimum-v1 frozen at enrollment; null for other/legacy records. No imposed dwell timer.",
+    exposure_measure_version:
+      "visible-interval-v1 for E3; null means exposure counters were not collected (legacy/E1/E2).",
+    active_time_ms:
+      "E3 client monotonic visible-time proxy, intervals capped at 30000ms, summed after UUID deduplication. Not attentive study time or an eligibility clock.",
+    presentation_exposures:
+      "E3 accepted group-display events (revisits/refresh included); no claim every concept was read.",
     lesson_opened_at:
       "First server lesson request; null for legacy rows. Not a measure of attentive exposure.",
     state: "Current lifecycle state (enrolled … finished).",
@@ -167,7 +175,7 @@ export function codebook() {
     })),
   }));
   return {
-    title: "VisualLearn E1/E2 codebook",
+    title: "VisualLearn E1/E2/E3 codebook",
     status:
       "DRAFT — instruments and rubrics await supervisor/educator review. Not a validated scale.",
     bankVersion: BANK_VERSION,

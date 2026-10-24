@@ -1912,3 +1912,20 @@ summary {
   height: 100%;
   max-height: none;
 }
+
+.chunk-presentation {
+  display: grid;
+  gap: 32px;
+  min-width: 0;
+}
+.concept-block {
+  display: grid;
+  gap: 16px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--border, #cbd5e1);
+  min-width: 0;
+}
+.concept-block h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}

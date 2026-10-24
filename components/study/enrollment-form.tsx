@@ -11,7 +11,7 @@ export function EnrollmentForm({
   consentVersion: string;
   consentText: string;
   studyContact: string;
-  experimentId?: "E1" | "E2";
+  experimentId?: "E1" | "E2" | "E3";
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);

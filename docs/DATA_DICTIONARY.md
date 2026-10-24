@@ -38,3 +38,16 @@ F3 E2 uses `2.1-modality-draft` and also allows categorical `support=not_applica
 New experiment configuration fields `pilot_contract_version` and `pilot_reviewed` are operational review gates, default null/false. They do not signify ethics, content or supervisor approval and do not replace existing recruitment gates.
 
 Final M2 engineering verification is recorded in QA. Loader cancellation and readiness safeguards add no research fields or eligibility clock controls. Source version is density-v5-draft for E1 and modality-v1-draft for E2; F3 modality is separately versioned 2.1-modality-draft. Canonical content/audio and A/B/C/rubric bytes remain unchanged.
+
+
+## M3 chunking additions (draft)
+
+E3 arm_key is chunked, grouped or all-at-once. presentation_version=chunking-v1-draft freezes groups [1,1,1,1,1], [3,2] or [5] in the canonical order. New session stimulus_version=shared-v6-draft tracks shared rendering source independently from the unchanged E1/E2 presentation contracts. Legacy versions/hashes stay intact.
+
+Session study_time_policy=self-paced-no-minimum-v1 is frozen for E3; experiment activation requires that exact reviewed policy and pilot contract. Null for legacy/E1/E2 means no new policy field was collected. exposure_measure_version=visible-interval-v1 identifies E3 counters; null identifies uncollected counters and must not be analysed as observed zero time/exposure.
+
+presentation_exposures increments on UUID-deduplicated presentation_exposed group events, with refresh/revisits included. active_time_ms sums validated client-reported visible intervals from active_time events (each 1-30000ms). Payload groupIndex is 0-based within the assigned projection; segment_id must belong to that group. Server ownership/version/withdrawal validation remains mandatory. Events are receipt-deduplicated before updating counters. Wrong-group and misplaced interval fields are rejected.
+
+These are client exposure proxies, not attentive study time. Hidden audio listening, browser suspension/capped intervals, offline process loss and concurrent tabs limit interpretation. No proxy changes eligibility. Progress visited_segments records all concepts in each displayed server-derived group, not reading completion. Analysis must stratify by experiment, source/contract/instrument versions and measurement availability.
+
+Final M3 verification passed 62 unit/service, 15 native PostgreSQL and 24 connected Supabase cases. A group is requested for display, not proven read; presentation_exposed represents a committed group mount, while document visibility transitions are recorded separately. A tab return to an already-mounted group does not create a new mount count.

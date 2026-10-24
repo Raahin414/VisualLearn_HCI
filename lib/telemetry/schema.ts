@@ -19,6 +19,8 @@ export const eventNames = [
   "survey_submitted",
   "followup_completed",
   "accommodation_used",
+  "presentation_exposed",
+  "active_time",
 ] as const;
 export const eventSchema = z
   .object({
@@ -43,11 +45,39 @@ export const eventSchema = z
           .union([z.literal(25), z.literal(50), z.literal(75), z.literal(100)])
           .optional(),
         accommodation: z.literal("transcript").optional(),
+        groupIndex: z.number().int().min(0).max(4).optional(),
+        activeMs: z.number().int().min(1).max(30000).optional(),
       })
       .strict(),
   })
   .strict()
   .superRefine((event, ctx) => {
+    const exposure =
+      event.eventType === "presentation_exposed" ||
+      event.eventType === "active_time";
+    if (
+      exposure &&
+      (!event.segmentId ||
+        event.payload.groupIndex === undefined ||
+        (event.eventType === "active_time" && !event.payload.activeMs))
+    )
+      ctx.addIssue({
+        code: "custom",
+        message: "Exposure events require a group, concept and valid interval.",
+        path: ["payload"],
+      });
+    if (
+      (!exposure &&
+        (event.payload.groupIndex !== undefined ||
+          event.payload.activeMs !== undefined)) ||
+      (event.eventType === "presentation_exposed" &&
+        event.payload.activeMs !== undefined)
+    )
+      ctx.addIssue({
+        code: "custom",
+        message: "Exposure fields require the matching event.",
+        path: ["payload"],
+      });
     if (
       event.eventType === "accommodation_used" &&
       (!event.segmentId || event.payload.accommodation !== "transcript")

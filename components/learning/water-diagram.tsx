@@ -4,10 +4,12 @@ export function WaterDiagram({
   condition = "medium",
   active = "overview",
   className = "",
+  idPrefix = "",
 }: {
   condition?: Condition;
   active?: string;
   className?: string;
+  idPrefix?: string;
 }) {
   const config = densityConfig[condition];
   return (
@@ -18,20 +20,20 @@ export function WaterDiagram({
       aria-label="Water cycle: the Sun provides energy for evaporation; cooling water vapor condenses into clouds; precipitation falls; water collects in lakes and flows downhill."
     >
       <defs>
-        <linearGradient id="sky" x2="0" y2="1">
+        <linearGradient id={`${idPrefix}sky`} x2="0" y2="1">
           <stop stopColor="#e4f1f0" />
           <stop offset="1" stopColor="#f1f5e9" />
         </linearGradient>
-        <linearGradient id="lake" x2="0" y2="1">
+        <linearGradient id={`${idPrefix}lake`} x2="0" y2="1">
           <stop stopColor="#75bab8" />
           <stop offset="1" stopColor="#288b9a" />
         </linearGradient>
-        <linearGradient id="hill" x2="0" y2="1">
+        <linearGradient id={`${idPrefix}hill`} x2="0" y2="1">
           <stop stopColor="#85aa88" />
           <stop offset="1" stopColor="#567e6b" />
         </linearGradient>
         <marker
-          id="arrow"
+          id={`${idPrefix}arrow`}
           markerWidth="9"
           markerHeight="9"
           refX="6"
@@ -46,7 +48,7 @@ export function WaterDiagram({
           />
         </marker>
       </defs>
-      <rect width="800" height="470" rx="24" fill="url(#sky)" />
+      <rect width="800" height="470" rx="24" fill={`url(#${idPrefix}sky)`} />
       <circle cx="140" cy="104" r="40" fill="#f5c56d" />
       {[0, 45, 90, 135, 180, 225, 270, 315].map((a) => (
         <path
@@ -62,7 +64,10 @@ export function WaterDiagram({
         d="M0 334Q130 245 260 324Q395 183 510 299L649 171L800 319V470H0Z"
         fill="#b4cbb0"
       />
-      <path d="M260 363L504 161L656 349L800 254V470H260Z" fill="url(#hill)" />
+      <path
+        d="M260 363L504 161L656 349L800 254V470H260Z"
+        fill={`url(#${idPrefix}hill)`}
+      />
       <path
         d="M452 206L504 161L557 226L523 216L505 230L486 211Z"
         fill="#f5f8ed"
@@ -73,7 +78,7 @@ export function WaterDiagram({
       />
       <path
         d="M0 391Q145 355 287 396Q352 412 444 403Q510 426 431 470H0Z"
-        fill="url(#lake)"
+        fill={`url(#${idPrefix}lake)`}
       />
       <path
         d="M558 321Q596 348 526 371T461 412"
@@ -101,7 +106,7 @@ export function WaterDiagram({
         stroke="#337c85"
         strokeWidth="3"
         strokeLinecap="round"
-        markerEnd="url(#arrow)"
+        markerEnd={`url(#${idPrefix}arrow)`}
       >
         <path d="M184 332Q150 240 234 182" strokeDasharray="7 9" />
         <path d="M285 145Q316 124 340 124" />
@@ -169,7 +174,7 @@ export function WaterDiagram({
             fill="none"
             stroke="#659a91"
             strokeWidth="2"
-            markerEnd="url(#arrow)"
+            markerEnd={`url(#${idPrefix}arrow)`}
           />
         </g>
       )}

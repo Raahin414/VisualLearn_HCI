@@ -52,6 +52,9 @@ describe("Synthetic E1 lifecycle using real PostgreSQL semantics", () => {
     await db.exec(
       await readFile("supabase/migrations/003_modality_foundation.sql", "utf8"),
     );
+    await db.exec(
+      await readFile("supabase/migrations/004_chunking_foundation.sql", "utf8"),
+    );
     await db.exec(await readFile("supabase/seed.sql", "utf8"));
     service = new StudyService(db as unknown as SQL, () => clock);
   }, 30000);

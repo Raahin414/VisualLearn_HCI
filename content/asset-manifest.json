@@ -51,23 +51,27 @@
   "stimulus": [
     {
       "path": "components/learning/water-diagram.tsx",
-      "sha256": "8bf76662fa96368ed08e72fe9ad5bb784c891e05f88d6ad983e234006ab5699d"
+      "sha256": "4550a86b74ba10e445dfe52e1e75311bd20622cfadd69621c5d1af49b27aa7e5"
     },
     {
       "path": "components/learning/modality-lesson.tsx",
       "sha256": "9f68b7a8dac0ce60488390edc2ba55d6fa6e06cbebf8e3bc1650988ba9e65392"
     },
     {
+      "path": "components/learning/chunked-lesson.tsx",
+      "sha256": "d38f0185b93d511581b08fb07681fba719e2e76967c5e8222022b5cceafcaab6"
+    },
+    {
       "path": "lib/study/presentation.ts",
-      "sha256": "3f434847ed89cf3ced5cff12ebc85296e8d2e1bc94a0f986f587bee7de4a50df"
+      "sha256": "f8a69757bd793d3a98d139fac78558de8a2a32a0ac0a600cfdca199069cf4127"
     },
     {
       "path": "lib/study/presentation.server.ts",
-      "sha256": "08c065da8cf0d49220382628c65a3a22ac2d95d334daac620f85bda642b73214"
+      "sha256": "c26cda3a2676ec858c3ea6b79b7a4f74efb7c5d91293647865a24d39155a90a3"
     },
     {
       "path": "lib/telemetry/schema.ts",
-      "sha256": "0aafa1fbc4659040453d7e408564cefdf9902b273dfc5e22e7e0b5676d5a0160"
+      "sha256": "da6b1f20bb0c12ce1a18ab2fe02f8b685f366b4d808f2ea29bea86d017177e8e"
     },
     {
       "path": "lib/content/lesson.ts",
@@ -75,7 +79,7 @@
     },
     {
       "path": "app/globals.css",
-      "sha256": "4d374cedb8a090250acd98dc982469acbca5227a54f2fe29d3f80205c842e401"
+      "sha256": "dbee25c8298c47e356435dc787ff0b7ab9e4b0c964d60f6e1fd3fb990975d0bc"
     },
     {
       "path": "app/layout.tsx",
@@ -103,7 +107,7 @@
     },
     {
       "path": "components/study/study-runner.tsx",
-      "sha256": "b97c33daaa72dc2573985d396b796c36d18766955fdd4770d9c3bd470199fefd"
+      "sha256": "8ee04837367ea009a7b1d64820401b5049c40cab0375c3066f4670c501af671e"
     },
     {
       "path": "components/assessments/assessment-form.tsx",

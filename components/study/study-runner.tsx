@@ -14,12 +14,15 @@ import { lesson, type Condition } from "@/lib/content/lesson";
 import { EventQueue } from "@/lib/telemetry/client-queue";
 import {
   presentationSchema,
+  visibleSegments,
   type Presentation,
 } from "@/lib/study/presentation";
+import { ChunkedLesson } from "@/components/learning/chunked-lesson";
+import type { StudyEvent } from "@/lib/telemetry/schema";
 import { ModalityLesson } from "@/components/learning/modality-lesson";
 import type { StudyState } from "@/lib/study/lifecycle";
 type Snapshot = {
-  experimentId?: "E1" | "E2";
+  experimentId?: "E1" | "E2" | "E3";
   publicCode: string;
   state: StudyState;
   progress: number;
@@ -68,6 +71,19 @@ export function StudyRunner({
   const queue = useRef<EventQueue | null>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   const loadSequence = useRef(0);
+  const invalidateLoad = useCallback(() => {
+    loadSequence.current++;
+  }, []);
+  const emit = useCallback(
+    (
+      event: StudyEvent["eventType"],
+      segment?: StudyEvent["segmentId"],
+      payload: StudyEvent["payload"] = {},
+    ) => {
+      queue.current?.add(event, segment, payload);
+    },
+    [],
+  );
   const reload = useCallback(async () => {
     const sequence = ++loadSequence.current;
     const current = () => sequence === loadSequence.current;
@@ -85,7 +101,13 @@ export function StudyRunner({
           throw new Error(
             "The saved modality presentation could not be loaded. Retry your session.",
           );
-        await transport("progress", { segment: info.progress });
+        if (state.experimentId === "E3" && assigned?.kind !== "chunking")
+          throw new Error(
+            "The saved chunking presentation could not be loaded.",
+          );
+        const progressed = await transport("progress", {
+          segment: info.progress,
+        });
         if (!current()) return;
         setPresentation(assigned);
         if (assigned?.kind === "density") setCondition(assigned.density);
@@ -93,7 +115,12 @@ export function StudyRunner({
         setSegment(info.progress);
         setSnapshot({
           ...state,
-          visited: [...new Set([...state.visited, info.progress])],
+          visited: progressed.visited ?? [
+            ...new Set([
+              ...state.visited,
+              ...visibleSegments(assigned, info.progress),
+            ]),
+          ],
         });
         setForm(null);
         setLessonReady(true);
@@ -141,9 +168,9 @@ export function StudyRunner({
     })();
     return () => {
       active = false;
-      loadSequence.current++;
+      invalidateLoad();
     };
-  }, [reload, transport]);
+  }, [reload, transport, invalidateLoad]);
   const publicCode = snapshot?.publicCode;
   useEffect(() => {
     if (!publicCode || withdrawn) return;
@@ -197,13 +224,18 @@ export function StudyRunner({
         "segment_exited",
         lesson.segments[segment].id as "overview",
       );
-      await transport("progress", { segment: next });
+      const progressed = await transport("progress", { segment: next });
       setSnapshot((p) =>
         p
           ? {
               ...p,
               progress: next,
-              visited: [...new Set([...p.visited, next])],
+              visited: progressed.visited ?? [
+                ...new Set([
+                  ...p.visited,
+                  ...visibleSegments(presentation, next),
+                ]),
+              ],
             }
           : p,
       );
@@ -288,6 +320,21 @@ export function StudyRunner({
       </Main>
     );
   const current = lesson.segments[segment];
+  const chunking = presentation?.kind === "chunking" ? presentation : null;
+  const groupIndex = chunking
+    ? chunking.groups.findIndex((group) => group.includes(segment))
+    : -1;
+  const group = visibleSegments(presentation, segment);
+  const previous = chunking
+    ? chunking.groups[groupIndex - 1]?.[0]
+    : segment > 0
+      ? segment - 1
+      : undefined;
+  const next = chunking
+    ? chunking.groups[groupIndex + 1]?.[0]
+    : segment < 4
+      ? segment + 1
+      : undefined;
   return (
     <Main
       id={localDemo ? undefined : "main"}
@@ -320,9 +367,13 @@ export function StudyRunner({
         <>
           {snapshot.state === "lesson_active" ? (
             <article className="lesson-main">
-              <p className="eyebrow">CHAPTER {segment + 1} OF 5</p>
+              <p className="eyebrow">
+                {chunking
+                  ? `GROUP ${groupIndex + 1} OF ${chunking.groups.length}`
+                  : `CHAPTER ${segment + 1} OF 5`}
+              </p>
               <h1 ref={heading} tabIndex={-1}>
-                {current.heading}
+                {chunking ? "The water cycle" : current.heading}
               </h1>
               <progress
                 className="study-chapter-progress"
@@ -330,7 +381,15 @@ export function StudyRunner({
                 value={snapshot.visited.length}
                 max={5}
               />
-              {presentation?.kind === "modality" ? (
+              {chunking ? (
+                <ChunkedLesson
+                  key={groupIndex}
+                  indices={group}
+                  groupIndex={groupIndex}
+                  busy={busy}
+                  emit={emit}
+                />
+              ) : presentation?.kind === "modality" ? (
                 <ModalityLesson
                   key={current.id}
                   segment={current}
@@ -385,15 +444,19 @@ export function StudyRunner({
               <div className="lesson-nav">
                 <Button
                   variant="outline"
-                  disabled={busy || segment === 0}
-                  onClick={() => navigate(segment - 1)}
+                  disabled={busy || previous === undefined}
+                  onClick={() => previous !== undefined && navigate(previous)}
                 >
                   Previous
                 </Button>
-                <span>Chapter {segment + 1} of 5</span>
-                {segment < 4 ? (
-                  <Button disabled={busy} onClick={() => navigate(segment + 1)}>
-                    Next chapter
+                <span>
+                  {chunking
+                    ? `Group ${groupIndex + 1} of ${chunking.groups.length}`
+                    : `Chapter ${segment + 1} of 5`}
+                </span>
+                {next !== undefined ? (
+                  <Button disabled={busy} onClick={() => navigate(next)}>
+                    {chunking ? "Next group" : "Next chapter"}
                   </Button>
                 ) : (
                   <Button
@@ -565,6 +628,7 @@ export function StudyRunner({
                   void act(async () => {
                     await transport("withdraw", {});
                     queue.current?.clear();
+                    queue.current = null;
                     setWithdrawn(true);
                   });
                 else

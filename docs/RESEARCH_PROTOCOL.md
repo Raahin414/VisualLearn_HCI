@@ -8,7 +8,7 @@ Timeline: F0 consent/background → A baseline → assigned five-segment lesson 
 
 Draft primary endpoint: adjusted immediate objective percentage. Confirm one endpoint before collection. Forms A/B/C (v2.0.0-draft) share one blueprint of eight objective items (four recall MCQs, ordering, diagram labeling, conceptual, transfer); B and C add a written evaporation scenario (4-point rubric) and free recall (10-point rubric), answered before the objective items. Shared structure is not proof of psychometric equivalence; expert review and a pilot are required. F3/F5 are study-designed drafts, not validated scales. No composite engagement or cognitive load score is calculated.
 
-Population, sample size/power, age bands, instruments, accessible accommodations, viewport policy, language support, final time window/late policy, ethics, consent contact, audio redistribution and debrief must be approved. Minor enrollment is blocked. E2 is implemented as a closed draft modality contract. E3-E8 remain disabled roadmap definitions; they are separate experiments, not crossed factors in E1.
+Population, sample size/power, age bands, instruments, accessible accommodations, viewport policy, language support, final time window/late policy, ethics, consent contact, audio redistribution and debrief must be approved. Minor enrollment is blocked. E2 is implemented as a closed draft modality contract. E3 is implemented as a closed draft chunking contract; E4-E8 remain disabled roadmap definitions; they are separate experiments, not crossed factors in E1.
 
 
 ## E2 draft pilot contract - modality-v1-draft
@@ -20,3 +20,12 @@ Audio-arm transcripts are available on explicit request as an accessibility acco
 Navigation is self-paced across five segments with the same completion and assessment sequence. The one-hour follow-up remains server-owned. First lesson request, segment/navigation and audio events are exposure proxies; they do not establish attentive study time. Segment headings/navigation are retained for orientation in every arm. Assessments and feedback policies are identical across arms, with answer keys on the server.
 
 E2 remains draft and closed. The versioned pilot gate is additional to ethics/content approval, reviewed consent/contact and explicit recruiting status. Source/transcript parity and synthetic tests are engineering evidence, not human pilot results or approval. Required reviews: objective/factual parity, narration listening/rights, accessibility accommodation policy, questionnaire suitability, exposure/timing/navigation limits and preregistered estimand.
+
+
+## E3 draft pilot contract - chunking-v1-draft
+
+Three independent arms present the same five concept blocks: one at a time; groups of three then two; or all five in one page. Each block uses identical canonical words, example, key idea, essential diagram and fixed-1x narration. Only one narration is active at a time. All arms are self-paced, with no imposed minimum dwell time, and retain previous/next navigation plus the same immediate and server-owned one-hour assessments. Content/objective and item/rubric bytes are unchanged. This is a proposed engineering contract, not approved pilot methodology or preregistration.
+
+Record group display/revisit counts and visible-document intervals as exposure proxies. A presented group is not proof that every concept was read. Different scrolling/navigation burden, native controls, hidden-tab listening, repeated orientations, browser suspension and multiple tabs limit interpretation; register a viewport and analysis policy before recruitment. Do not force equal attentive exposure, infer attention from document visibility, automatically exclude participants or change the one-hour clock based on these proxies. F3 remains the original instrument because every E3 arm has diagram and audio; its review remains open.
+
+Recruitment remains closed. Review the proposed time/group policy, objective equivalence, narration rights/listening, accessibility/viewport behavior, exposure limitations, outcome/analysis plan and pilot suitability. E4-E8 remain disabled. No ethics, supervisor or educator approval has been recorded.

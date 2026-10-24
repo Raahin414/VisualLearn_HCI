@@ -1,5 +1,9 @@
 # VisualLearn progress
 
+## M3 chunking - verified, recruitment closed (2026-10-24)
+
+M2 was committed/pushed as 50ca2a5947488f7e5bd3ef8297b57fb1866ed002 and the remote hash verified. M3 adds server-owned chunked/grouped/all-at-once projections of the same five canonical concept blocks, additive migration 004, explicit closed pilot/time-policy gates, versioned exposure proxies, export metadata and the development-only simulator. Source revision shared-v6-draft is separate from the density/modality/chunking presentation contracts. Canonical lesson/audio/spec remain unchanged. Verified: clean install (414 packages, audit 0), content/spec/audio invariants, 62 unit/service tests across 10 files (includes PGlite), 5 dedicated PGlite schema tests, lint/types (0 errors/warnings), 15 real PostgreSQL tests, 29 development browser tests (4.2 min), build/22 clean assets, 29 production browser tests (1.5 min), 19 local security checks, 24 connected Supabase tests (7.2 min) and production HTTP 200/404/401. E3 remains draft/disabled and E4-E8 remain disabled. M4 debrief/seven-day/privacy/analysis is next. No hosted or human-review work was performed.
+
 ## M2 modality - verified, recruitment closed (2026-10-24)
 
 Four server-assigned modality arms reuse the canonical script/audio/essential diagram; audio transcripts are explicit recorded accommodations. Additive migration 003 preserves legacy E1 rows and enforces study identity. E2 is available only in the development simulator and remains closed to real recruitment. Exports distinguish studies and dashboard summaries are scoped by experiment. E1 rendering advances to density-v5-draft and E2 to modality-v1-draft; canonical source/audio/spec bytes are unchanged.
