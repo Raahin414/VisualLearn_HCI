@@ -19,3 +19,19 @@ Known confounds: supportive and decorative density form a package; they cannot i
 Local milestone: `density-v2-draft` changes the shared shell (narration status, progress, assessment drafts) uniformly, preserving canonical copy, SVG tiers and audio bytes. The manifest includes shared player/assessment/study UI sources. Hash changes must reject stale research sessions rather than silently adopt new stimuli. No human trial was active during this change.
 
 Assessment v2 (`density-v3-draft`, 2026-10-18): the shared assessment and questionnaire UI changed identically for every condition (ordering selects, a neutral labeling diagram, staged written answers, questionnaire drafts). The labeling diagram is an assessment stimulus with one fixed rendering; it does not vary with density. Canonical lesson text, lesson diagram tiers and audio bytes are unchanged.
+
+
+## E2 modality-v1-draft audit (engineering, not approval)
+
+| Arm | Canonical written body | Existing canonical WAV | Essential canonical diagram | Optional transcript |
+|---|---|---|---|---|
+| text-only | Visible | Absent | Absent | Body already visible |
+| audio-only | Hidden by default | Present, fixed 1x | Absent | Explicit recorded accommodation |
+| text-diagram | Visible | Absent | Present, low tier | Body already visible |
+| audio-diagram | Hidden by default | Present, fixed 1x | Present, low tier | Explicit recorded accommodation |
+
+The same canvas height is reserved at a given viewport in every arm. No supportive/decorative diagram layer, extra narration fact or music is added. The canonical body is the narration generator's input, and automated rendering checks compare every text-arm paragraph to that source for all five segments. These checks establish source parity; they do not replace independent listening or educational equivalence review. Narration and source JSON byte hashes match the committed E1 manifest.
+
+Orientation headings and shared progression/withdrawal controls remain available in all arms. Audio controls naturally add a different control surface; native media controls still vary by device. Audio-arm transcript use changes effective modality and must be considered in the reviewed analysis plan. Self-pacing, scrolling/reading/listening duration and accommodation use are unresolved design/analysis limits, not evidence of equal attentive exposure. No automatic exclusion rule or fixed minimum dwell time has been invented.
+
+Screenshots at 360/768/1280 are stored under `docs/screenshots/m2/` using browser-only SYNTHETIC fixtures. They represent the initial assigned presentation, before accommodation is requested. Axe and keyboard checks are engineering evidence only; screen-reader/device review, audio redistribution rights, objective equivalence and pilot suitability remain unapproved.

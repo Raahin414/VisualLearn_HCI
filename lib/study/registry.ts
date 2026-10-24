@@ -11,7 +11,7 @@ export const experiments = [
     name: "Multimedia modality",
     factor: "Presentation channel",
     arms: ["text-only", "audio-only", "text-diagram", "audio-diagram"],
-    technicalTesting: false,
+    technicalTesting: true,
   },
   {
     id: "E3",

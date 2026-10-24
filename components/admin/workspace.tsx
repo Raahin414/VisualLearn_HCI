@@ -114,7 +114,9 @@ export function AdminWorkspace({
               disabled={busy}
               onClick={() =>
                 run(async () =>
-                  setEnrollment(await post("/api/admin/mfa", { action: "enroll" })),
+                  setEnrollment(
+                    await post("/api/admin/mfa", { action: "enroll" }),
+                  ),
                 )
               }
             >
@@ -126,8 +128,8 @@ export function AdminWorkspace({
             {enrollment && (
               <>
                 <p>
-                  Scan this code with your authenticator app, or enter the
-                  setup key manually.
+                  Scan this code with your authenticator app, or enter the setup
+                  key manually.
                 </p>
                 {enrollment.qrCode && (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -200,7 +202,12 @@ export function AdminWorkspace({
           <>
             <label>
               Email
-              <input name="email" type="email" required autoComplete="username" />
+              <input
+                name="email"
+                type="email"
+                required
+                autoComplete="username"
+              />
             </label>
             {errorBox}
             <Button disabled={busy} type="submit">
@@ -208,7 +215,11 @@ export function AdminWorkspace({
             </Button>
           </>
         )}
-        <Button variant="ghost" type="button" onClick={() => setForgot("closed")}>
+        <Button
+          variant="ghost"
+          type="button"
+          onClick={() => setForgot("closed")}
+        >
           Back to sign-in
         </Button>
       </form>
@@ -255,6 +266,24 @@ export function AdminWorkspace({
       <p className="lead">
         Database-backed research overview. Descriptive summaries only; no
         significance tests or causal claims.
+      </p>
+      <nav aria-label="Research experiment" className="export-links">
+        <a
+          href="/admin?study=E1"
+          aria-current={stats.experimentId === "E1" ? "page" : undefined}
+        >
+          E1: Visual density
+        </a>
+        <a
+          href="/admin?study=E2"
+          aria-current={stats.experimentId === "E2" ? "page" : undefined}
+        >
+          E2: Modality (draft)
+        </a>
+      </nav>
+      <p>
+        Overview scope: {stats.experimentId}. Exports contain all studies with
+        joinable experiment identifiers.
       </p>
       <div className="admin-tabs" role="group" aria-label="Workspace sections">
         {(

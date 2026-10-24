@@ -20,7 +20,11 @@ async function boundedBody(request: Request) {
     // A browser that navigates away mid-request aborts the body stream; that
     // is a client disconnect, not a server failure.
     const { done, value } = await reader.read().catch(() => {
-      throw new StudyError("CLIENT_ABORTED", "The request was interrupted.", 400);
+      throw new StudyError(
+        "CLIENT_ABORTED",
+        "The request was interrupted.",
+        400,
+      );
     });
     if (done) break;
     bytes += value.length;
@@ -109,7 +113,10 @@ async function handle(request: NextRequest, ctx: Context) {
     const data = await transaction(async (client) => {
       const service = new StudyService(client as unknown as SQL);
       if (action === "consent") {
-        const e = await service.gate();
+        const experimentId = z
+          .enum(["E1", "E2"])
+          .parse(request.nextUrl.searchParams.get("study") ?? "E1");
+        const e = await service.gate(experimentId);
         return {
           consentVersion: e.consent_version,
           consentText: e.consent_text,
@@ -118,7 +125,16 @@ async function handle(request: NextRequest, ctx: Context) {
       }
       if (action === "enroll") {
         if (id) {
-          await service.session(id);
+          const session = await service.session(id);
+          const target = z
+            .object({ experimentId: z.enum(["E1", "E2"]).default("E1") })
+            .parse(input);
+          if (session.experiment_id !== target.experimentId)
+            throw new StudyError(
+              "STUDY_CONFLICT",
+              "This browser is already enrolled in another study.",
+              409,
+            );
           return { alreadyEnrolled: true };
         }
         const result = await service.enroll(

@@ -2,10 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { AssessmentForm } from "@/components/assessments/assessment-form";
-import type {
-  AssessmentDraft,
-  PublicQuestion,
-} from "@/lib/assessments/draft";
+import type { AssessmentDraft, PublicQuestion } from "@/lib/assessments/draft";
 import { SurveyForm } from "@/components/surveys/survey-form";
 import type { SurveyDraft } from "@/lib/assessments/survey-draft";
 import { NarrationPlayer } from "@/components/learning/narration-player";
@@ -15,8 +12,14 @@ import { Button } from "@/components/ui/button";
 import { WaterDiagram } from "@/components/learning/water-diagram";
 import { lesson, type Condition } from "@/lib/content/lesson";
 import { EventQueue } from "@/lib/telemetry/client-queue";
+import {
+  presentationSchema,
+  type Presentation,
+} from "@/lib/study/presentation";
+import { ModalityLesson } from "@/components/learning/modality-lesson";
 import type { StudyState } from "@/lib/study/lifecycle";
 type Snapshot = {
+  experimentId?: "E1" | "E2";
   publicCode: string;
   state: StudyState;
   progress: number;
@@ -55,6 +58,8 @@ export function StudyRunner({
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
   const [form, setForm] = useState<Form | null>(null);
   const [condition, setCondition] = useState<Condition>("low");
+  const [presentation, setPresentation] = useState<Presentation | null>(null);
+  const [lessonReady, setLessonReady] = useState(false);
   const [segment, setSegment] = useState(0);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -62,27 +67,54 @@ export function StudyRunner({
   const [withdrawn, setWithdrawn] = useState(false);
   const queue = useRef<EventQueue | null>(null);
   const heading = useRef<HTMLHeadingElement>(null);
+  const loadSequence = useRef(0);
   const reload = useCallback(async () => {
-    const state: Snapshot = await transport("session");
-    setSnapshot(state);
-    setForm(null);
-    if (state.state === "lesson_active") {
-      const info = await transport("lesson");
-      setCondition(info.condition);
-      setSegment(info.progress);
-      await transport("progress", { segment: info.progress });
-      setSnapshot({
-        ...state,
-        visited: [...new Set([...state.visited, info.progress])],
-      });
-    } else {
-      const stage = {
-        enrolled: "pre",
-        lesson_complete: "immediate",
-        waiting_60m: "plus_60m",
-      }[state.state as "enrolled" | "lesson_complete" | "waiting_60m"];
-      if (stage && state.state !== "waiting_60m")
-        setForm(await transport(`assessment/${stage}`));
+    const sequence = ++loadSequence.current;
+    const current = () => sequence === loadSequence.current;
+    setLessonReady(false);
+    try {
+      const state: Snapshot = await transport("session");
+      if (!current()) return;
+      if (state.state === "lesson_active") {
+        const info = await transport("lesson");
+        if (!current()) return;
+        const assigned = info.presentation
+          ? presentationSchema.parse(info.presentation)
+          : null;
+        if (state.experimentId === "E2" && assigned?.kind !== "modality")
+          throw new Error(
+            "The saved modality presentation could not be loaded. Retry your session.",
+          );
+        await transport("progress", { segment: info.progress });
+        if (!current()) return;
+        setPresentation(assigned);
+        if (assigned?.kind === "density") setCondition(assigned.density);
+        else if (!assigned) setCondition(info.condition);
+        setSegment(info.progress);
+        setSnapshot({
+          ...state,
+          visited: [...new Set([...state.visited, info.progress])],
+        });
+        setForm(null);
+        setLessonReady(true);
+      } else {
+        const stage = {
+          enrolled: "pre",
+          lesson_complete: "immediate",
+          waiting_60m: "plus_60m",
+        }[state.state as "enrolled" | "lesson_complete" | "waiting_60m"];
+        const nextForm =
+          stage && state.state !== "waiting_60m"
+            ? await transport(`assessment/${stage}`)
+            : null;
+        if (!current()) return;
+        // Commit a complete load together. Obsolete requests must not unmount
+        // an assessment, restore an old draft, or replace a newer assignment.
+        setSnapshot(state);
+        setForm(nextForm);
+      }
+    } catch (error) {
+      if (current()) throw error;
     }
   }, [transport]);
   useEffect(() => {
@@ -109,6 +141,7 @@ export function StudyRunner({
     })();
     return () => {
       active = false;
+      loadSequence.current++;
     };
   }, [reload, transport]);
   const publicCode = snapshot?.publicCode;
@@ -216,6 +249,25 @@ export function StudyRunner({
     }
   }
   const Main = localDemo ? "section" : "main";
+  if (snapshot?.state === "lesson_active" && !lessonReady && !withdrawn)
+    return (
+      <Main
+        id={localDemo ? undefined : "main"}
+        className="container page-content"
+      >
+        <h1 className="page-title">Opening your assigned lesson…</h1>
+        {error ? (
+          <div role="alert" className="form-error">
+            {error}
+            <Button onClick={() => act(reload)} disabled={busy}>
+              Retry saved session
+            </Button>
+          </div>
+        ) : (
+          <p role="status">Loading the saved presentation and progress.</p>
+        )}
+      </Main>
+    );
   if (withdrawn)
     return (
       <Main
@@ -278,32 +330,58 @@ export function StudyRunner({
                 value={snapshot.visited.length}
                 max={5}
               />
-              <div className="lesson-canvas">
-                <WaterDiagram condition={condition} active={current.id} />
-                <p className="diagram-caption">{current.diagramDescription}</p>
-              </div>
-              <NarrationPlayer
-                key={current.id}
-                src={current.audioSrc}
-                title={current.shortTitle}
-                pauseWhen={busy}
-                onEvent={(event, position) =>
-                  queue.current?.add(event, current.id as "overview", {
-                    playbackPositionSeconds: position,
-                  })
-                }
-              />
-              <details open className="transcript">
-                <summary>Read the full explanation</summary>
-                <div className="transcript-content">
-                  {current.body.split("\n\n").map((p, i) => (
-                    <p key={i}>{p}</p>
-                  ))}
-                </div>
-              </details>
-              <div className="key-idea">
-                <p>{current.keyIdea}</p>
-              </div>
+              {presentation?.kind === "modality" ? (
+                <ModalityLesson
+                  key={current.id}
+                  segment={current}
+                  presentation={presentation}
+                  busy={busy}
+                  onAudio={(event, position) =>
+                    queue.current?.add(event, current.id as "overview", {
+                      playbackPositionSeconds: position,
+                    })
+                  }
+                  onTranscript={() => {
+                    queue.current?.add(
+                      "accommodation_used",
+                      current.id as "overview",
+                      { accommodation: "transcript" },
+                    );
+                    void queue.current?.flush();
+                  }}
+                />
+              ) : (
+                <>
+                  <div className="lesson-canvas">
+                    <WaterDiagram condition={condition} active={current.id} />
+                    <p className="diagram-caption">
+                      {current.diagramDescription}
+                    </p>
+                  </div>
+                  <NarrationPlayer
+                    key={current.id}
+                    src={current.audioSrc}
+                    title={current.shortTitle}
+                    pauseWhen={busy}
+                    onEvent={(event, position) =>
+                      queue.current?.add(event, current.id as "overview", {
+                        playbackPositionSeconds: position,
+                      })
+                    }
+                  />
+                  <details open className="transcript">
+                    <summary>Read the full explanation</summary>
+                    <div className="transcript-content">
+                      {current.body.split("\n\n").map((p, i) => (
+                        <p key={i}>{p}</p>
+                      ))}
+                    </div>
+                  </details>
+                  <div className="key-idea">
+                    <p>{current.keyIdea}</p>
+                  </div>
+                </>
+              )}
               <div className="lesson-nav">
                 <Button
                   variant="outline"
@@ -364,10 +442,11 @@ export function StudyRunner({
               </p>
               <SurveyForm
                 key={snapshot.state}
+                diagramNA={snapshot.experimentId === "E2"}
                 form={
                   snapshot.state === "immediate_test_complete" ? "F3" : "F5"
                 }
-                draftKey={`visuallearn-${localDemo ? "simulation" : "study"}-${snapshot.publicCode}-${snapshot.state}-survey-v2`}
+                draftKey={`visuallearn-${localDemo ? "simulation" : "study"}-${snapshot.publicCode}-${snapshot.state}-survey-${snapshot.experimentId === "E2" ? "modality-v1" : "v2"}`}
                 onSubmit={submitSurvey}
               />
             </>

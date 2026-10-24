@@ -44,7 +44,13 @@ describe("Synthetic E1 lifecycle using real PostgreSQL semantics", () => {
       await readFile("supabase/migrations/001_research_foundation.sql", "utf8"),
     );
     await db.exec(
-      await readFile("supabase/migrations/002_assessment_v2_rating.sql", "utf8"),
+      await readFile(
+        "supabase/migrations/002_assessment_v2_rating.sql",
+        "utf8",
+      ),
+    );
+    await db.exec(
+      await readFile("supabase/migrations/003_modality_foundation.sql", "utf8"),
     );
     await db.exec(await readFile("supabase/seed.sql", "utf8"));
     service = new StudyService(db as unknown as SQL, () => clock);
@@ -100,7 +106,15 @@ describe("Synthetic E1 lifecycle using real PostgreSQL semantics", () => {
     await expect(tx((s) => s.getLesson(id))).rejects.toThrow(/only during/);
   });
   it("persists immediate answers once, withholds scores and validates survey", async () => {
-    await expect(tx(s=>s.submitAssessment(id,'immediate',{answers:correct('B'),freeRecall:' '.repeat(40),scenario}))).rejects.toThrow();
+    await expect(
+      tx((s) =>
+        s.submitAssessment(id, "immediate", {
+          answers: correct("B"),
+          freeRecall: " ".repeat(40),
+          scenario,
+        }),
+      ),
+    ).rejects.toThrow();
     const result = await tx((s) =>
       s.submitAssessment(id, "immediate", {
         answers: correct("B"),

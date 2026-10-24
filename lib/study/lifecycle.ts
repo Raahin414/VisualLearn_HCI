@@ -10,6 +10,7 @@ export const enrollmentSchema = z
     dataUse: z.literal(true),
     contactViewed: z.literal(true),
     consentVersion: z.string().min(1).max(80),
+    experimentId: z.enum(["E1", "E2"]).default("E1"),
   })
   .strict();
 export type StudyState =

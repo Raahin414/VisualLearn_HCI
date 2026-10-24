@@ -5,15 +5,24 @@ import {
   LocalStudy,
   type DemoBanks,
   type LocalStudyRecord,
+  fallbackExperiments,
 } from "@/lib/demo/local-study";
 import { StudyRunner } from "@/components/study/study-runner";
 import { Button } from "@/components/ui/button";
-import { conditions, type Condition } from "@/lib/content/lesson";
+import type { DemoExperiment } from "@/lib/study/presentation";
 import { z } from "zod";
-export function LocalStudyDemo({ banks }: { banks: DemoBanks }) {
+export function LocalStudyDemo({
+  banks,
+  experiments = fallbackExperiments,
+}: {
+  banks: DemoBanks;
+  experiments?: DemoExperiment[];
+}) {
   const [model, setModel] = useState<LocalStudy | null>(null);
   const [record, setRecord] = useState<LocalStudyRecord | null>(null);
-  const [condition, setCondition] = useState<Condition>("medium");
+  const [experimentId, setExperimentId] = useState<"E1" | "E2">("E1");
+  const [armKey, setArmKey] = useState("medium");
+  const definition = experiments.find((e) => e.id === experimentId)!;
   const [revision, setRevision] = useState(0);
   const [error, setError] = useState("");
   useEffect(() => {
@@ -29,7 +38,7 @@ export function LocalStudyDemo({ banks }: { banks: DemoBanks }) {
         removeItem: () => {},
       };
     }
-    const instance = new LocalStudy(storage, banks);
+    const instance = new LocalStudy(storage, banks, Date.now, experiments);
     const unsubscribe = instance.subscribe(() =>
       setRecord(instance.getRecord()),
     );
@@ -38,7 +47,7 @@ export function LocalStudyDemo({ banks }: { banks: DemoBanks }) {
       setRecord(instance.getRecord());
     });
     return unsubscribe;
-  }, [banks]);
+  }, [banks, experiments]);
   const transport = useCallback(
     async (action: string, input?: unknown) => {
       try {
@@ -80,19 +89,46 @@ export function LocalStudyDemo({ banks }: { banks: DemoBanks }) {
         {!record ? (
           <div className="dev-actions">
             <label>
-              Simulated visual condition
+              Simulated experiment
               <select
-                value={condition}
-                onChange={(e) => setCondition(e.target.value as Condition)}
+                disabled={!model}
+                value={experimentId}
+                onChange={(e) => {
+                  const id = e.target.value as "E1" | "E2";
+                  setExperimentId(id);
+                  setArmKey(
+                    experiments.find((item) => item.id === id)!.arms[0].key,
+                  );
+                }}
               >
-                {conditions.map((c) => (
-                  <option key={c}>{c}</option>
+                {experiments.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.id} · {item.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              {experimentId === "E1"
+                ? "Simulated visual condition"
+                : "Simulated presentation"}
+              <select
+                disabled={!model}
+                value={armKey}
+                onChange={(e) => setArmKey(e.target.value)}
+              >
+                {definition.arms.map((arm) => (
+                  <option key={arm.key} value={arm.key}>
+                    {arm.label}
+                  </option>
                 ))}
               </select>
             </label>
             <Button
               disabled={!model}
-              onClick={() => change(() => model!.start(condition))}
+              onClick={() =>
+                change(() => model!.startExperiment(experimentId, armKey))
+              }
             >
               Start simulated session
             </Button>
@@ -100,7 +136,8 @@ export function LocalStudyDemo({ banks }: { banks: DemoBanks }) {
         ) : (
           <div className="dev-actions">
             <span className="pill">
-              {record.publicCode} · {record.state}
+              {record.publicCode} · {record.experimentId} · {record.armKey} ·{" "}
+              {record.state}
             </span>
             <Button
               variant="outline"

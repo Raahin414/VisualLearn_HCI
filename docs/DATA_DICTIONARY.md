@@ -23,3 +23,18 @@ All timestamps are UTC. Exported `participant_id`, `session_id` and `attempt_id`
 | events | One row per accepted telemetry event: allowlisted type, chapter, elapsed time, client and server times, bounded payload |
 
 CSV cells that start like spreadsheet formulas are prefixed with an apostrophe. JSON columns are escaped JSON. Every download is written to the audit log. Telemetry events are behavior observations, not attention measures; queue caps can drop events and missing telemetry is not inactivity. Missing follow-ups are never zero-filled.
+
+
+## M2 modality additions (draft)
+
+`participants_deidentified.experiment_id` and `sessions.experiment_id` distinguish E1/E2 even before baseline allocation. Session `presentation_version` freezes the renderer contract and `lesson_opened_at` is the first server request time (not attentive exposure); null is retained for legacy records. Participant, assignment and session study identities are linked by database constraints.
+
+E2 assignment arms are text-only, audio-only, text-diagram and audio-diagram. `randomization_version=age-stratified-minimum-v2` identifies E2 allocation, with persisted random ties; E1 remains v1. All four arms use the same canonical scripts, objective assessments and one-hour window. No real recruitment is enabled.
+
+`accommodation_used` requires a valid segment and `payload.accommodation=transcript`, only for an assigned audio arm. `sessions.accommodations["transcript:segment-id"]` stores first server receipt in UTC; event IDs deduplicate retries. Client timestamps never determine eligibility. Channel-incompatible audio/diagram events are rejected for E2. Absence of an accommodation event does not establish complete attentive exposure or successful delivery under abrupt process termination.
+
+F3 E2 uses `2.1-modality-draft` and also allows categorical `support=not_applicable`; E1 F3 remains `2.0.0-draft`. Never recode N/A as zero. Exported assessments still use A/B/C and the same server-only keys. Dashboard summaries select one experiment; exports include all non-withdrawn studies and must be joined and stratified by experiment and frozen versions.
+
+New experiment configuration fields `pilot_contract_version` and `pilot_reviewed` are operational review gates, default null/false. They do not signify ethics, content or supervisor approval and do not replace existing recruitment gates.
+
+Final M2 engineering verification is recorded in QA. Loader cancellation and readiness safeguards add no research fields or eligibility clock controls. Source version is density-v5-draft for E1 and modality-v1-draft for E2; F3 modality is separately versioned 2.1-modality-draft. Canonical content/audio and A/B/C/rubric bytes remain unchanged.

@@ -54,12 +54,28 @@
       "sha256": "8bf76662fa96368ed08e72fe9ad5bb784c891e05f88d6ad983e234006ab5699d"
     },
     {
+      "path": "components/learning/modality-lesson.tsx",
+      "sha256": "9f68b7a8dac0ce60488390edc2ba55d6fa6e06cbebf8e3bc1650988ba9e65392"
+    },
+    {
+      "path": "lib/study/presentation.ts",
+      "sha256": "3f434847ed89cf3ced5cff12ebc85296e8d2e1bc94a0f986f587bee7de4a50df"
+    },
+    {
+      "path": "lib/study/presentation.server.ts",
+      "sha256": "08c065da8cf0d49220382628c65a3a22ac2d95d334daac620f85bda642b73214"
+    },
+    {
+      "path": "lib/telemetry/schema.ts",
+      "sha256": "0aafa1fbc4659040453d7e408564cefdf9902b273dfc5e22e7e0b5676d5a0160"
+    },
+    {
       "path": "lib/content/lesson.ts",
       "sha256": "c072b4fee12ab3681662e56c6e90b61b3dda8862bc74b6f7972b77543e695ded"
     },
     {
       "path": "app/globals.css",
-      "sha256": "15304de45c3d88388d362ae7dc6efcb5cfc62edbe69e50565e77494ad4965404"
+      "sha256": "4d374cedb8a090250acd98dc982469acbca5227a54f2fe29d3f80205c842e401"
     },
     {
       "path": "app/layout.tsx",
@@ -75,11 +91,11 @@
     },
     {
       "path": "lib/assessments/surveys.ts",
-      "sha256": "4670790fcc5e81822a86f7085656b0899fef73d12f453b44ec33e0366d45a06d"
+      "sha256": "272d209b50b603f028bed54c565033a34567f4ffabc6e92d1cfeceb77988d374"
     },
     {
       "path": "components/learning/narration-player.tsx",
-      "sha256": "76c5dde25b532a0201a9343427e0003fd1eef589d63443fdbe949068fe8b49c4"
+      "sha256": "76fe11e35a396d445e0c78356b288d0298f6d1848ed78e11be01938962381a6f"
     },
     {
       "path": "components/learning/lesson-player.tsx",
@@ -87,7 +103,7 @@
     },
     {
       "path": "components/study/study-runner.tsx",
-      "sha256": "7022c56b25b13c152fb10929b690c3b1225cc05af986cb1f1b8bb9f9d621d487"
+      "sha256": "b97c33daaa72dc2573985d396b796c36d18766955fdd4770d9c3bd470199fefd"
     },
     {
       "path": "components/assessments/assessment-form.tsx",
@@ -103,11 +119,11 @@
     },
     {
       "path": "components/surveys/survey-form.tsx",
-      "sha256": "c78943fd19338e6ad36b96066925378a912f9222d435c4bc9e94d600993a76ae"
+      "sha256": "7bf83092c2817471d3eb5065ff50142ef8f0c7192cbddc554ad3da032bb663f6"
     },
     {
       "path": "lib/assessments/survey-draft.ts",
-      "sha256": "a6eaebe983a6d9a2b5e1c2862cdd8b023cc3bfb461c9f09ab2b9145db7a927da"
+      "sha256": "bbc08416b3127b8c9f236339153cee15f2a2e97d3c2be5d25bf2b84dcd67425d"
     },
     {
       "path": "lib/assessments/written-prompts.ts",

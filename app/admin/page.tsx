@@ -10,7 +10,13 @@ import { studyStats, type StudyStats } from "@/lib/admin/exports";
 import type { SQL } from "@/lib/study/service";
 export const dynamic = "force-dynamic";
 export const metadata = { robots: { index: false, follow: false } };
-export default async function Admin() {
+export default async function Admin({
+  searchParams,
+}: {
+  searchParams: Promise<{ study?: string }>;
+}) {
+  const requested = (await searchParams).study;
+  const study = requested === "E2" ? "E2" : "E1";
   const configured = !!(
     process.env.SUPABASE_URL &&
     process.env.SUPABASE_ANON_KEY &&
@@ -22,7 +28,9 @@ export default async function Admin() {
   if (configured) {
     try {
       await requireAdmin();
-      stats = await transaction((client) => studyStats(client as unknown as SQL));
+      stats = await transaction((client) =>
+        studyStats(client as unknown as SQL, study),
+      );
     } catch {
       const pending = (await cookies()).get(adminMfaCookie)?.value;
       if (pending)

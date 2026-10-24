@@ -122,3 +122,51 @@ Executed locally on Windows, Node 24.14.1 / npm 11.11.0. See package-lock for re
 Failures discovered and fixed during this run: public-origin mismatch rejected valid practice POSTs; small-text contrast failures; mobile lesson grid overflow; test fixture Storage interface typing; overly broad Playwright selectors. None of these initial failed checks are counted as passing runs. A separate P practice bank prevents public scoring from being an oracle for research A/B/C keys. The final browser test includes an explicitly SYNTHETIC participant UI contract; it mocks HTTP responses and is **not** proof of a connected Supabase browser workflow.
 
 Not verified: actual Supabase migration/grants, multi-connection PostgreSQL allocation races, real admin authentication/MFA, connected study browsers and exports, full screen-reader/manual accessibility audit, every segment/density screenshot combination, actual offline abrupt-process delivery, approved asset rights, scientific/instrument validity or human outcomes. Development lint dependencies have 5 transitive high advisory findings; no compatible patched braces release was available during the run. CI workflow was created but has not run on GitHub.
+
+
+## M2 modality - 2026-10-24 (verified; failed attempts retained below)
+
+Executed on Windows with Node 24.22.1/npm 11.21.1. Initial static/unit run exposed missing application of migration 003 in the PGlite fixtures (7 lifecycle failures); the fixtures now apply the complete schema. A new renderer test initially counted the Replay icon as a lesson diagram; it now identifies the accessible instructional SVG. New browser tests initially used an exact nested-select label locator; trace inspection confirmed the presentation was present and the locator was wrong. Those partial runs were stopped and corrected; they are not counted as passing suites. Simulator selects also wait for model initialization as a pre-hydration safeguard.
+
+Completed so far: 57 unit/service tests across 9 files (including PGlite, not a hosted database); lint/typecheck; 14 real PostgreSQL 17 tests including 12 concurrent E2 allocations over independent runtime connections; 25 development Chromium tests (3.8 minutes), including all four E2 arms at 360/768/1280, WCAG 2.2 AA axe/overflow, canonical rendered paragraph equality, explicit transcript accommodation, refresh and no research requests from the simulator. No canonical lesson, SVG meaning, question/rubric or WAV bytes changed. Spec hash remains the required original. Clean-install/production/connected results will be recorded after completion.
+
+The clean reinstall completed with 414 packages and zero audit findings; source/audio verifier passed (5 segments, 327.0 seconds), followed by 57 tests and the dedicated 5-test PGlite schema suite. An initial post-install lint process read a connected test during a concurrent write and reported a temporary parse failure. Prettier successfully parsed the final file, code edits were finished, and the pipeline was restarted with stable source files. This interrupted attempt is not counted as a passing verification.
+
+
+Stable-code post-install run: content verifier, 57 unit/service tests, 5 PGlite schema tests, lint/typecheck, 14 real PostgreSQL tests, optimized production build, bundle scan (22 assets), production Chromium (25/25, 1.4 min) and pristine local Supabase security verifier (19/19) passed. The first expanded connected suite finished 22/23 (5.7 min): all existing cases passed, while E2 stopped before its first database operation because the previous researcher's test file closed the shared pool. The shared fixture now lazily creates a new local pool after end(), and the E2 file closes its own lifecycle. Targeted E2 and complete connected reruns are pending; this failure is not counted as a pass.
+
+Historical M1 screenshots were restored to their committed versions after detecting that recurring tests reused that directory. Current regression captures now use `docs/screenshots/current/`; E2 initial presentations use `docs/screenshots/m2/`. No MFA setup key or QR is captured by these screenshot calls.
+
+
+The focused real-connected E2 case passed (1/1, 1.2 min) after the pool fix. A subsequent complete run exposed an intermittent baseline UI-load race: the first concurrent enrollment case reached submit with zero answered items, and its dependent E1/dashboard fixtures consequently failed or skipped (10 passed, 2 failed, 11 not run, 4.1 min). The answer helper previously used a non-retrying question count and could silently do nothing during a transient form replacement. The helper now requires all eight cards and all eight answers, and StudyRunner commits only the newest complete load, discarding obsolete initial responses. A controlled HTTP-contract regression holds an old initial session response until a newer lesson is visible. Final real-connected and regression reruns remain pending. No timing gate or authentication checks were relaxed.
+
+
+Controlled regression evidence: `session-loading.spec.ts` holds an obsolete initial session response until a newer assigned lesson is visible. The fixed loader passed (1/1, 16.0 seconds). A deliberate local mutation disabled only the obsolete-load guard: the same test failed because the late baseline response replaced the current chapter. The ignored harness restored the exact source bytes in finally; `verify-content` then passed. This expected failing mutation is regression evidence, not a passing application suite. The stable-source pipeline is being rerun, including all affected browser paths.
+
+
+Stable fixed-loader pipeline: 57 unit/service tests, 5 dedicated PGlite schema tests, type checking, 14 PostgreSQL tests, production build, bundle scan (22 assets), 26 production browser tests (1.4 min), pristine local verifier (19/19), and complete connected Supabase browser suite (23/23, 6.7 min) passed. The real-connected run includes all existing E1/researcher/invite cases plus all four E2 assignments, persisted accommodation, delayed C/F5 completion and withdrawal. Production HTTP smoke passed `/` 200, `/dev/study` 404 and `/api/admin/stats` 401. Final development rerun pending.
+
+Lint exits 0 with one exhaustive-deps warning about incrementing a ref in cleanup. This is a numeric cancellation generation, not a DOM-node ref; reading/incrementing the actual current generation is intentional. Source has no lint errors. No stale numeric generation is captured, no eligibility timer is altered and the obsolete-response regression is verified independently. This warning will be removed in the subsequent shared strategy refactor without changing cancellation behavior.
+
+
+### Final M2 verification
+
+| Check | Actual final result |
+|---|---|
+| Clean install | 414 packages; 0 audit findings; no dependency/lock changes |
+| Original spec / canonical lesson / WAVs | Unchanged; verifier covers 5 segments, 327.0 seconds |
+| Unit/service | 57/57 across 9 files; includes PGlite and pure browser-model fixtures |
+| Dedicated PGlite schema | 5/5; separate from real PostgreSQL |
+| Lint / types | PASS; 0 lint errors, 1 cancellation-ref heuristic warning described above |
+| Real PostgreSQL 17 | 14/14, including concurrent E2 allocation and study identity constraints |
+| Development Chromium | 26/26, 3.2 min; includes public/UI contracts and browser-only SYNTHETIC simulation |
+| Build / learner assets | PASS; 22 assets without keys, rationales, rubrics or server secret names |
+| Production Chromium | 26/26, 1.4 min; dev-only route 404 |
+| Production HTTP smoke | `/` 200; `/dev/study` 404; `/api/admin/stats` 401 |
+| Local Supabase security audit | 19/19 on pristine closed schema |
+| Real local Supabase Auth/MFA/PostgreSQL browser suite | 23/23, 6.7 min; no participant HTTP mocks |
+| Responsive/accessibility | All 4 E2 arms at 360/768/1280; no axe WCAG 2.2 AA violations/overflow; keyboard transcript toggle |
+| Regression sensitivity | Held obsolete response passes fixed code, fails when only its guard is disabled; exact fixed source restored |
+| Diff / targeted credential patterns | PASS including changed/new UTF-8 text; populated env/state files ignored |
+
+The single held-response regression is explicitly an HTTP contract fixture, not evidence of a connected backend. Public media-failure tests mock only the failing media boundary. Connected cases use real local services and actual TOTP, with only SYNTHETIC rows shifted for delayed eligibility. Screenshots were visually reviewed at mobile/tablet/desktop widths. Manual screen readers/devices, independent listening/objective equivalence, rights, pilot suitability and every human approval remain open. No hosted security/deployment/backup claim is made.

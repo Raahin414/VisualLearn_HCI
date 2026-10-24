@@ -21,7 +21,14 @@ import {
   f3Schema,
   f5Schema,
   SURVEY_VERSION,
+  f3ModalitySchema,
+  MODALITY_SURVEY_VERSION,
 } from "@/lib/assessments/surveys";
+import {
+  DENSITY_VERSION,
+  MODALITY_VERSION,
+  presentationFor,
+} from "./presentation.server";
 import { eventBatchSchema } from "@/lib/telemetry/schema";
 import { hashToken, newReturnToken } from "@/lib/security/tokens";
 
@@ -55,6 +62,9 @@ type Session = {
   withdrawn_at: Date | null;
   public_code: string;
   arm_key: string | null;
+  experiment_id: "E1" | "E2";
+  presentation_version: string;
+  lesson_opened_at: Date | null;
 };
 const digest = (value: unknown) =>
   createHash("sha256").update(JSON.stringify(value)).digest("hex");
@@ -67,7 +77,7 @@ const bankHash = digest({
   writtenPrompts,
   rubrics,
 });
-export const STIMULUS_VERSION = "density-v4-draft";
+export const STIMULUS_VERSION = DENSITY_VERSION;
 const stageForms = { pre: "A", immediate: "B", plus_60m: "C" } as const;
 export type Timepoint = keyof typeof stageForms;
 const submissionSchema = z
@@ -83,7 +93,7 @@ export class StudyService {
     private db: SQL,
     private now: () => Date = () => new Date(),
   ) {}
-  async gate() {
+  async gate(experimentId: "E1" | "E2" = "E1") {
     const { rows } = await this.db.query<{
       enabled: boolean;
       status: string;
@@ -94,7 +104,9 @@ export class StudyService {
       study_contact: string | null;
       followup_window_minutes: number;
       protocol_version: string;
-    }>("select * from visuallearn.experiments where id='E1'");
+      pilot_reviewed: boolean;
+      pilot_contract_version: string | null;
+    }>("select * from visuallearn.experiments where id=$1", [experimentId]);
     const e = rows[0];
     if (
       !e ||
@@ -109,6 +121,15 @@ export class StudyService {
       throw new StudyError(
         "STUDY_CLOSED",
         "Research enrollment is not approved or open.",
+        503,
+      );
+    if (
+      experimentId === "E2" &&
+      (!e.pilot_reviewed || e.pilot_contract_version !== MODALITY_VERSION)
+    )
+      throw new StudyError(
+        "PILOT_CLOSED",
+        "A reviewed modality pilot contract is required.",
         503,
       );
     return e;
@@ -145,8 +166,8 @@ export class StudyService {
     return s;
   }
   async enroll(input: unknown, idempotencyKey: string) {
-    const e = await this.gate();
     const data = enrollmentSchema.parse(input);
+    const e = await this.gate(data.experimentId);
     if (data.ageBand !== "18-30")
       throw new StudyError(
         "MINORS_BLOCKED",
@@ -159,7 +180,10 @@ export class StudyService {
         "Please read the current consent materials.",
         409,
       );
-    const key = hashToken(z.string().uuid().parse(idempotencyKey));
+    const uuid = z.string().uuid().parse(idempotencyKey);
+    const key = hashToken(
+      data.experimentId === "E1" ? uuid : `${data.experimentId}:${uuid}`,
+    );
     await this.db.query("select pg_advisory_xact_lock(hashtext($1))", [key]);
     const existing = await this.db.query<{ id: string; state: StudyState }>(
       "select s.id,s.state from visuallearn.sessions s join visuallearn.participants p on p.id=s.participant_id where p.enrollment_key=$1",
@@ -168,7 +192,7 @@ export class StudyService {
     if (existing.rows[0]) return { sessionId: existing.rows[0].id };
     const code = `VL-${randomBytes(6).toString("hex").toUpperCase()}`;
     const p = await this.db.query<{ id: string }>(
-      "insert into visuallearn.participants(public_code,experiment_id,age_band,language,consent_version,f0,enrollment_key) values($1,'E1',$2,$3,$4,$5,$6) returning id",
+      "insert into visuallearn.participants(public_code,experiment_id,age_band,language,consent_version,f0,enrollment_key) values($1,$7,$2,$3,$4,$5,$6) returning id",
       [
         code,
         data.ageBand,
@@ -176,20 +200,22 @@ export class StudyService {
         data.consentVersion,
         JSON.stringify(data),
         key,
+        data.experimentId,
       ],
     );
     const s = await this.db.query<{ id: string }>(
-      "insert into visuallearn.sessions(participant_id,content_version,content_sha256,protocol_version,stimulus_version,media_manifest_sha256,question_bank_sha256,stimulus_sha256,followup_window_minutes) values($1,$2,$3,$4,$5,$6,$7,$8,$9) returning id",
+      "insert into visuallearn.sessions(participant_id,content_version,content_sha256,protocol_version,stimulus_version,media_manifest_sha256,question_bank_sha256,stimulus_sha256,followup_window_minutes,experiment_id,presentation_version) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$5) returning id",
       [
         p.rows[0].id,
         lesson.version,
         manifest.contentSha256,
         e.protocol_version,
-        STIMULUS_VERSION,
+        data.experimentId === "E1" ? STIMULUS_VERSION : MODALITY_VERSION,
         mediaHash,
         bankHash,
         stimulusHash,
         e.followup_window_minutes,
+        data.experimentId,
       ],
     );
     return { sessionId: s.rows[0].id };
@@ -206,6 +232,7 @@ export class StudyService {
     );
     return {
       publicCode: s.public_code,
+      experimentId: s.experiment_id,
       state: s.state,
       progress: s.progress,
       visited: s.visited_segments,
@@ -347,16 +374,29 @@ export class StudyService {
     return f;
   }
   async getLesson(id: string) {
-    const s = await this.session(id);
+    const s = await this.session(id, true);
     if (s.state !== "lesson_active")
       throw new StudyError(
         "LESSON_LOCKED",
         "The study lesson is available only during its assigned stage.",
         409,
       );
+    const presentation = presentationFor(s.experiment_id, s.arm_key);
+    if (presentation.version !== s.presentation_version)
+      throw new StudyError(
+        "VERSION_MISMATCH",
+        "The saved presentation version is no longer available.",
+        409,
+      );
+    const opened = await this.db.query<{ lesson_opened_at: Date }>(
+      "update visuallearn.sessions set lesson_opened_at=coalesce(lesson_opened_at,$2) where id=$1 returning lesson_opened_at",
+      [id, this.now()],
+    );
     return {
       lesson,
-      condition: s.arm_key,
+      condition: presentation.kind === "density" ? presentation.density : null,
+      presentation,
+      lessonOpenedAt: opened.rows[0].lesson_opened_at,
       progress: s.progress,
       visited: s.visited_segments,
     };
@@ -413,10 +453,19 @@ export class StudyService {
         "Please complete the assessment first.",
         409,
       );
-    const data = (form === "F3" ? f3Schema : f5Schema).parse(input);
+    const modalitySurvey = form === "F3" && s.experiment_id === "E2";
+    const data = (
+      form === "F3" ? (modalitySurvey ? f3ModalitySchema : f3Schema) : f5Schema
+    ).parse(input);
     await this.db.query(
       "insert into visuallearn.survey_submissions(session_id,form_key,form_version,answers_json,submitted_at) values($1,$2,$3,$4,$5)",
-      [id, form, SURVEY_VERSION, JSON.stringify(data), this.now()],
+      [
+        id,
+        form,
+        modalitySurvey ? MODALITY_SURVEY_VERSION : SURVEY_VERSION,
+        JSON.stringify(data),
+        this.now(),
+      ],
     );
     await this.db.query(
       "update visuallearn.sessions set state=$2 where id=$1",
@@ -451,11 +500,57 @@ export class StudyService {
     return { sessionId: result.rows[0].session_id };
   }
   async ingestEvents(id: string, input: unknown) {
-    await this.session(id, true);
+    const session = await this.session(id, true);
     const events = eventBatchSchema.parse(input);
-    for (const e of events)
-      await this.db.query(
-        "insert into visuallearn.events(session_id,client_event_id,event_type,segment_id,elapsed_ms,client_time,payload) values($1,$2,$3,$4,$5,$6,$7) on conflict(session_id,client_event_id) do nothing",
+    for (const e of events) {
+      if (
+        !session.arm_key &&
+        (e.eventType.startsWith("audio_") ||
+          e.eventType === "diagram_interacted" ||
+          e.eventType === "accommodation_used")
+      )
+        throw new StudyError(
+          "STAGE_LOCKED",
+          "A saved assignment is required for lesson-channel events.",
+          409,
+        );
+      if (
+        session.experiment_id === "E2" &&
+        (e.eventType.startsWith("audio_") ||
+          e.eventType === "diagram_interacted")
+      ) {
+        const assigned = presentationFor(
+          session.experiment_id,
+          session.arm_key,
+        );
+        if (
+          assigned.kind !== "modality" ||
+          (e.eventType.startsWith("audio_") && !assigned.audio) ||
+          (e.eventType === "diagram_interacted" && !assigned.diagram)
+        )
+          throw new StudyError(
+            "INVALID_CHANNEL_EVENT",
+            "This channel is not part of the assigned presentation.",
+          );
+      }
+      if (e.eventType === "accommodation_used") {
+        const assigned = presentationFor(
+          session.experiment_id,
+          session.arm_key,
+        );
+        if (
+          assigned.kind !== "modality" ||
+          assigned.text ||
+          e.payload.accommodation !== "transcript" ||
+          !e.segmentId
+        )
+          throw new StudyError(
+            "INVALID_ACCOMMODATION",
+            "This accommodation event is not valid for this study.",
+          );
+      }
+      const inserted = await this.db.query<{ id: string }>(
+        "insert into visuallearn.events(session_id,client_event_id,event_type,segment_id,elapsed_ms,client_time,payload) values($1,$2,$3,$4,$5,$6,$7) on conflict(session_id,client_event_id) do nothing returning id",
         [
           id,
           e.clientEventId,
@@ -466,6 +561,12 @@ export class StudyService {
           JSON.stringify(e.payload),
         ],
       );
+      if (inserted.rows.length && e.eventType === "accommodation_used")
+        await this.db.query(
+          "update visuallearn.sessions set accommodations=jsonb_set(accommodations,array[$2],coalesce(accommodations->$2,to_jsonb($3::text)),true) where id=$1",
+          [id, `transcript:${e.segmentId}`, this.now().toISOString()],
+        );
+    }
     return { accepted: true };
   }
   async withdraw(id: string) {

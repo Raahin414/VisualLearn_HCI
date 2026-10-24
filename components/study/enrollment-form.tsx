@@ -1,29 +1,42 @@
 "use client";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 export function EnrollmentForm({
   consentVersion,
   consentText,
   studyContact,
+  experimentId = "E1",
 }: {
   consentVersion: string;
   consentText: string;
   studyContact: string;
+  experimentId?: "E1" | "E2";
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const enrollmentKey = useRef<string | null>(null);
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setBusy(true);
     setError("");
     const form = new FormData(e.currentTarget);
-    let key = sessionStorage.getItem("visuallearn-enrollment-key");
+    const storageKey =
+      experimentId === "E1"
+        ? "visuallearn-enrollment-key"
+        : `visuallearn-enrollment-key:${experimentId}`;
+    let key = enrollmentKey.current;
+    try {
+      key ??= sessionStorage.getItem(storageKey);
+    } catch {}
     if (!key) {
       key = crypto.randomUUID();
-      sessionStorage.setItem("visuallearn-enrollment-key", key);
     }
+    enrollmentKey.current = key;
+    try {
+      sessionStorage.setItem(storageKey, key);
+    } catch {}
     try {
       const response = await fetch("/api/study/enroll", {
         method: "POST",
@@ -37,6 +50,7 @@ export function EnrollmentForm({
           dataUse: form.get("dataUse") === "on",
           contactViewed: form.get("contactViewed") === "on",
           consentVersion,
+          experimentId,
         }),
       });
       const data = await response.json();

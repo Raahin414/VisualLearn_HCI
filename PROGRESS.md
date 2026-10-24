@@ -1,5 +1,11 @@
 # VisualLearn progress
 
+## M2 modality - verified, recruitment closed (2026-10-24)
+
+Four server-assigned modality arms reuse the canonical script/audio/essential diagram; audio transcripts are explicit recorded accommodations. Additive migration 003 preserves legacy E1 rows and enforces study identity. E2 is available only in the development simulator and remains closed to real recruitment. Exports distinguish studies and dashboard summaries are scoped by experiment. E1 rendering advances to density-v5-draft and E2 to modality-v1-draft; canonical source/audio/spec bytes are unchanged.
+
+Verified: clean install (414 packages, audit 0), 57 unit/service tests (includes PGlite), 5 dedicated PGlite schema tests, lint (0 errors, 1 cancellation-ref warning), types, 14 real PostgreSQL tests, optimized build, 22 clean browser assets, 26 development browser tests (3.2 min), 26 production browser tests (1.4 min), 19 local security checks and 23 connected Supabase tests (6.7 min). Production HTTP smoke is 200/404/401. A controlled obsolete-response regression passed and failed when its guard was deliberately disabled; exact source bytes were restored and verified. Failed/interrupted attempts are recorded in QA. M3 chunking is next. Manual device/screen-reader and human scientific/ethics reviews remain open. No hosted changes or human approvals have been performed.
+
 ## M1 shared academic UI — verified, 2026-10-24
 
 Baseline infrastructure was committed/pushed as `9b0d509` and the remote hash verified. M1 introduces shared type/spacing/radius/focus tokens, readable metadata, consistent form surfaces and simpler public copy, removing decorative rotations/shadows/emoji. It fixes cached narration status and prevents callback/form buttons being activated before hydration. Dashboard tables support keyboard scrolling. Draft stimulus version is `density-v4-draft`; layout/header/public player/button sources join the manifest. Canonical lesson JSON, objectives, WAVs, assessment wording and SVG tiers remain unchanged.

@@ -43,6 +43,10 @@ const manifest = {
   stimulus: await Promise.all(
     [
       "components/learning/water-diagram.tsx",
+      "components/learning/modality-lesson.tsx",
+      "lib/study/presentation.ts",
+      "lib/study/presentation.server.ts",
+      "lib/telemetry/schema.ts",
       "lib/content/lesson.ts",
       "app/globals.css",
       "app/layout.tsx",

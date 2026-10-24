@@ -18,6 +18,7 @@ export const eventNames = [
   "lesson_completed",
   "survey_submitted",
   "followup_completed",
+  "accommodation_used",
 ] as const;
 export const eventSchema = z
   .object({
@@ -41,9 +42,27 @@ export const eventSchema = z
         scrollPercent: z
           .union([z.literal(25), z.literal(50), z.literal(75), z.literal(100)])
           .optional(),
+        accommodation: z.literal("transcript").optional(),
       })
       .strict(),
   })
-  .strict();
+  .strict()
+  .superRefine((event, ctx) => {
+    if (
+      event.eventType === "accommodation_used" &&
+      (!event.segmentId || event.payload.accommodation !== "transcript")
+    )
+      ctx.addIssue({
+        code: "custom",
+        message: "Transcript accommodation requires a chapter.",
+        path: ["payload"],
+      });
+    if (event.eventType !== "accommodation_used" && event.payload.accommodation)
+      ctx.addIssue({
+        code: "custom",
+        message: "Accommodation payload requires the matching event.",
+        path: ["payload"],
+      });
+  });
 export const eventBatchSchema = z.array(eventSchema).min(1).max(50);
 export type StudyEvent = z.infer<typeof eventSchema>;

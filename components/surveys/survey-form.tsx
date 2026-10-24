@@ -16,10 +16,12 @@ export function SurveyForm({
   form,
   draftKey,
   onSubmit,
+  diagramNA = false,
 }: {
   form: SurveyFormKey;
   draftKey: string;
   onSubmit: (answers: SurveyDraft) => Promise<void>;
+  diagramNA?: boolean;
 }) {
   const [draft, setDraft] = useState<SurveyDraft>({});
   const [ready, setReady] = useState(false);
@@ -32,7 +34,11 @@ export function SurveyForm({
     let saved: SurveyDraft = {};
     let available = true;
     try {
-      saved = readSurveyDraft(sessionStorage.getItem(draftKey), form);
+      saved = readSurveyDraft(
+        sessionStorage.getItem(draftKey),
+        form,
+        diagramNA,
+      );
     } catch {
       available = false;
     }
@@ -41,7 +47,7 @@ export function SurveyForm({
       setCanSave(available);
       setReady(true);
     });
-  }, [draftKey, form]);
+  }, [draftKey, form, diagramNA]);
   useEffect(() => {
     if (!ready) return;
     try {
@@ -55,7 +61,7 @@ export function SurveyForm({
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (submitting.current || !ready) return;
-    const invalid = validateSurveyDraft(form, draft);
+    const invalid = validateSurveyDraft(form, draft, diagramNA);
     if (invalid) {
       setError(invalid.message);
       formRef.current
@@ -106,7 +112,11 @@ export function SurveyForm({
               : "Restoring draft…"}
           </span>
         </div>
-        <progress aria-label="Questionnaire progress" value={done} max={total} />
+        <progress
+          aria-label="Questionnaire progress"
+          value={done}
+          max={total}
+        />
       </div>
       {form === "F3" ? (
         <>
@@ -115,7 +125,10 @@ export function SurveyForm({
               key={key}
               name={key}
               label={text}
-              na={["audio", "motion", "color"].includes(key)}
+              na={
+                ["audio", "motion", "color"].includes(key) ||
+                (diagramNA && key === "support")
+              }
               value={draft[key]}
               disabled={disabled}
               onChange={(v) => set(key, v)}
@@ -164,9 +177,7 @@ export function SurveyForm({
             </select>
           </label>
           <fieldset disabled={disabled || draft.reviewed !== "yes"}>
-            <legend>
-              If yes, what did you use? Choose all that apply.
-            </legend>
+            <legend>If yes, what did you use? Choose all that apply.</legend>
             {f5Sources.map(([value, label]) => {
               const selected = Array.isArray(draft.sources)
                 ? draft.sources

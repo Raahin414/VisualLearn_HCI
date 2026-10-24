@@ -1,32 +1,54 @@
 import "server-only";
-import { BANK_VERSION, questionBanks, answerKey } from "@/lib/assessments/questions.server";
+import {
+  BANK_VERSION,
+  questionBanks,
+  answerKey,
+} from "@/lib/assessments/questions.server";
 import { rubrics } from "@/lib/assessments/rubrics.server";
 import { writtenPrompts } from "@/lib/assessments/written-prompts";
-import { f3Items, f5Sources, SURVEY_VERSION } from "@/lib/assessments/surveys";
+import {
+  f3Items,
+  f5Sources,
+  MODALITY_SURVEY_VERSION,
+  SURVEY_VERSION,
+} from "@/lib/assessments/surveys";
 import type { ExportName } from "./exports";
-const ID = "Stable pseudonymous key: VL_ + first 24 hex of SHA-256(internal UUID). Joins across files; not reversible from the export.";
+const ID =
+  "Stable pseudonymous key: VL_ + first 24 hex of SHA-256(internal UUID). Joins across files; not reversible from the export.";
 // Column documentation for every export. Tests assert each exported column is documented.
 export const dataDictionary: Record<ExportName, Record<string, string>> = {
   participants_deidentified: {
     participant_id: ID,
+    experiment_id: "Registered experiment; analyse each experiment separately.",
     age_band: "Self-reported age band (18-30 only; minors are blocked).",
     language: "Primary learning language from F0.",
-    language_comfort: "F0 language comfort, 1 very uncomfortable to 5 very comfortable.",
-    prior_familiarity: "F0 prior topic familiarity, 1 never heard to 5 know it very well.",
-    consent_version: "Consent text version accepted (SYNTHETIC-* in test databases).",
+    language_comfort:
+      "F0 language comfort, 1 very uncomfortable to 5 very comfortable.",
+    prior_familiarity:
+      "F0 prior topic familiarity, 1 never heard to 5 know it very well.",
+    consent_version:
+      "Consent text version accepted (SYNTHETIC-* in test databases).",
     consent_at: "Server UTC time consent was recorded.",
     created_at: "Server UTC time the participant row was created.",
   },
   assignments: {
     participant_id: ID,
-    experiment_id: "Registered experiment (E1 only can be enabled).",
-    arm_key: "Assigned visual-density condition: low, medium or high.",
-    randomization_version: "Allocation algorithm version (age-stratified minimum allocation with random ties).",
+    experiment_id:
+      "Registered experiment; E2 remains closed pending pilot and human review.",
+    arm_key:
+      "Persisted arm within experiment_id; E1 low/medium/high; E2 text-only/audio-only/text-diagram/audio-diagram.",
+    randomization_version:
+      "Allocation algorithm version (age-stratified minimum allocation with random ties).",
     assigned_at: "Server UTC time of assignment, after baseline submission.",
   },
   sessions: {
     session_id: ID,
     participant_id: ID,
+    experiment_id:
+      "Registered experiment; joins to participant and assignment study are enforced.",
+    presentation_version: "Frozen rendering contract version at enrollment.",
+    lesson_opened_at:
+      "First server lesson request; null for legacy rows. Not a measure of attentive exposure.",
     state: "Current lifecycle state (enrolled … finished).",
     content_version: "Canonical lesson content version.",
     content_sha256: "SHA-256 of canonical lesson JSON at enrollment.",
@@ -35,10 +57,13 @@ export const dataDictionary: Record<ExportName, Record<string, string>> = {
     media_manifest_sha256: "Hash of the narration manifest.",
     question_bank_sha256: "Hash of forms A/B/C, written prompts and rubrics.",
     stimulus_sha256: "Hash of the stimulus source manifest.",
-    followup_window_minutes: "Grace window after +60 minutes frozen at enrollment.",
-    accommodations: "Recorded accommodations (JSON; currently not collected by the UI).",
+    followup_window_minutes:
+      "Grace window after +60 minutes frozen at enrollment.",
+    accommodations:
+      "JSON: transcript:segment-id records first server receipt of explicit transcript accommodation; inspect with event stream.",
     started_at: "Server UTC enrollment time.",
-    lesson_completed_at: "Server UTC lesson completion time (anchors the follow-up).",
+    lesson_completed_at:
+      "Server UTC lesson completion time (anchors the follow-up).",
   },
   assessment_attempts: {
     attempt_id: ID,
@@ -48,11 +73,14 @@ export const dataDictionary: Record<ExportName, Record<string, string>> = {
     form_version: "Question bank version.",
     opened_at: "Server UTC time the form was first served.",
     submitted_at: "Server UTC submission time (first valid submission wins).",
-    duration_ms: "submitted_at minus opened_at, milliseconds (includes idle time).",
-    correct: "Objective items correct (0–8). Ordering and labeling are all-or-nothing.",
+    duration_ms:
+      "submitted_at minus opened_at, milliseconds (includes idle time).",
+    correct:
+      "Objective items correct (0–8). Ordering and labeling are all-or-nothing.",
     max_score: "Number of objective items (8).",
     scoring_version: "Objective scoring version.",
-    rubric_version: "Written-response rubric version (immediate and plus_60m only).",
+    rubric_version:
+      "Written-response rubric version (immediate and plus_60m only).",
   },
   item_responses: {
     attempt_id: ID,
@@ -61,7 +89,8 @@ export const dataDictionary: Record<ExportName, Record<string, string>> = {
     form_key: "Form A, B or C.",
     form_version: "Question bank version.",
     item_id: "Item identifier, e.g. B-5. See items in codebook.json.",
-    response: "MCQ: option index. Ordering: step indices by position. Labeling: option index per marker.",
+    response:
+      "MCQ: option index. Ordering: step indices by position. Labeling: option index per marker.",
     auto_score: "1 if correct under the frozen key, otherwise 0.",
     item_type: "mcq, ordering or labeling.",
     skill: "recall, sequencing, labeling, conceptual or transfer.",
@@ -75,7 +104,8 @@ export const dataDictionary: Record<ExportName, Record<string, string>> = {
     timepoint: "immediate or plus_60m.",
     response_kind: "free_recall or scenario.",
     rubric_version: "Rubric version applicable to the response.",
-    response_text: "Verbatim participant text. Review for self-disclosed identifying details before sharing.",
+    response_text:
+      "Verbatim participant text. Review for self-disclosed identifying details before sharing.",
     char_count: "Character count.",
   },
   free_recall_ratings: {
@@ -137,18 +167,24 @@ export function codebook() {
     })),
   }));
   return {
-    title: "VisualLearn E1 codebook",
-    status: "DRAFT — instruments and rubrics await supervisor/educator review. Not a validated scale.",
+    title: "VisualLearn E1/E2 codebook",
+    status:
+      "DRAFT — instruments and rubrics await supervisor/educator review. Not a validated scale.",
     bankVersion: BANK_VERSION,
     surveyVersion: SURVEY_VERSION,
+    modalitySurveyVersion: MODALITY_SURVEY_VERSION,
+    modalitySurveyRule:
+      "E2 F3 also allows support=not_applicable in every arm; wording unchanged. Never impute this as zero.",
     forms,
     writtenPrompts,
     rubrics,
     surveys: {
       F3: {
-        likert: "1 Strongly disagree … 5 Strongly agree; audio, motion and color allow not_applicable.",
+        likert:
+          "1 Strongly disagree … 5 Strongly agree; audio, motion and color allow not_applicable.",
         items: f3Items.map(([key, text]) => ({ key, text })),
-        mentalEffort: "Single item, 1 very little … 9 very much. Analyse separately; do not sum with Likert items.",
+        mentalEffort:
+          "Single item, 1 very little … 9 very much. Analyse separately; do not sum with Likert items.",
         optionalText: ["confusing", "helpful"],
       },
       F5: {
@@ -172,7 +208,13 @@ export function dataDictionaryMarkdown() {
     "Draft instruments. Withdrawn participants are excluded from every file. Free text needs disclosure review before sharing.",
   ];
   for (const [name, columns] of Object.entries(dataDictionary)) {
-    lines.push("", `## ${name}.csv`, "", "| Column | Description |", "|---|---|");
+    lines.push(
+      "",
+      `## ${name}.csv`,
+      "",
+      "| Column | Description |",
+      "|---|---|",
+    );
     for (const [col, text] of Object.entries(columns))
       lines.push(`| ${col} | ${text.replaceAll("|", "\\|")} |`);
   }

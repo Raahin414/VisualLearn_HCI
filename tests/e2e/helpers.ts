@@ -1,7 +1,8 @@
-import type { Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 /** Completes every objective item with a well-formed (not necessarily correct) answer. */
 export async function answerAll(page: Page) {
   const groups = page.locator("fieldset.quiz-card");
+  await expect(groups).toHaveCount(8);
   const count = await groups.count();
   for (let i = 0; i < count; i++) {
     const group = groups.nth(i);
@@ -12,9 +13,11 @@ export async function answerAll(page: Page) {
       continue;
     }
     // Ordering uses each step once; labeling accepts any listed process.
-    for (let j = 0; j < n; j++)
-      await selects.nth(j).selectOption(String(j));
+    for (let j = 0; j < n; j++) await selects.nth(j).selectOption(String(j));
   }
+  await expect(
+    page.getByText("8 of 8 answered", { exact: true }),
+  ).toBeVisible();
 }
 /** Fills part 1 (free recall and, when shown, the scenario) and continues. */
 export async function completeWritten(page: Page, label = "SYNTHETIC") {

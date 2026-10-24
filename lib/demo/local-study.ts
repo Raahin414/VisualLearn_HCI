@@ -1,11 +1,35 @@
 import { z } from "zod";
 import { conditions, lesson, type Condition } from "@/lib/content/lesson";
 import { followupEligibility, followupWindow } from "@/lib/study/lifecycle";
-import { f3Schema, f5Schema } from "@/lib/assessments/surveys";
+import {
+  f3Schema,
+  f3ModalitySchema,
+  f5Schema,
+} from "@/lib/assessments/surveys";
+import {
+  presentationSchema,
+  type DemoExperiment,
+} from "@/lib/study/presentation";
 import { eventBatchSchema } from "@/lib/telemetry/schema";
 import { validateDraft, type PublicQuestion } from "@/lib/assessments/draft";
 import { writtenPrompts } from "@/lib/assessments/written-prompts";
-export const LOCAL_DEMO_KEY = "visuallearn-SYNTHETIC-local-study-v2";
+export const LOCAL_DEMO_KEY = "visuallearn-SYNTHETIC-local-study-v3";
+const LEGACY_DEMO_KEY = "visuallearn-SYNTHETIC-local-study-v2";
+export const fallbackExperiments: DemoExperiment[] = [
+  {
+    id: "E1",
+    name: "Visual density",
+    arms: conditions.map((key) => ({
+      key,
+      label: key,
+      presentation: {
+        kind: "density",
+        version: "SYNTHETIC-density",
+        density: key,
+      },
+    })),
+  },
+];
 const submission = z
   .object({
     answers: z.record(
@@ -33,9 +57,13 @@ const states = [
 const recordSchema = z
   .object({
     kind: z.literal("SYNTHETIC"),
-    version: z.literal(2),
+    version: z.literal(3),
     publicCode: z.string().startsWith("SYNTHETIC-"),
-    condition: z.enum(conditions),
+    experimentId: z.enum(["E1", "E2"]),
+    armKey: z.string().min(1).max(40),
+    condition: z.enum(conditions).nullable(),
+    presentation: presentationSchema,
+    transcriptSegments: z.array(z.string().max(40)).max(5),
     state: z.enum(states),
     progress: z.number().int().min(0).max(4),
     visited: z.array(z.number().int().min(0).max(4)).max(5),
@@ -49,7 +77,10 @@ const recordSchema = z
       immediate: storedSubmission.optional(),
       plus_60m: storedSubmission.optional(),
     }),
-    surveys: z.object({ F3: f3Schema.optional(), F5: f5Schema.optional() }),
+    surveys: z.object({
+      F3: f3ModalitySchema.optional(),
+      F5: f5Schema.optional(),
+    }),
     eventCount: z.number().int().nonnegative(),
   })
   .strict();
@@ -73,15 +104,39 @@ export class LocalStudy {
     private storage: StorageLike,
     private banks: DemoBanks,
     private clock: () => number = Date.now,
+    private experiments: DemoExperiment[] = fallbackExperiments,
   ) {
     let raw: string | null = null;
     try {
-      raw = storage.getItem(LOCAL_DEMO_KEY);
+      raw = storage.getItem(LOCAL_DEMO_KEY) ?? storage.getItem(LEGACY_DEMO_KEY);
     } catch {
       this.storageAvailable = false;
     }
-    // An unreadable or older fixture is discarded rather than migrated.
-    const parsed = raw ? recordSchema.safeParse(safeJson(raw)) : null;
+    // Preserve valid v2 E1 fixtures; this is browser SYNTHETIC data only.
+    let candidate = raw ? safeJson(raw) : null;
+    if (
+      candidate &&
+      typeof candidate === "object" &&
+      "version" in candidate &&
+      candidate.version === 2 &&
+      "condition" in candidate
+    ) {
+      const condition = z.enum(conditions).safeParse(candidate.condition);
+      if (condition.success)
+        candidate = {
+          ...candidate,
+          version: 3,
+          experimentId: "E1",
+          armKey: condition.data,
+          presentation: {
+            kind: "density",
+            version: "SYNTHETIC-density",
+            density: condition.data,
+          },
+          transcriptSegments: [],
+        };
+    }
+    const parsed = candidate ? recordSchema.safeParse(candidate) : null;
     if (parsed?.success) this.record = parsed.data;
     else if (parsed)
       try {
@@ -109,13 +164,24 @@ export class LocalStudy {
   }
   start(condition: Condition) {
     z.enum(conditions).parse(condition);
+    this.startExperiment("E1", condition);
+  }
+  startExperiment(experimentId: "E1" | "E2", armKey: string) {
+    const definition = this.experiments.find((e) => e.id === experimentId);
+    const arm = definition?.arms.find((a) => a.key === armKey);
+    if (!arm) throw new Error("Choose a registered simulated presentation.");
     if (this.record)
       throw new Error("Reset the simulated session before starting another.");
     this.record = {
       kind: "SYNTHETIC",
-      version: 2,
+      version: 3,
       publicCode: `SYNTHETIC-${crypto.randomUUID().slice(0, 8).toUpperCase()}`,
-      condition,
+      experimentId,
+      armKey,
+      condition:
+        arm.presentation.kind === "density" ? arm.presentation.density : null,
+      presentation: presentationSchema.parse(arm.presentation),
+      transcriptSegments: [],
       state: "enrolled",
       progress: 0,
       visited: [],
@@ -130,6 +196,9 @@ export class LocalStudy {
   reset() {
     this.record = null;
     this.publish();
+    try {
+      this.storage.removeItem(LEGACY_DEMO_KEY);
+    } catch {}
   }
   private active() {
     if (!this.record) throw new Error("Start a simulated session first.");
@@ -165,6 +234,7 @@ export class LocalStudy {
       const w = r.lessonCompletedAt ? this.window() : null;
       return {
         publicCode: r.publicCode,
+        experimentId: r.experimentId,
         state: r.state,
         progress: r.progress,
         visited: r.visited,
@@ -188,6 +258,7 @@ export class LocalStudy {
         throw new Error("The simulated lesson is not active.");
       return {
         condition: r.condition,
+        presentation: r.presentation,
         progress: r.progress,
         visited: r.visited,
       };
@@ -285,14 +356,30 @@ export class LocalStudy {
       )
         throw new Error("Complete the assessment first.");
       if (form === "F3") {
-        r.surveys.F3 = f3Schema.parse(input);
+        r.surveys.F3 = (
+          r.experimentId === "E2" ? f3ModalitySchema : f3Schema
+        ).parse(input);
         r.state = "waiting_60m";
       } else {
         r.surveys.F5 = f5Schema.parse(input);
         r.state = "finished";
       }
     } else if (action === "events") {
-      r.eventCount += eventBatchSchema.parse(input).length;
+      const events = eventBatchSchema.parse(input);
+      for (const event of events)
+        if (event.eventType === "accommodation_used") {
+          if (
+            r.presentation.kind !== "modality" ||
+            r.presentation.text ||
+            event.payload.accommodation !== "transcript" ||
+            !event.segmentId
+          )
+            throw new Error("Invalid simulated accommodation event.");
+          r.transcriptSegments = [
+            ...new Set([...r.transcriptSegments, event.segmentId]),
+          ];
+        }
+      r.eventCount += events.length;
     } else if (action === "withdraw") {
       r.state = "withdrawn";
       result = { withdrawn: true };

@@ -29,14 +29,16 @@ type Ctx = { params: Promise<{ operation: string }> };
 const noStore = { "Cache-Control": "no-store" };
 const unauthorized = () =>
   NextResponse.json(
-    { error: { code: "UNAUTHORIZED", message: "Researcher sign-in required." } },
+    {
+      error: { code: "UNAUTHORIZED", message: "Researcher sign-in required." },
+    },
     { status: 401, headers: noStore },
   );
 const audit = (db: SQL, actor: string, action: string) =>
-  db.query("insert into visuallearn.audit_log(actor_hash,action) values($1,$2)", [
-    hashToken(actor),
-    action,
-  ]);
+  db.query(
+    "insert into visuallearn.audit_log(actor_hash,action) values($1,$2)",
+    [hashToken(actor), action],
+  );
 export async function GET(request: NextRequest, ctx: Ctx) {
   let actor: string;
   try {
@@ -49,12 +51,24 @@ export async function GET(request: NextRequest, ctx: Ctx) {
   try {
     return await transaction(async (client) => {
       const db = client as unknown as SQL;
-      if (operation === "stats")
-        return NextResponse.json(await studyStats(db), { headers: noStore });
+      if (operation === "stats") {
+        const study = params.get("study") || "E1";
+        if (study !== "E1" && study !== "E2")
+          return NextResponse.json(
+            { error: "Unknown study." },
+            { status: 400, headers: noStore },
+          );
+        return NextResponse.json(await studyStats(db, study), {
+          headers: noStore,
+        });
+      }
       if (operation === "export") {
         const table = params.get("table") || "";
         if (!Object.hasOwn(exportQueries, table))
-          return NextResponse.json({ error: "Unknown export dataset." }, { status: 400 });
+          return NextResponse.json(
+            { error: "Unknown export dataset." },
+            { status: 400 },
+          );
         const { rows, columns } = await exportRows(db, table as ExportName);
         await audit(db, actor, `export:${table}`);
         return new Response(toCsv(rows, columns), {
@@ -67,9 +81,15 @@ export async function GET(request: NextRequest, ctx: Ctx) {
       }
       if (operation === "codebook") {
         const markdown = params.get("format") === "md";
-        await audit(db, actor, `export:${markdown ? "data_dictionary" : "codebook"}`);
+        await audit(
+          db,
+          actor,
+          `export:${markdown ? "data_dictionary" : "codebook"}`,
+        );
         return new Response(
-          markdown ? dataDictionaryMarkdown() : JSON.stringify(codebook(), null, 2),
+          markdown
+            ? dataDictionaryMarkdown()
+            : JSON.stringify(codebook(), null, 2),
           {
             headers: {
               ...noStore,
@@ -87,10 +107,16 @@ export async function GET(request: NextRequest, ctx: Ctx) {
           { headers: noStore },
         );
       if (operation === "adjudication")
-        return NextResponse.json(await adjudicationQueue(db, params.get("kind")), {
-          headers: noStore,
-        });
-      return NextResponse.json({ error: "Unknown admin operation." }, { status: 404 });
+        return NextResponse.json(
+          await adjudicationQueue(db, params.get("kind")),
+          {
+            headers: noStore,
+          },
+        );
+      return NextResponse.json(
+        { error: "Unknown admin operation." },
+        { status: 404 },
+      );
     });
   } catch {
     return NextResponse.json(
@@ -111,7 +137,10 @@ export async function POST(request: NextRequest, ctx: Ctx) {
       await supabaseAuth("logout?scope=local", { method: "POST", token }).catch(
         () => undefined,
       );
-    const response = NextResponse.json({ signedOut: true }, { headers: noStore });
+    const response = NextResponse.json(
+      { signedOut: true },
+      { headers: noStore },
+    );
     response.cookies.delete(adminCookie);
     response.cookies.delete(adminMfaCookie);
     return response;

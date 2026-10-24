@@ -5,7 +5,7 @@ import { mkdir } from "node:fs/promises";
 for (const width of [360, 768, 1280]) {
   test(`shared forms and simulation meet accessibility/layout checks at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
-    await mkdir("docs/screenshots/m1-after", { recursive: true });
+    await mkdir("docs/screenshots/current", { recursive: true });
     const routes = [
       ["auth", "/admin"],
       ["accept", "/admin/accept"],
@@ -21,7 +21,7 @@ for (const width of [360, 768, 1280]) {
         .withTags(["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"])
         .analyze();
       expect(result.violations, `${name}: WCAG A/AA rules`).toEqual([]);
-      await page.screenshot({ path: `docs/screenshots/m1-after/${name}-${width}.png`, fullPage: true });
+      await page.screenshot({ path: `docs/screenshots/current/${name}-${width}.png`, fullPage: true });
     }
     await page.goto("/");
     await page.keyboard.press("Tab");

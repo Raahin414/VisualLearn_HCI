@@ -1,5 +1,15 @@
 # Implementation handoff — 2026-10-16
 
+## M2 handoff - 2026-10-24 (verified, recruitment closed)
+
+Follows verified/pushed M1 `5882146`. Implemented centralized server modality projections, canonical four-arm renderer with recorded transcript accommodation and fixed 1x audio, closed pilot gates, additive migration 003, experiment-scoped summaries/exports, modality F3 N/A version and development-only simulator support. Canonical JSON/WAV/SVG/banks/rubrics and original specification remain unchanged.
+
+Executed: Node 24.22.1/npm 11.21.1 clean `npm ci` (414 packages, audit 0), `verify-content` (5 segments, 327.0 seconds unchanged WAVs), `test` (57 across 9 files, includes PGlite), `db:validate` (5), lint (0 errors, 1 intentional cancellation-ref warning)/types, `test:pg` (14 real PostgreSQL), final development `test:e2e` (26/26, 3.2 min), build/bundle (22 assets), production Chromium (26/26, 1.4 min), production HTTP smoke (200/404/401), pristine local Supabase verifier (19/19), complete connected real Auth/MFA/PostgreSQL Chromium (23/23, 6.7 min). No hosted work or actual researcher acceptance was performed.
+
+New evidence covers all 4 modalities at 3 widths, source/transcript equality, channel/rate contracts, keyboard accommodation, refresh, no research requests in the simulator, legacy schema preservation, 12 concurrent E2 allocations, duplicate telemetry/accommodation handling, one-hour C/F5 and withdrawal. Fixed a reused test-worker pool lifecycle and a real obsolete-load UI hazard; the latter is reproduced by controlled HTTP response ordering and a deliberate failing guard mutation. Final source was restored exactly, rehashed and fully verified. Historical M1 screenshots are preserved; current regression captures use `docs/screenshots/current/`, with E2 primary presentations in `m2/`. Initial fixture/locator errors and failed runs remain in QA; they are not counted as passes.
+
+Next: commit/push this verified M2 checkpoint on the requested branch and verify its remote hash, then proceed directly to M3. No recruitment or review approvals were recorded.
+
 ## M1 handoff — 2026-10-24
 
 Follows verified/pushed baseline `9b0d509`, branch `feat/visuallearn-foundation`. Implemented shared academic type/spacing/radius/focus tokens, readable metadata/control text, consistent form surfaces, keyboard-scrollable dashboard regions, simpler public copy and removal of decorative rotations/shadows/emoji. Fixed two real hydration defects: cached native audio metadata/error events could precede handlers and leave stale loading status; immediately after MFA, a tab button could be clicked before its callback existed. Shared buttons now wait for hydration (native links still work); replay/chapter controls use that primitive and chapter navigation waits for saved progress. No playback command or telemetry is emitted by readiness synchronization.

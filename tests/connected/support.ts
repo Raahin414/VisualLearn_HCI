@@ -21,12 +21,32 @@ export const harness = JSON.parse(
 };
 if (!/@127\.0\.0\.1:/.test(harness.ownerUrl))
   throw new Error("Connected tests only run against the local Supabase stack.");
-export const db = new pg.Pool({ connectionString: harness.ownerUrl, max: 2 });
+let databasePool: pg.Pool | null = null;
+// Test files share this module in a reused worker. A file may close its pool
+// without preventing the next file from obtaining a fresh local connection.
+export const db = {
+  get query() {
+    const pool = (databasePool ??= new pg.Pool({
+      connectionString: harness.ownerUrl,
+      max: 2,
+    }));
+    return pool.query.bind(pool);
+  },
+  async end() {
+    const pool = databasePool;
+    databasePool = null;
+    await pool?.end();
+  },
+};
 /** Test-only read of the signed cookie payload; it cannot be forged without the secret. */
 export async function sessionId(context: BrowserContext) {
-  const cookie = (await context.cookies()).find((c) => c.name === "visuallearn_session");
+  const cookie = (await context.cookies()).find(
+    (c) => c.name === "visuallearn_session",
+  );
   if (!cookie) return null;
-  return JSON.parse(Buffer.from(cookie.value.split(".")[0], "base64url").toString()).id as string;
+  return JSON.parse(
+    Buffer.from(cookie.value.split(".")[0], "base64url").toString(),
+  ).id as string;
 }
 /** Same-origin JSON call with the context's cookies (like the app's own fetch). */
 export async function api(page: Page, action: string, body?: unknown) {
@@ -39,16 +59,25 @@ export async function api(page: Page, action: string, body?: unknown) {
         });
   return { status: r.status(), body: await r.json() };
 }
-export async function enroll(page: Page) {
-  await page.goto("/study/enroll");
+export async function enroll(page: Page, study: "E1" | "E2" = "E1") {
+  await page.goto(`/study/enroll?study=${study}`);
   await expect(page.getByText(/SYNTHETIC LOCAL TEST/)).toBeVisible();
   await page.getByLabel("Age band").selectOption("18-30");
-  await page.getByLabel("How comfortable are you learning in English?").selectOption("4");
-  await page.getByLabel("How familiar are you with the water cycle?").selectOption("2");
-  for (const box of await page.locator('input[type="checkbox"]').all()) await box.check();
-  await page.getByRole("button", { name: "Consent and begin baseline assessment" }).click();
+  await page
+    .getByLabel("How comfortable are you learning in English?")
+    .selectOption("4");
+  await page
+    .getByLabel("How familiar are you with the water cycle?")
+    .selectOption("2");
+  for (const box of await page.locator('input[type="checkbox"]').all())
+    await box.check();
+  await page
+    .getByRole("button", { name: "Consent and begin baseline assessment" })
+    .click();
   await expect(page).toHaveURL(`${BASE}/study/session`, { timeout: 60000 });
-  await expect(page.getByRole("heading", { name: "Before we begin." })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Before we begin." }),
+  ).toBeVisible();
 }
 export async function finishLesson(page: Page) {
   for (;;) {
@@ -56,13 +85,25 @@ export async function finishLesson(page: Page) {
     const n = Number(label.match(/\d/)![0]);
     if (n === 5) break;
     await page.getByRole("button", { name: "Next chapter" }).click();
-    await expect(page.getByText(`CHAPTER ${n + 1} OF 5`, { exact: true })).toBeVisible();
+    await expect(
+      page.getByText(`CHAPTER ${n + 1} OF 5`, { exact: true }),
+    ).toBeVisible();
   }
   await page.getByRole("button", { name: "Complete lesson" }).click();
   await expect(page.getByText("Part 1 of 2 · written answers")).toBeVisible();
 }
 export async function fillF3(page: Page) {
-  for (const name of ["clarity", "overload", "support", "distraction", "pacing", "audio", "color", "acceptability", "mentalEffort"])
+  for (const name of [
+    "clarity",
+    "overload",
+    "support",
+    "distraction",
+    "pacing",
+    "audio",
+    "color",
+    "acceptability",
+    "mentalEffort",
+  ])
     await page.locator(`input[name="${name}"]`).nth(2).check();
   await page.locator('input[name="motion"][value="not_applicable"]').check();
 }
@@ -108,7 +149,10 @@ export async function freshTotp(secret: string) {
 }
 
 export const secrets: Record<string, string> = {};
-export async function signIn(page: Page, who: { email: string; password: string }) {
+export async function signIn(
+  page: Page,
+  who: { email: string; password: string },
+) {
   await page.goto("/admin");
   await page.getByLabel("Email").fill(who.email);
   await page.getByLabel("Password").fill(who.password);
@@ -119,7 +163,11 @@ export async function passMfa(page: Page, who: { email: string }) {
     await page.getByRole("button", { name: "Set up authenticator" }).click();
     secrets[who.email] = await page.getByLabel("Setup key").inputValue();
   }
-  await page.getByLabel("Six-digit code from your authenticator").fill(await freshTotp(secrets[who.email]));
+  await page
+    .getByLabel("Six-digit code from your authenticator")
+    .fill(await freshTotp(secrets[who.email]));
   await page.getByRole("button", { name: "Verify and continue" }).click();
-  await expect(page.getByRole("heading", { name: "Allocation by age band and condition" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Allocation by age band and condition" }),
+  ).toBeVisible();
 }

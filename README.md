@@ -2,7 +2,7 @@
 
 An original visual learning experience and a draft HCI study platform. Built from an empty repository using the supplied [v2 implementation specification](VISUALLEARN_AGENT_IMPLEMENTATION_SPEC.md).
 
-**Status:** Runnable local MVP with a public lesson, v2 assessments (ordering, diagram labeling, written scenario and recall), questionnaire drafts, a development-only study simulation, and an E1 research workflow verified against real PostgreSQL and a local Supabase stack (Auth with MFA). Hosted Supabase staging is recorded as configured; the app is not deployed. **Not approved for human research or ready for recruitment.** No human participants or research results are seeded. See [progress](PROGRESS.md), [roadmap](ROADMAP.md) and [decisions](docs/DECISIONS.md).
+**Status:** Runnable local MVP with a public lesson, v2 assessments (ordering, diagram labeling, written scenario and recall), questionnaire drafts, a development-only study simulation, and E1/E2 research workflows verified against real PostgreSQL and a local Supabase stack (Auth with MFA). Hosted Supabase staging is recorded as configured; the app is not deployed. **Not approved for human research or ready for recruitment.** No human participants or research results are seeded. See [progress](PROGRESS.md), [roadmap](ROADMAP.md) and [decisions](docs/DECISIONS.md).
 
 ## Run the public demo
 
@@ -56,7 +56,7 @@ npm run verify:staging   # reads ignored .env.staging.local; see .env.staging.ex
 
 Migration runs every pending file in one transaction with an advisory lock and a ledger in the private `visuallearn_ops` schema (a `public` ledger would be writable by Supabase's anon role). Seed is idempotent and creates eight **disabled draft** definitions only. Provision the runtime login with `supabase/roles/runtime_role.sql` and use it for `DATABASE_URL`; never the migration owner or a superuser. Keep `visuallearn` and `visuallearn_ops` outside the exposed API schemas. Researchers need an allowlisted UUID and an authenticator app. `verify:staging` audits all of this read-only. Step-by-step staging and hosting runbook: [deployment](docs/DEPLOYMENT.md).
 
-`STUDY_ENABLED=true` alone cannot open enrollment. E1 also requires database status `recruiting`, enabled flag, content and ethics approvals, approved consent version/text and study contact. **Do not set these fields as a substitute for approval.** Minors remain blocked even if generic consent is checked; a verified guardian workflow has not been implemented. E2–E8 cannot be activated by the current database constraint.
+`STUDY_ENABLED=true` alone cannot open enrollment. E1 also requires database status `recruiting`, enabled flag, content and ethics approvals, approved consent version/text and study contact. **Do not set these fields as a substitute for approval.** Minors remain blocked even if generic consent is checked; a verified guardian workflow has not been implemented. E2 additionally requires a reviewed modality pilot contract and remains disabled in the seed. E3-E8 cannot be activated by the current database constraint.
 
 ## Checks
 
@@ -90,3 +90,10 @@ Hosted staging configuration and its earlier 19/19 audit are recorded in the dec
 ## Continuing work
 
 Read `AGENTS.md`, the specification and `PROGRESS.md`. Preserve demo/research isolation and update progress with actual outputs. Continue the authorized milestone sequence in `ROADMAP.md`; use the existing hosted staging project only within the deployment milestone. No live research before approval.
+
+
+### E2 modality preview (draft, recruitment closed)
+
+In development, open `/dev/study`, choose **E2 - Modality**, then text-only, audio-only, text and diagram, or audio and diagram. The simulator reuses the canonical lesson and participant screens without research API calls, database writes or grading. Audio arms offer an explicit transcript accommodation and use the existing narration at fixed 1x speed. The route returns 404 in production.
+
+Research assignments are server-owned and persisted after baseline; participants have no condition selector. Migration 003 enforces study identity and adds frozen presentation version/first lesson-request time. Dashboard summaries are scoped by experiment; de-identified exports remain joinable across studies. E2 remains draft and disabled pending the separate pilot/content/ethics/consent reviews. See [protocol](docs/RESEARCH_PROTOCOL.md), [stimulus audit](docs/STIMULUS_AUDIT.md) and [progress](PROGRESS.md).

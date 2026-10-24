@@ -77,7 +77,7 @@ test("the dashboard matches the database and keeps withdrawn participants out", 
   expect(stats.retention.reduce((n: number, r: { paired: number }) => n + r.paired, 0)).toBe(1);
   await expect(pageOne.getByRole("heading", { name: "Retention: immediate vs one hour" })).toBeVisible();
   await expect(pageOne.getByRole("heading", { name: "Data quality" })).toBeVisible();
-  await mkdir("docs/screenshots/m1-after", { recursive: true });
+  await mkdir("docs/screenshots/current", { recursive: true });
   for (const width of [360, 768, 1280]) {
     await pageOne.setViewportSize({ width, height: 900 });
     expect(await pageOne.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
@@ -93,7 +93,7 @@ test("the dashboard matches the database and keeps withdrawn participants out", 
       .analyze();
     expect(result.violations).toEqual([]);
     // Authenticated dashboard only: no MFA QR or setup key is present.
-    await pageOne.screenshot({ path: `docs/screenshots/m1-after/dashboard-${width}.png`, fullPage: true });
+    await pageOne.screenshot({ path: `docs/screenshots/current/dashboard-${width}.png`, fullPage: true });
   }
   await pageOne.setViewportSize({ width: 1280, height: 900 });
 });

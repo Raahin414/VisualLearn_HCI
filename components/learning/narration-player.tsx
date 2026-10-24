@@ -9,11 +9,13 @@ export function NarrationPlayer({
   title,
   onEvent,
   pauseWhen = false,
+  fixedRate = false,
 }: {
   src: string;
   title: string;
   onEvent?: (event: AudioEvent, position: number) => void;
   pauseWhen?: boolean;
+  fixedRate?: boolean;
 }) {
   const audio = useRef<HTMLAudioElement>(null);
   const [status, setStatus] = useState("Loading narration…");
@@ -28,7 +30,9 @@ export function NarrationPlayer({
         if (!active) return;
         if (element.error) {
           setFailed(true);
-          setStatus("Audio could not load. The complete transcript is available below.");
+          setStatus(
+            "Audio could not load. The complete transcript is available below.",
+          );
         } else {
           setStatus("Narration ready · press play to listen");
         }
@@ -52,6 +56,11 @@ export function NarrationPlayer({
           ref={audio}
           src={src}
           controls
+          controlsList={fixedRate ? "noplaybackrate" : undefined}
+          onRateChange={() => {
+            if (fixedRate && audio.current && audio.current.playbackRate !== 1)
+              audio.current.playbackRate = 1;
+          }}
           preload="metadata"
           aria-label={`Narration: ${title}`}
           onLoadedMetadata={() =>
