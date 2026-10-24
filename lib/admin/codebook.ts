@@ -5,6 +5,11 @@ import {
   answerKey,
 } from "@/lib/assessments/questions.server";
 import { rubrics } from "@/lib/assessments/rubrics.server";
+import {
+  SEVEN_DAY_VERSION,
+  SEVEN_DAY_SURVEY_VERSION,
+  sevenDayPrompts,
+} from "@/lib/assessments/seven-day";
 import { writtenPrompts } from "@/lib/assessments/written-prompts";
 import {
   f3Items,
@@ -13,6 +18,7 @@ import {
   SURVEY_VERSION,
 } from "@/lib/assessments/surveys";
 import type { ExportName } from "./exports";
+import { responseReviewDefinitions } from "./response-review.server";
 const ID =
   "Stable pseudonymous key: VL_ + first 24 hex of SHA-256(internal UUID). Joins across files; not reversible from the export.";
 // Column documentation for every export. Tests assert each exported column is documented.
@@ -47,6 +53,12 @@ export const dataDictionary: Record<ExportName, Record<string, string>> = {
     experiment_id:
       "Registered experiment; joins to participant and assignment study are enforced.",
     presentation_version: "Frozen rendering contract version at enrollment.",
+    seven_day_form_version:
+      "Optional reviewed form D version frozen at enrollment; null means not assigned.",
+    seven_day_bank_sha256:
+      "Hash of optional form D, its written prompts and rubrics; null means not assigned.",
+    seven_day_window_minutes:
+      "Separately reviewed seven-day grace window frozen at enrollment; null means not assigned.",
     study_time_policy:
       "E3 self-paced-no-minimum-v1 frozen at enrollment; null for other/legacy records. No imposed dwell timer.",
     exposure_measure_version:
@@ -76,8 +88,9 @@ export const dataDictionary: Record<ExportName, Record<string, string>> = {
   assessment_attempts: {
     attempt_id: ID,
     session_id: ID,
-    timepoint: "pre (form A), immediate (form B) or plus_60m (form C).",
-    form_key: "A, B or C.",
+    timepoint:
+      "pre (form A), immediate (form B) plus_60m (form C), or optional plus_7d (form D).",
+    form_key: "A, B, C or optional D.",
     form_version: "Question bank version.",
     opened_at: "Server UTC time the form was first served.",
     submitted_at: "Server UTC submission time (first valid submission wins).",
@@ -88,13 +101,13 @@ export const dataDictionary: Record<ExportName, Record<string, string>> = {
     max_score: "Number of objective items (8).",
     scoring_version: "Objective scoring version.",
     rubric_version:
-      "Written-response rubric version (immediate and plus_60m only).",
+      "Written-response rubric version (immediate, plus_60m and optional plus_7d).",
   },
   item_responses: {
     attempt_id: ID,
     session_id: ID,
     timepoint: "Assessment timepoint.",
-    form_key: "Form A, B or C.",
+    form_key: "Form A, B, C or optional D.",
     form_version: "Question bank version.",
     item_id: "Item identifier, e.g. B-5. See items in codebook.json.",
     response:
@@ -109,7 +122,7 @@ export const dataDictionary: Record<ExportName, Record<string, string>> = {
   written_responses: {
     attempt_id: ID,
     session_id: ID,
-    timepoint: "immediate or plus_60m.",
+    timepoint: "immediate, plus_60m or optional plus_7d.",
     response_kind: "free_recall or scenario.",
     rubric_version: "Rubric version applicable to the response.",
     response_text:
@@ -136,15 +149,17 @@ export const dataDictionary: Record<ExportName, Record<string, string>> = {
   },
   surveys: {
     session_id: ID,
-    form_key: "F3 immediate experience or F5 one-hour survey.",
+    form_key:
+      "F3 immediate experience, F5 one-hour, or F6 optional seven-day exposure survey.",
     form_version: "Questionnaire version.",
     answers_json: "Validated answers; see surveys in codebook.json.",
     submitted_at: "Server UTC submission time.",
   },
   followup_status: {
     session_id: ID,
-    timepoint: "plus_60m.",
-    due_at: "Server UTC: lesson_completed_at + 60 minutes.",
+    timepoint: "plus_60m or optional plus_7d; never pool them.",
+    due_at:
+      "Server UTC: lesson_completed_at + 60 minutes or seven days, according to timepoint.",
     deadline_at: "due_at + frozen grace window.",
     status: "not_started, completed_in_window, expired or withdrawn.",
     completed_at: "Server UTC completion time.",
@@ -160,9 +175,9 @@ export const dataDictionary: Record<ExportName, Record<string, string>> = {
   },
 };
 export function codebook() {
-  const forms = (["A", "B", "C"] as const).map((form) => ({
+  const forms = (["A", "B", "C", "D"] as const).map((form) => ({
     form,
-    timepoint: { A: "pre", B: "immediate", C: "plus_60m" }[form],
+    timepoint: { A: "pre", B: "immediate", C: "plus_60m", D: "plus_7d" }[form],
     items: questionBanks[form].map((q) => ({
       ...q,
       key: answerKey(form)[q.id],
@@ -176,6 +191,7 @@ export function codebook() {
   }));
   return {
     title: "VisualLearn E1/E2/E3 codebook",
+    responseReview: responseReviewDefinitions,
     status:
       "DRAFT — instruments and rubrics await supervisor/educator review. Not a validated scale.",
     bankVersion: BANK_VERSION,
@@ -185,6 +201,13 @@ export function codebook() {
       "E2 F3 also allows support=not_applicable in every arm; wording unchanged. Never impute this as zero.",
     forms,
     writtenPrompts,
+    sevenDay: {
+      status: "DRAFT, disabled pending inclusion/form/window/consent review",
+      formVersion: SEVEN_DAY_VERSION,
+      surveyVersion: SEVEN_DAY_SURVEY_VERSION,
+      writtenPrompts: sevenDayPrompts,
+      exposureSurvey: "F6 uses F5 fields at the distinct seven-day timepoint.",
+    },
     rubrics,
     surveys: {
       F3: {

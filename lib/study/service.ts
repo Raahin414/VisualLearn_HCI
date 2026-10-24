@@ -12,8 +12,14 @@ import {
 import { RUBRIC_VERSION, rubrics } from "@/lib/assessments/rubrics.server";
 import { writtenPrompts } from "@/lib/assessments/written-prompts";
 import {
+  SEVEN_DAY_VERSION,
+  SEVEN_DAY_SURVEY_VERSION,
+  sevenDayPrompts,
+} from "@/lib/assessments/seven-day";
+import {
   enrollmentSchema,
   followupWindow,
+  sevenDayWindow,
   followupEligibility,
   type StudyState,
 } from "./lifecycle";
@@ -68,6 +74,9 @@ type Session = {
   experiment_id: "E1" | "E2" | "E3";
   presentation_version: string;
   lesson_opened_at: Date | null;
+  seven_day_form_version: string | null;
+  seven_day_bank_sha256: string | null;
+  seven_day_window_minutes: number | null;
 };
 const digest = (value: unknown) =>
   createHash("sha256").update(JSON.stringify(value)).digest("hex");
@@ -81,7 +90,13 @@ const bankHash = digest({
   rubrics,
 });
 export const STIMULUS_VERSION = SOURCE_VERSION;
-const stageForms = { pre: "A", immediate: "B", plus_60m: "C" } as const;
+const sevenDayHash = digest({ D: questionBanks.D, sevenDayPrompts, rubrics });
+const stageForms = {
+  pre: "A",
+  immediate: "B",
+  plus_60m: "C",
+  plus_7d: "D",
+} as const;
 export type Timepoint = keyof typeof stageForms;
 const submissionSchema = z
   .object({
@@ -110,6 +125,10 @@ export class StudyService {
       pilot_reviewed: boolean;
       pilot_contract_version: string | null;
       study_time_policy: string | null;
+      seven_day_enabled: boolean;
+      seven_day_reviewed: boolean;
+      seven_day_form_version: string | null;
+      seven_day_window_minutes: number | null;
     }>("select * from visuallearn.experiments where id=$1", [experimentId]);
     const e = rows[0];
     if (
@@ -147,6 +166,17 @@ export class StudyService {
         "A reviewed chunking time policy is required.",
         503,
       );
+    if (
+      e.seven_day_enabled &&
+      (!e.seven_day_reviewed ||
+        e.seven_day_form_version !== SEVEN_DAY_VERSION ||
+        !e.seven_day_window_minutes)
+    )
+      throw new StudyError(
+        "OPTIONAL_CLOSED",
+        "A reviewed seven-day protocol and window are required.",
+        503,
+      );
     return e;
   }
   async session(id: string, lock = false) {
@@ -171,7 +201,10 @@ export class StudyService {
       s.content_sha256 !== manifest.contentSha256 ||
       s.media_manifest_sha256 !== mediaHash ||
       s.question_bank_sha256 !== bankHash ||
-      s.stimulus_sha256 !== stimulusHash
+      s.stimulus_sha256 !== stimulusHash ||
+      (s.seven_day_form_version !== null &&
+        (s.seven_day_form_version !== SEVEN_DAY_VERSION ||
+          s.seven_day_bank_sha256 !== sevenDayHash))
     )
       throw new StudyError(
         "VERSION_MISMATCH",
@@ -240,6 +273,16 @@ export class StudyService {
         data.experimentId === "E3" ? e.study_time_policy : null,
       ],
     );
+    if (e.seven_day_enabled)
+      await this.db.query(
+        "update visuallearn.sessions set seven_day_form_version=$2,seven_day_bank_sha256=$3,seven_day_window_minutes=$4 where id=$1",
+        [
+          s.rows[0].id,
+          SEVEN_DAY_VERSION,
+          sevenDayHash,
+          e.seven_day_window_minutes,
+        ],
+      );
     return { sessionId: s.rows[0].id };
   }
   async snapshot(id: string) {
@@ -249,8 +292,13 @@ export class StudyService {
       deadline_at: Date;
       status: string;
     }>(
-      "select due_at,deadline_at,status from visuallearn.scheduled_followups where session_id=$1 and timepoint='plus_60m'",
-      [id],
+      "select due_at,deadline_at,status from visuallearn.scheduled_followups where session_id=$1 and timepoint=$2",
+      [
+        id,
+        s.state === "waiting_7d" || s.state === "7d_test_complete"
+          ? "plus_7d"
+          : "plus_60m",
+      ],
     );
     return {
       publicCode: s.public_code,
@@ -260,11 +308,18 @@ export class StudyService {
       visited: s.visited_segments,
       followup: followups.rows[0] ?? null,
       serverTime: this.now().toISOString(),
+      sevenDay: s.seven_day_form_version !== null,
     };
   }
   async assessment(id: string, timepoint: Timepoint) {
     const s = await this.session(id, true);
     const form = stageForms[timepoint];
+    if (timepoint === "plus_7d" && !s.seven_day_form_version)
+      throw new StudyError(
+        "OPTIONAL_DISABLED",
+        "Seven-day participation was not assigned to this session.",
+        409,
+      );
     const existing = await this.db.query<{ submitted_at: Date | null }>(
       "select submitted_at from visuallearn.assessment_attempts where session_id=$1 and timepoint=$2",
       [id, timepoint],
@@ -274,6 +329,7 @@ export class StudyService {
       pre: "enrolled",
       immediate: "lesson_complete",
       plus_60m: "waiting_60m",
+      plus_7d: "waiting_7d",
     };
     if (s.state !== expected[timepoint])
       throw new StudyError(
@@ -281,16 +337,29 @@ export class StudyService {
         "This assessment is not available at the current stage.",
         409,
       );
-    if (timepoint === "plus_60m") await this.requireFollowup(id);
+    if (timepoint === "plus_60m" || timepoint === "plus_7d")
+      await this.requireFollowup(id, timepoint);
     await this.db.query(
       "insert into visuallearn.assessment_attempts(session_id,timepoint,form_key,form_version,opened_at) values($1,$2,$3,$4,$5) on conflict(session_id,timepoint) do nothing",
-      [id, timepoint, form, BANK_VERSION, this.now()],
+      [
+        id,
+        timepoint,
+        form,
+        timepoint === "plus_7d" ? SEVEN_DAY_VERSION : BANK_VERSION,
+        this.now(),
+      ],
     );
     return {
       submitted: false,
       questions: publicQuestions(form),
-      freeRecallPrompt: writtenPrompts[timepoint].freeRecall,
-      scenarioPrompt: writtenPrompts[timepoint].scenario,
+      freeRecallPrompt: (timepoint === "plus_7d"
+        ? sevenDayPrompts
+        : writtenPrompts[timepoint]
+      ).freeRecall,
+      scenarioPrompt: (timepoint === "plus_7d"
+        ? sevenDayPrompts
+        : writtenPrompts[timepoint]
+      ).scenario,
     };
   }
   async submitAssessment(id: string, timepoint: Timepoint, input: unknown) {
@@ -335,7 +404,7 @@ export class StudyService {
         timepoint === "pre" ? null : RUBRIC_VERSION,
         data.scenario ?? null,
         JSON.stringify(result.itemScores),
-        `objective-${BANK_VERSION}`,
+        `objective-${timepoint === "plus_7d" ? SEVEN_DAY_VERSION : BANK_VERSION}`,
       ],
     );
     let next: StudyState;
@@ -351,10 +420,10 @@ export class StudyService {
       next = "lesson_active";
     } else if (timepoint === "immediate") next = "immediate_test_complete";
     else {
-      next = "60m_test_complete";
+      next = timepoint === "plus_7d" ? "7d_test_complete" : "60m_test_complete";
       await this.db.query(
-        "update visuallearn.scheduled_followups set status='completed_in_window',completed_at=$2 where session_id=$1 and timepoint='plus_60m'",
-        [id, this.now()],
+        "update visuallearn.scheduled_followups set status='completed_in_window',completed_at=$2 where session_id=$1 and timepoint=$3",
+        [id, this.now(), timepoint],
       );
     }
     await this.db.query(
@@ -363,14 +432,17 @@ export class StudyService {
     );
     return { accepted: true, alreadySubmitted: false };
   }
-  async requireFollowup(id: string) {
+  async requireFollowup(
+    id: string,
+    timepoint: "plus_60m" | "plus_7d" = "plus_60m",
+  ) {
     const result = await this.db.query<{
       due_at: Date;
       deadline_at: Date;
       completed_at: Date | null;
     }>(
-      "select due_at,deadline_at,completed_at from visuallearn.scheduled_followups where session_id=$1 and timepoint='plus_60m'",
-      [id],
+      "select due_at,deadline_at,completed_at from visuallearn.scheduled_followups where session_id=$1 and timepoint=$2",
+      [id, timepoint],
     );
     const f = result.rows[0];
     if (!f)
@@ -390,7 +462,7 @@ export class StudyService {
         status.toUpperCase(),
         status === "expired"
           ? "The follow-up window has expired. Your earlier work is preserved."
-          : "The one-hour follow-up is not available yet.",
+          : `The ${timepoint === "plus_7d" ? "seven-day" : "one-hour"} follow-up is not available yet.`,
         409,
       );
     return f;
@@ -461,9 +533,16 @@ export class StudyService {
       "insert into visuallearn.scheduled_followups(session_id,timepoint,due_at,deadline_at) values($1,'plus_60m',$2,$3) on conflict(session_id,timepoint) do nothing",
       [id, window.dueAt, window.deadlineAt],
     );
+    if (s.seven_day_form_version && s.seven_day_window_minutes) {
+      const optional = sevenDayWindow(now, s.seven_day_window_minutes);
+      await this.db.query(
+        "insert into visuallearn.scheduled_followups(session_id,timepoint,due_at,deadline_at) values($1,'plus_7d',$2,$3) on conflict(session_id,timepoint) do nothing",
+        [id, optional.dueAt, optional.deadlineAt],
+      );
+    }
     return { completed: true };
   }
-  async submitSurvey(id: string, form: "F3" | "F5", input: unknown) {
+  async submitSurvey(id: string, form: "F3" | "F5" | "F6", input: unknown) {
     const s = await this.session(id, true);
     const prior = await this.db.query(
       "select id from visuallearn.survey_submissions where session_id=$1 and form_key=$2",
@@ -472,7 +551,11 @@ export class StudyService {
     if (prior.rows.length) return { accepted: true, alreadySubmitted: true };
     if (
       s.state !==
-      (form === "F3" ? "immediate_test_complete" : "60m_test_complete")
+      (form === "F3"
+        ? "immediate_test_complete"
+        : form === "F5"
+          ? "60m_test_complete"
+          : "7d_test_complete")
     )
       throw new StudyError(
         "STAGE_LOCKED",
@@ -488,14 +571,25 @@ export class StudyService {
       [
         id,
         form,
-        modalitySurvey ? MODALITY_SURVEY_VERSION : SURVEY_VERSION,
+        form === "F6"
+          ? SEVEN_DAY_SURVEY_VERSION
+          : modalitySurvey
+            ? MODALITY_SURVEY_VERSION
+            : SURVEY_VERSION,
         JSON.stringify(data),
         this.now(),
       ],
     );
     await this.db.query(
       "update visuallearn.sessions set state=$2 where id=$1",
-      [id, form === "F3" ? "waiting_60m" : "finished"],
+      [
+        id,
+        form === "F3"
+          ? "waiting_60m"
+          : form === "F5" && s.seven_day_form_version
+            ? "waiting_7d"
+            : "finished",
+      ],
     );
     return { accepted: true };
   }

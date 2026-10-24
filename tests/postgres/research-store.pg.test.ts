@@ -1,3 +1,6 @@
+import { spawnSync } from "node:child_process";
+import { mkdir, writeFile } from "node:fs/promises";
+import { dataDictionary, codebook } from "@/lib/admin/codebook";
 // Real PostgreSQL 17 over TCP with separate pooled connections, using the
 // application's own transaction helper and the non-owner runtime login.
 // All participants are SYNTHETIC (consent version SYNTHETIC-LOCAL-CONSENT).
@@ -6,7 +9,7 @@ import pg from "pg";
 import type { PoolClient } from "pg";
 import { StudyService, type SQL } from "@/lib/study/service";
 import { answerKey, publicQuestions } from "@/lib/assessments/questions.server";
-import { exportQueries } from "@/lib/admin/exports";
+import { exportRows, toCsv, exportQueries } from "@/lib/admin/exports";
 const ownerUrl = process.env.PG_OWNER_URL!;
 const appUrl = process.env.PG_APP_URL!;
 if (!ownerUrl || !appUrl || !process.env.VISUALLEARN_SYNTHETIC_DB)
@@ -75,6 +78,12 @@ beforeAll(async () => {
   expect(rows[0].db).toBe("visuallearn_synthetic");
 });
 afterAll(async () => {
+  await mkdir(".local/m4-synthetic-exports", { recursive: true });
+  for (const name of Object.keys(exportQueries) as (keyof typeof exportQueries)[]) {
+    const out = await exportRows(getPool() as unknown as SQL, name);
+    await writeFile(`.local/m4-synthetic-exports/${name}.csv`, toCsv(out.rows, Object.keys(dataDictionary[name])));
+  }
+  await writeFile(".local/m4-synthetic-exports/codebook.json", JSON.stringify(codebook(), null, 2));
   await owner.end();
   await getPool().end();
 });
@@ -83,7 +92,7 @@ describe("Migrations and least-privilege runtime login", () => {
     const m = await owner.query(
       "select version from visuallearn_ops.migrations order by version",
     );
-    expect(m.rows.map((r) => r.version)).toEqual(["001", "002", "003", "004"]);
+    expect(m.rows.map((r) => r.version)).toEqual(["001", "002", "003", "004", "005"]);
     const e = await owner.query(
       "select id,enabled,status,consent_version from visuallearn.experiments order by id",
     );
@@ -542,7 +551,7 @@ describe("SYNTHETIC E3 allocation over independent PostgreSQL connections", () =
       ).rows[0];
       expect(Number(metric.active_time_ms)).toBe(1800);
       expect(metric.presentation_version).toBe("chunking-v1-draft");
-      expect(metric.stimulus_version).toBe("shared-v6-draft");
+      expect(metric.stimulus_version).toBe("shared-v7-draft");
       await Promise.all(ids.map((id) => tx((s) => s.withdraw(id))));
     } finally {
       await owner.query(
@@ -550,4 +559,77 @@ describe("SYNTHETIC E3 allocation over independent PostgreSQL connections", () =
       );
     }
   });
+});
+
+describe("M4 optional follow-up and physical deletion on real PostgreSQL", () => {
+  it("freezes D, rejects early access and commits concurrent submissions once", async () => {
+    const savedClock = clock;
+    await owner.query("update visuallearn.experiments set seven_day_enabled=true,seven_day_reviewed=true,seven_day_form_version='1.0-seven-day-draft',seven_day_window_minutes=60 where id='E1'");
+    try {
+      const id = await enroll();
+      await owner.query("update visuallearn.experiments set seven_day_enabled=false,seven_day_reviewed=false,seven_day_window_minutes=null where id='E1'");
+      await toLessonComplete(id);
+      await tx((s) => s.submitAssessment(id, "immediate", { answers: answerKey("B"), ...written }));
+      await tx((s) => s.submitSurvey(id, "F3", f3));
+      clock = new Date(clock.getTime() + 61 * 60000);
+      await tx((s) => s.submitAssessment(id, "plus_60m", { answers: answerKey("C"), ...written }));
+      await tx((s) => s.submitSurvey(id, "F5", f5));
+      expect((await tx((s) => s.snapshot(id))).state).toBe("waiting_7d");
+      await expect(tx((s) => s.assessment(id, "plus_7d"))).rejects.toThrow(/not available yet/);
+      clock = new Date((await owner.query("select due_at from visuallearn.scheduled_followups where session_id=$1 and timepoint='plus_7d'", [id])).rows[0].due_at);
+      const results = await Promise.all(Array.from({ length: 4 }, () => tx((s) => s.submitAssessment(id, "plus_7d", { answers: answerKey("D"), ...written }))));
+      expect(results.filter((r) => !r.alreadySubmitted)).toHaveLength(1);
+      await tx((s) => s.submitSurvey(id, "F6", { ...f5, reviewed: "yes", sources: ["notes"] }));
+      expect((await tx((s) => s.snapshot(id))).state).toBe("finished");
+      expect((await owner.query("select form_key,correct from visuallearn.assessment_attempts where session_id=$1 and timepoint='plus_7d'", [id])).rows).toEqual([{ form_key: "D", correct: 8 }]);
+      expect((await owner.query("select answers_json from visuallearn.survey_submissions where session_id=$1 and form_key='F6'", [id])).rows[0].answers_json.sources).toEqual(["notes"]);
+    } finally {
+      clock = savedClock;
+      await owner.query("update visuallearn.experiments set seven_day_enabled=false,seven_day_reviewed=false,seven_day_window_minutes=null where id='E1'");
+    }
+  });
+  it("purges all linked records once under concurrency while preserving private allocation history", async () => {
+    const id = await enroll();
+    await tx((s) => s.submitAssessment(id, "pre", { answers: answerKey("A") }));
+    const participant = (await owner.query("select participant_id from visuallearn.sessions where id=$1", [id])).rows[0].participant_id;
+    const run = (enabled: boolean) => transaction((db) => db.query("select visuallearn.purge_withdrawn($1,'SYNTHETIC-POLICY', $2) deleted", [participant, enabled]));
+    await expect(run(false)).rejects.toThrow(/disabled/);
+    await expect(run(true)).rejects.toThrow(/Approved retention/);
+    await owner.query("update visuallearn.experiments set retention_approved=true,retention_policy_version='SYNTHETIC-POLICY',withdrawal_retention_days=30 where id='E1'");
+    try {
+      await expect(run(true)).rejects.toThrow(/not eligible/);
+      const attempt = (await owner.query("select id from visuallearn.assessment_attempts where session_id=$1", [id])).rows[0].id;
+      await owner.query("insert into visuallearn.free_recall_ratings(attempt_id,rater_code,rubric_version,sub_scores,total_score) values($1,'SYNTHETIC-RATER','SYNTHETIC','{}',0)", [attempt]);
+      await owner.query("insert into visuallearn.rating_adjudications(attempt_id,response_kind,rubric_version,adjudicator_code,sub_scores,total_score) values($1,'free_recall','SYNTHETIC','SYNTHETIC','{}',0)", [attempt]);
+      await tx((s) => s.issueReturnToken(id));
+      await tx((s) => s.withdraw(id));
+      await expect(run(true)).rejects.toThrow(/not eligible/);
+      await owner.query("update visuallearn.participants set withdrawn_at=now()-interval '31 days' where id=$1", [participant]);
+      const before = Number((await owner.query("select coalesce(sum(n),0) n from visuallearn.deleted_allocation_counts")).rows[0].n);
+      const results = await Promise.all(Array.from({ length: 4 }, () => run(true)));
+      expect(results.filter((r) => r.rows[0].deleted)).toHaveLength(1);
+      expect(Number((await owner.query("select sum(n) n from visuallearn.deleted_allocation_counts")).rows[0].n)).toBe(before + 1);
+      expect((await owner.query("select id from visuallearn.participants where id=$1", [participant])).rowCount).toBe(0);
+      for (const table of ["free_recall_ratings", "rating_adjudications"])
+        expect((await owner.query(`select id from visuallearn.${table} where attempt_id=$1`, [attempt])).rowCount).toBe(0);
+      for (const table of ["events", "assessment_attempts", "return_tokens", "survey_submissions", "scheduled_followups"])
+        expect((await owner.query(`select * from visuallearn.${table} where session_id=$1`, [id])).rowCount).toBe(0);
+    } finally {
+      await owner.query("update visuallearn.experiments set retention_approved=false,retention_policy_version=null,withdrawal_retention_days=null where id='E1'");
+    }
+  });
+});
+
+
+it("operator CLI defaults to a read-only dry run and rejects apply when the feature flag is off", async () => {
+  const before = (await owner.query("select count(*)::int n from visuallearn.participants")).rows[0].n;
+  const env = { ...process.env, DATABASE_URL: appUrl, PHYSICAL_DELETION_ENABLED: "false" };
+  const dry = spawnSync(process.execPath, ["scripts/purge-withdrawn.mjs"], { env, encoding: "utf8" });
+  expect(dry.status).toBe(0);
+  expect(dry.stdout).toContain("DRY RUN");
+  const disabled = spawnSync(process.execPath, ["scripts/purge-withdrawn.mjs", "--apply"], { env, encoding: "utf8" });
+  expect(disabled.status).toBe(1);
+  expect(disabled.stderr).toContain("Deletion disabled");
+  expect((dry.stdout + disabled.stderr).includes(new URL(appUrl).password)).toBe(false);
+  expect((await owner.query("select count(*)::int n from visuallearn.participants")).rows[0].n).toBe(before);
 });

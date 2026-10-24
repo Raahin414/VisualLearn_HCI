@@ -1,6 +1,7 @@
 import "server-only";
 import type { SQL } from "@/lib/study/service";
 import { hashToken } from "@/lib/security/tokens";
+import { responseReview, type ReviewResponse } from "./response-review.server";
 import {
   questionBanks,
   type Question,
@@ -15,7 +16,7 @@ export const exportQueries = {
   assignments:
     "select a.participant_id,a.experiment_id,a.arm_key,a.randomization_version,a.assigned_at from visuallearn.assignments a join visuallearn.participants p on p.id=a.participant_id where p.withdrawn_at is null",
   sessions:
-    "select s.id session_id,s.participant_id,s.experiment_id,s.presentation_version,s.exposure_measure_version,s.study_time_policy,s.active_time_ms,s.presentation_exposures,s.lesson_opened_at,s.state,s.content_version,s.content_sha256,s.protocol_version,s.stimulus_version,s.media_manifest_sha256,s.question_bank_sha256,s.stimulus_sha256,s.followup_window_minutes,s.accommodations,s.started_at,s.lesson_completed_at from visuallearn.sessions s join visuallearn.participants p on p.id=s.participant_id where p.withdrawn_at is null",
+    "select s.id session_id,s.participant_id,s.experiment_id,s.presentation_version,s.seven_day_form_version,s.seven_day_bank_sha256,s.seven_day_window_minutes,s.exposure_measure_version,s.study_time_policy,s.active_time_ms,s.presentation_exposures,s.lesson_opened_at,s.state,s.content_version,s.content_sha256,s.protocol_version,s.stimulus_version,s.media_manifest_sha256,s.question_bank_sha256,s.stimulus_sha256,s.followup_window_minutes,s.accommodations,s.started_at,s.lesson_completed_at from visuallearn.sessions s join visuallearn.participants p on p.id=s.participant_id where p.withdrawn_at is null",
   assessment_attempts: `select t.id attempt_id,t.session_id,t.timepoint,t.form_key,t.form_version,t.opened_at,t.submitted_at,round(extract(epoch from (t.submitted_at-t.opened_at))*1000)::bigint duration_ms,t.correct,t.max_score,t.scoring_version,t.rubric_version from visuallearn.assessment_attempts t ${live}`,
   item_responses: `select t.id attempt_id,t.session_id,t.timepoint,t.form_key,t.form_version,a.key item_id,a.value response,(t.item_scores->>a.key)::int auto_score,t.submitted_at from visuallearn.assessment_attempts t cross join lateral jsonb_each(t.answers_json) a ${live} and t.submitted_at is not null order by t.id,a.key`,
   written_responses: `select t.id attempt_id,t.session_id,t.timepoint,w.kind response_kind,t.rubric_version,w.text response_text,length(w.text) char_count from visuallearn.assessment_attempts t cross join lateral (values ('free_recall',t.free_recall),('scenario',t.scenario_response)) w(kind,text) ${live} and w.text is not null`,
@@ -30,7 +31,7 @@ export const exportQueries = {
 } as const;
 export type ExportName = keyof typeof exportQueries;
 const items = new Map<string, Question>(
-  (["A", "B", "C"] as const).flatMap((f) =>
+  (["A", "B", "C", "D"] as const).flatMap((f) =>
     questionBanks[f].map((q): [string, Question] => [q.id, q]),
   ),
 );
@@ -137,12 +138,13 @@ export async function studyStats(
   );
   const followups = await db.query<{
     arm_key: string;
+    timepoint: string;
     status: string;
     n: number;
   }>(
-    `select coalesce(a.arm_key,'unassigned') arm_key,case when f.status='not_started' and now()>f.deadline_at then 'expired' when f.status='not_started' and now()<f.due_at then 'waiting' when f.status='not_started' then 'open_now' else f.status end status,count(*)::int n
+    `select coalesce(a.arm_key,'unassigned') arm_key,f.timepoint,case when f.status='not_started' and now()>f.deadline_at then 'expired' when f.status='not_started' and now()<f.due_at then 'waiting' when f.status='not_started' then 'open_now' else f.status end status,count(*)::int n
      from visuallearn.scheduled_followups f join visuallearn.sessions s on s.id=f.session_id join visuallearn.participants p on p.id=s.participant_id left join visuallearn.assignments a on a.id=s.assignment_id
-     where p.withdrawn_at is null and p.experiment_id=$1 group by 1,2 order by 1,2`,
+     where p.withdrawn_at is null and p.experiment_id=$1 group by 1,2,3 order by 1,2,3`,
   );
   const quality = await db.query<Record<string, number>>(
     `select
@@ -160,7 +162,7 @@ export async function studyStats(
     question_bank_sha256: string;
     n: number;
   }>(
-    "select s.protocol_version,s.stimulus_version,left(s.question_bank_sha256,12) question_bank_sha256,count(*)::int n from visuallearn.sessions s join visuallearn.participants p on p.id=s.participant_id where p.withdrawn_at is null and p.experiment_id=$1 group by 1,2,3 order by 4 desc",
+    "select s.protocol_version,s.stimulus_version,s.presentation_version,s.content_sha256,s.media_manifest_sha256,s.question_bank_sha256,s.seven_day_bank_sha256,s.stimulus_sha256,s.seven_day_window_minutes,count(*)::int n from visuallearn.sessions s join visuallearn.participants p on p.id=s.participant_id where p.withdrawn_at is null and p.experiment_id=$1 group by 1,2,3,4,5,6,7,8,9 order by 10 desc",
   );
   const ratings = await db.query<{
     response_kind: string;
@@ -176,8 +178,14 @@ export async function studyStats(
       count(*) filter (where exists(select 1 from visuallearn.rating_adjudications d where d.attempt_id=r.id and d.response_kind=r.kind))::int adjudicated
      from r group by 1 order by 1`,
   );
+  const reviewRows = await db.query<ReviewResponse>(
+    `select concat(s.protocol_version,' / ',s.stimulus_version,' / ',s.presentation_version,' / ',s.content_sha256,' / ',s.media_manifest_sha256,' / ',s.question_bank_sha256,' / ',s.stimulus_sha256,' / ',coalesce(s.seven_day_bank_sha256,'not_assigned'),' / ',coalesce(s.seven_day_window_minutes::text,'not_assigned'),' / ',a.arm_key) cohort,q.form_key,q.form_version,q.answers_json
+     from visuallearn.survey_submissions q join visuallearn.sessions s on s.id=q.session_id join visuallearn.participants p on p.id=s.participant_id join visuallearn.assignments a on a.id=s.assignment_id
+     where p.withdrawn_at is null and p.experiment_id=$1 order by q.form_key,q.form_version`,
+  );
   return {
     experimentId,
+    responseReview: responseReview(reviewRows.rows),
     balance: balance.rows,
     funnel: funnel.rows,
     performance: performance.rows,

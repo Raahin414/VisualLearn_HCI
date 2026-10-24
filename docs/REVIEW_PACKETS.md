@@ -35,10 +35,17 @@ Research questions and the single primary outcome (draft: adjusted immediate per
 
 - **Consent text and contact:** the database fields `consent_version`, `consent_text` and `study_contact` stay empty until approved wording exists. The app refuses enrollment while they are empty.
 - **Withdrawal (implemented):** a participant can withdraw at any time from the study screen. Access and return links stop immediately, follow-ups are marked withdrawn and every export excludes the participant. Allocation counts still include them to prevent condition shopping.
-- **Retention and deletion (needs approval):** proposed default is to keep de-identified research data until the end of the approved retention period and to delete withdrawn participants' rows (including written responses) within 30 days of withdrawal; backups expire on the provider's schedule. Physical deletion is not implemented yet because the period and scope are not approved.
-- **Debrief (needs approval):** proposed debrief after F5 explains the three visual-density conditions, that assignment was random and that scores are withheld until all follow-ups close. Not shown to participants yet.
+- **Retention and deletion (needs approval):** proposed default is to keep de-identified research data until the end of the approved retention period and to delete withdrawn participants' rows (including written responses) within 30 days of withdrawal; backups expire on the provider's schedule. M4 provides an inactive, tested deletion mechanism; no retention delay is configured by default. Review its scope, private aggregate allocation counts, institutional deletion-request records and backup expiry before enabling the operator flag. The proposed 30-day period is not an approved or configured policy.
+- **Debrief (needs approval):** proposed debrief after F5 explains the three visual-density conditions, that assignment was random and that scores are withheld until all follow-ups close. The marked review draft is in components/study/draft-debrief.tsx through /dev/study only; it is not participant-active. Review feedback timing separately when optional D is assigned.
 - **Data collected:** age band, language, language comfort, topic familiarity, answers, written responses, questionnaire answers and lesson interaction events. No names, emails, exact dates of birth, IP addresses or device fingerprints.
 
 ## 5–6. Ethics and minors
 
 Submit only after rows 1–4 are complete. Real enrollment needs, in the database, `status='recruiting'`, `enabled=true`, `content_approved=true`, `ethics_approved=true` plus approved consent text and contact, and `STUDY_ENABLED=true` in the deployment. Setting these is a recorded decision, not a configuration step. Minors are rejected in code regardless of these flags until a verified guardian-consent and assent mechanism is approved and implemented.
+
+
+## M4 review additions (all pending)
+
+Give the educator the updated protected codebook containing D, its written prompts and unchanged rubrics. Review D equivalence, scientific wording, scoring and potential cues independently; matching blueprints do not validate forms. Give the supervisor the proposed C/F5 then D/F6 sequence, exact seven-day anchor and an unfilled grace-window decision. Approve optional consent wording and feedback/debrief release timing before any activation. The seven-day and retention gates remain false/null.
+
+Review response-review-v1-draft in content/review-heuristics.json: the cutoffs and review prompts are transparent study-designed heuristics, not validated instrument thresholds or diagnoses. Keep questionnaire forms, versions and presentations separate; do not turn these prompts into automatic exclusions or stimulus changes. No human approval, contact, signature, reviewer decision or pilot is invented by the engineering checks.

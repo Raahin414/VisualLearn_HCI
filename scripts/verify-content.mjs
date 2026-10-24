@@ -57,12 +57,14 @@ const manifest = {
       "components/learning/narration-player.tsx",
       "components/learning/lesson-player.tsx",
       "components/study/study-runner.tsx",
+      "components/study/followup-status.tsx",
       "components/assessments/assessment-form.tsx",
       "lib/assessments/draft.ts",
       "components/assessments/item-inputs.tsx",
       "components/surveys/survey-form.tsx",
       "lib/assessments/survey-draft.ts",
       "lib/assessments/written-prompts.ts",
+      "lib/assessments/seven-day.ts",
     ].map(async (path) => ({
       path,
       sha256: hash(

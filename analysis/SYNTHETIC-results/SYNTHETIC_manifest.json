@@ -1,0 +1,21 @@
+{
+  "review_rules_sha256": "b034c72a9c95717c5a30bb3a3fe9aad5dd913c0a819198102d03409b2ae71c95",
+  "review_rules_version": "response-review-v1-draft",
+  "data_kind": "SYNTHETIC",
+  "sessions": 37,
+  "cohorts": 2,
+  "primary_model_requested": false,
+  "inputs_sha256": {
+    "assessment_attempts.csv": "cf2a846af1bbb0b0b01628cf0707efc2f020831f8b96d1e0ed88a593e9814aa9",
+    "assignments.csv": "43fb9c11409e3675a444b8e0c228e88c118a32f4ee86f72acc921509a6f33c90",
+    "events.csv": "353a634635fe4a4fa222bf8ae50ec2af31f22c95033ae8538b422e0bc1b8a5e1",
+    "followup_status.csv": "3ac1d75a11fccdf8e07f5592247ea02ade4258f4f33dc80703da140af1db1575",
+    "free_recall_ratings.csv": "ed8bf1916002db13826d980709c8becc78eaaf4c3f2087412e856f37fb8550cd",
+    "item_responses.csv": "da9061dc356b1f8c3b14f053320739e5bfbbea2e053a91c2e1377e522ce2d34d",
+    "participants_deidentified.csv": "11abe1046ad3e9baa5fd7605c36b9d67378da6799a2cb527ee60fe5c2633a35c",
+    "rating_adjudications.csv": "a10a6e4ca5354a7781a9ccd79eb6b2baac8be396b1c3172fca956fe37fada3c7",
+    "sessions.csv": "6bc2b11a69e4f885ff24e46f4cee41b5ae3fdd4be4b64b2bab89d2b46af195c9",
+    "surveys.csv": "8f96e49401f5a10b6629d3cb3c7860a676aa6c4ea85505fbd1570bd517b6dddb",
+    "written_responses.csv": "c5028c2dd77a06f1f667d3721a4403bb508724f5868780beaf8999ea89bab99c"
+  }
+}

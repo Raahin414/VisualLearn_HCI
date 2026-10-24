@@ -1,6 +1,7 @@
 import "server-only";
 import { z } from "zod";
 import type { LabelSlot, PublicQuestion } from "./draft";
+import { SEVEN_DAY_VERSION } from "./seven-day";
 export const BANK_VERSION = "2.0.0-draft";
 export type Skill =
   | "recall"
@@ -10,7 +11,7 @@ export type Skill =
   | "transfer";
 type Base = {
   id: string;
-  form: "A" | "B" | "C" | "P";
+  form: "A" | "B" | "C" | "D" | "P";
   objectiveId: string;
   skill: Skill;
   stem: string;
@@ -50,7 +51,7 @@ const meta = (form: Base["form"], n: number, m: Meta) => ({
     m.difficulty ??
     (m.skill === "recall" ? ("basic" as const) : ("application" as const)),
   reviewStatus: "draft" as const,
-  version: BANK_VERSION,
+  version: form === "D" ? SEVEN_DAY_VERSION : BANK_VERSION,
 });
 const mcq = (
   form: Base["form"],
@@ -381,6 +382,107 @@ export const questionBanks = {
       ["Every drop instantly becomes snow", "The water must stop moving", "Some may run downhill to the river and some may soak in", "The water can never evaporate again"],
       2,
       { objectiveId: "LO4", skill: "transfer", rationale: "Water may run off, infiltrate, collect, or later evaporate." },
+    ),
+  ],
+  D: [
+    mcq(
+      "D",
+      1,
+      "A pond loses some liquid water to the air on a warm afternoon. What is that change called?",
+      ["Runoff", "Precipitation", "Evaporation", "Condensation"],
+      2,
+      {
+        objectiveId: "LO1",
+        skill: "recall",
+        rationale:
+          "Evaporation changes liquid water at the pond surface into vapor.",
+      },
+    ),
+    mcq(
+      "D",
+      2,
+      "Water vapor cools and becomes tiny liquid drops. Which process describes this?",
+      ["Condensation", "Collection", "Infiltration", "Evaporation"],
+      0,
+      {
+        objectiveId: "LO2",
+        skill: "recall",
+        rationale:
+          "Condensation is the change from water vapor to liquid droplets.",
+      },
+    ),
+    mcq(
+      "D",
+      3,
+      "Hail falls from a cloud onto a field. Which part of the water cycle is this?",
+      ["Evaporation", "Runoff", "Condensation", "Precipitation"],
+      3,
+      {
+        objectiveId: "LO3",
+        skill: "recall",
+        rationale: "Hail falling from clouds is precipitation.",
+      },
+    ),
+    mcq(
+      "D",
+      4,
+      "Water from a shower of rain gathers in a lake. Which term describes water gathering there?",
+      ["Condensation", "Collection", "Evaporation", "Boiling"],
+      1,
+      {
+        objectiveId: "LO4",
+        skill: "recall",
+        rationale:
+          "Collection describes water gathering in a store such as a lake.",
+      },
+    ),
+    ordering(
+      "D",
+      5,
+      [
+        "Rainwater flows into a pond",
+        "Vapor cools and forms cloud droplets",
+        "Water from the pond evaporates in the Sun's warmth",
+        "Water falls from the cloud as rain",
+      ],
+      [2, 1, 3, 0],
+    ),
+    labeling("D", 6, ["s3", "s1", "s4", "s2"]),
+    mcq(
+      "D",
+      7,
+      "A cold window develops water drops on the side facing warm moist air. Where did the drops come from?",
+      [
+        "Water was created by the glass",
+        "Water vapor in the air cooled into liquid",
+        "Rain traveled through the glass",
+        "The window turned into water",
+      ],
+      1,
+      {
+        objectiveId: "LO2",
+        skill: "conceptual",
+        rationale:
+          "Nearby water vapor cools at the cold surface and condenses.",
+      },
+    ),
+    mcq(
+      "D",
+      8,
+      "Rain falls on a slope beside a pond. Which description allows the water cycle to continue?",
+      [
+        "The water can run into the pond or soak into the soil and later move again",
+        "All water must stay exactly where it lands",
+        "Rainwater cannot enter the air again",
+        "Only water in clouds can move",
+      ],
+      0,
+      {
+        objectiveId: "LO4",
+        skill: "transfer",
+        rationale:
+          "Runoff, infiltration, collection and later evaporation allow water to keep moving.",
+      },
     ),
   ],
 } satisfies Record<Base["form"], Question[]>;

@@ -1,13 +1,21 @@
-# Reproducible analysis scaffold
+# Reproducible export analysis
 
-Install `analysis/requirements.txt` into an isolated Python environment. Download the nine authenticated export datasets into one folder. Do not add identifiable data or real research records to Git.
+No human observations or findings exist. Checked-in SYNTHETIC-results are software fixture outputs, not a study.
 
-```text
-python analysis/analyze.py path/to/exports path/to/analysis-output
+Use Python with analysis/requirements.txt. Download the current authenticated CSV exports (including complete frozen session metadata) into one private folder. Do not put human or identifying data in Git. Run `python analysis/analyze.py path/to/exports path/to/output`. The script detects SYNTHETIC consent versions automatically, refuses mixed synthetic/human records, and labels every output by data kind. `--synthetic` additionally refuses anything except SYNTHETIC inputs.
+
+## Reproduce the local example
+
+```powershell
+npm run test:pg
+python -m unittest discover -s analysis -p 'test_*.py'
+python analysis/analyze.py .local/m4-synthetic-exports analysis/SYNTHETIC-results --synthetic
 ```
 
-The script joins de-identified IDs, summarizes observed objective percentages by arm and age, counts missing outcomes, and computes within-person change only for observed pairs. No missing scores are replaced with zero. No study results exist in this repository.
+The PostgreSQL suite exports actual disposable SYNTHETIC rows through the app's own de-identification/CSV functions. These are integration fixtures, not fabricated empirical findings. The output manifest records input SHA-256 hashes and the response-rule source hash/version. Random allocation ties may change example group counts between runs.
 
-An optional `--fit-primary-model` fits `immediate ~ pre + C(arm_key) + C(age_band)` using HC3 uncertainty only after a registered analysis decision and at least 30 complete observations across all three arms. This numerical threshold is a technical guard, **not a power justification**. Age interaction, repeated-measures retention models, transfer-item analysis, blind recall reliability and sensitivity analyses require the finalized protocol and further analysis implementation.
+Outputs: cohort codebook, descriptive scores by arm/age/timepoint, missingness, paired observed one-hour change, separate effort items, response-based review prompts/counts, score distribution plots, paired retention plots and missingness plot. Every example file and plot title says SYNTHETIC. Missing values stay missing; zero is retained as an observed score. People without assignment remain in attrition summaries. Optional unassigned seven-day tasks are not counted as missed. Duplicate attempts, invalid scores, mismatched study identity and mixed form versions within one frozen cohort are rejected.
 
-The actual exported-data analysis is unrun because no approved observations or connected export database were provided. Do not report the scaffold as completed statistical analysis.
+Cohorts separate experiment, protocol, canonical/media/question hashes, stimulus source/hash, presentation, optional bank and grace window. Questionnaire rules also separate form/version and arm. The shared response-review-v1-draft JSON defines transparent cutoffs, not validated scales or optimal interface advice. N/A/missing/malformed values never enter numeric denominators as zero. No automatic exclusions, diagnoses, causal claims or adaptation occur. Review text needs disclosure screening before any external sharing.
+
+The optional --fit-primary-model fits the existing draft immediate ~ pre + arm + age model with HC3 intervals only for one E1 frozen cohort and at least 30 complete observations across three arms. These guards are not scientific registration or a power justification. Do not use the flag before the supervisor registers the model; it was not run for the example. Age interactions, repeated-measures models, rubric reliability, approved sensitivity analysis and scientific interpretation remain human protocol work. Small cells and attrition require caution; descriptive charts do not supply confidence intervals.

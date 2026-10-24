@@ -67,7 +67,7 @@
     },
     {
       "path": "lib/study/presentation.server.ts",
-      "sha256": "c26cda3a2676ec858c3ea6b79b7a4f74efb7c5d91293647865a24d39155a90a3"
+      "sha256": "bd315070a9debc0073a94a53d0ecd7730679d72261dd4636faa661938c47347c"
     },
     {
       "path": "lib/telemetry/schema.ts",
@@ -79,7 +79,7 @@
     },
     {
       "path": "app/globals.css",
-      "sha256": "dbee25c8298c47e356435dc787ff0b7ab9e4b0c964d60f6e1fd3fb990975d0bc"
+      "sha256": "c5037aedc810bd8311bc745cebb620a83ccbfb940791771722c8e3f83d45de3b"
     },
     {
       "path": "app/layout.tsx",
@@ -107,7 +107,11 @@
     },
     {
       "path": "components/study/study-runner.tsx",
-      "sha256": "8ee04837367ea009a7b1d64820401b5049c40cab0375c3066f4670c501af671e"
+      "sha256": "84299572a0545b859215e01da4f14ba76fd705a73b23dd7d8fd844b6fe0ba44a"
+    },
+    {
+      "path": "components/study/followup-status.tsx",
+      "sha256": "2964ef7c030abcdb38a9180b162f94731e50484845060bb2844ad47fcd4926e5"
     },
     {
       "path": "components/assessments/assessment-form.tsx",
@@ -127,11 +131,15 @@
     },
     {
       "path": "lib/assessments/survey-draft.ts",
-      "sha256": "bbc08416b3127b8c9f236339153cee15f2a2e97d3c2be5d25bf2b84dcd67425d"
+      "sha256": "89b4ee5c8796f0d36c90ba6927c14956e1ef7053003664d5250e9e8525220ee0"
     },
     {
       "path": "lib/assessments/written-prompts.ts",
       "sha256": "78638d554071597445458fffeaed439d475946c222f8f157d8aedba947d0bb5d"
+    },
+    {
+      "path": "lib/assessments/seven-day.ts",
+      "sha256": "347aa7c76c7dda60f2512bf067e0273ed2e1f2e32b9f2f84dff2e65587ed57ae"
     }
   ]
 }

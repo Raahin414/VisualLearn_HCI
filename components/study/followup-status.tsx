@@ -27,6 +27,14 @@ export function FollowupStatus({
     0,
     Math.ceil((due.getTime() - now.getTime()) / 60000),
   );
+  const days = Math.floor(minutes / 1440);
+  const hours = Math.floor((minutes % 1440) / 60);
+  const remaining =
+    days > 0
+      ? `${days} day${days === 1 ? "" : "s"}${hours ? ` and ${hours} hour${hours === 1 ? "" : "s"}` : ""}`
+      : minutes >= 120
+        ? `${Math.ceil(minutes / 60)} hours`
+        : `${minutes} minute${minutes === 1 ? "" : "s"}`;
   return (
     <section className="followup-status" aria-label="Follow-up schedule">
       <strong>
@@ -34,7 +42,7 @@ export function FollowupStatus({
           ? "Your return window is open"
           : status === "expired"
             ? "Your return window has expired"
-            : `Available in about ${minutes} minute${minutes === 1 ? "" : "s"}`}
+            : `Available in about ${remaining}`}
       </strong>
       <p>
         Return between{" "}

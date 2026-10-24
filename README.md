@@ -85,7 +85,7 @@ Copy and diagrams are original. Scientific concepts were checked against [USGS W
 
 ## Current limits
 
-Hosted staging configuration and its earlier 19/19 audit are recorded in the decisions; researcher invite acceptance, the hosted participant workflow, backup/restore and app deployment remain unverified. Content, instruments, rubrics, consent, narration rights, protocol, retention/deletion, debrief and ethics are unreviewed and unapproved ([review packets](docs/REVIEW_PACKETS.md)). Optional seven-day form D, physical deletion after withdrawal, approved debrief and analysis charts remain to implement. No claim of research readiness is made.
+Hosted staging configuration and its earlier 19/19 audit are recorded in the decisions; a researcher reported successful access locally against hosted Auth, while the hosted participant workflow, backup/restore and app deployment remain unverified. Content, instruments, rubrics, consent, narration rights, protocol, retention/deletion, debrief and ethics are unreviewed and unapproved ([review packets](docs/REVIEW_PACKETS.md)). Optional D/F6, draft-only debrief, inactive physical deletion, descriptive charts and response-based review are implemented in M4; participant activation and every related approval remain blocked. No claim of research readiness is made.
 
 ## Continuing work
 
@@ -102,3 +102,24 @@ Research assignments are server-owned and persisted after baseline; participants
 ### E3 chunking preview (draft, recruitment closed)
 
 The development simulator also offers E3: one concept at a time, groups of three then two, or the full five-concept lesson. All arms use identical scripts, diagrams and fixed-1x audio, with self-paced navigation. Only one narration plays at a time. Research groups come from the saved server assignment; no participant arm selector exists. Versioned group-display and visible-time counters are exposure proxies, not attention or eligibility clocks. E3 remains disabled pending independent pilot/time-policy/content/ethics/consent review. E4-E8 remain structurally disabled.
+
+
+### M4 local research tools (draft, recruitment closed)
+
+The owner chose local-only work through M4. E2/E3 already exist and remain closed. No app hosting was provisioned. Migration 005 is tested on disposable local PostgreSQL/Supabase only; the existing hosted staging project is unchanged. A database used with this revision must apply 005 through an authorized migration owner first. Do not use a restricted personal runtime login to migrate it.
+
+In /dev/study, check **Include optional seven-day simulation**, complete C/F5, then advance to +7 days for distinct D/F6. Research sessions require a separately reviewed optional protocol, form version and explicit grace window; defaults remain off/null. The draft debrief below the simulator is review-only. No participant debrief is enabled.
+
+**Response patterns to review** in the researcher dashboard uses actual F3/F5/F6 answers and visible draft rules. The local simulator offers the same prompts from its submitted SYNTHETIC answers, with no database or grading. Low clarity/pacing, high overload/distraction/effort and reported topic review produce flagged/eligible counts. Missing and N/A answers never become zero. These are review prompts, not a validated score, diagnosis or automatic adaptation.
+
+Run real local PostgreSQL fixtures and analyze their actual de-identified exports:
+
+```powershell
+npm run test:pg
+python -m unittest discover -s analysis -p 'test_*.py'
+python analysis/analyze.py .local/m4-synthetic-exports analysis/SYNTHETIC-results --synthetic
+```
+
+Every generated example is labeled SYNTHETIC. Analysis separates experiments/frozen cohorts, keeps missingness and optional assignment distinct, plots observed scores and paired retention, and exports effort items plus response-review rules/counts. No human findings or primary model are reported.
+
+Physical deletion stays off. Read docs/PRIVACY.md and obtain retention approval before enabling anything. `node --env-file-if-exists=.env.local scripts/purge-withdrawn.mjs` is a dry run; no automatic cleanup job or participant deletion API exists.

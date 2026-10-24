@@ -1,5 +1,7 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { responseReview } from "@/lib/admin/response-review";
+import { ResponseReviewPanel } from "@/components/admin/response-review-panel";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import {
   LocalStudy,
@@ -14,14 +16,17 @@ import { z } from "zod";
 export function LocalStudyDemo({
   banks,
   experiments = fallbackExperiments,
+  review,
 }: {
   banks: DemoBanks;
   experiments?: DemoExperiment[];
+  review?: ReactNode;
 }) {
   const [model, setModel] = useState<LocalStudy | null>(null);
   const [record, setRecord] = useState<LocalStudyRecord | null>(null);
   const [experimentId, setExperimentId] = useState<"E1" | "E2" | "E3">("E1");
   const [armKey, setArmKey] = useState("medium");
+  const [sevenDay, setSevenDay] = useState(false);
   const definition = experiments.find((e) => e.id === experimentId)!;
   const [revision, setRevision] = useState(0);
   const [error, setError] = useState("");
@@ -124,10 +129,21 @@ export function LocalStudyDemo({
                 ))}
               </select>
             </label>
+            <label className="check-field">
+              <input
+                type="checkbox"
+                checked={sevenDay}
+                disabled={!model}
+                onChange={(e) => setSevenDay(e.target.checked)}
+              />
+              Include optional seven-day simulation (SYNTHETIC one-hour grace)
+            </label>
             <Button
               disabled={!model}
               onClick={() =>
-                change(() => model!.startExperiment(experimentId, armKey))
+                change(() =>
+                  model!.startExperiment(experimentId, armKey, sevenDay),
+                )
               }
             >
               Start simulated session
@@ -141,14 +157,20 @@ export function LocalStudyDemo({
             </span>
             <Button
               variant="outline"
-              disabled={record.state !== "waiting_60m"}
+              disabled={
+                record.state !== "waiting_60m" && record.state !== "waiting_7d"
+              }
               onClick={() => change(() => model!.advanceTo("due"))}
             >
-              Advance to +60 minutes
+              {record.state === "waiting_7d"
+                ? "Advance to +7 days"
+                : "Advance to +60 minutes"}
             </Button>
             <Button
               variant="outline"
-              disabled={record.state !== "waiting_60m"}
+              disabled={
+                record.state !== "waiting_60m" && record.state !== "waiting_7d"
+              }
               onClick={() => change(() => model!.advanceTo("expired"))}
             >
               Advance past deadline
@@ -193,6 +215,20 @@ export function LocalStudyDemo({
           Browser fixture only · no empirical outcomes, scores or validated
           measures. The real researcher dashboard remains protected.
         </p>
+        {record && (
+          <ResponseReviewPanel
+            synthetic
+            compact
+            review={responseReview(
+              Object.entries(record.surveys).map(([form, answers]) => ({
+                cohort: `SYNTHETIC ${record.experimentId} / ${record.armKey}`,
+                form_key: form,
+                form_version: "SYNTHETIC-preview",
+                answers_json: answers as Record<string, unknown>,
+              })),
+            )}
+          />
+        )}
         {record ? (
           <>
             <div className="demo-metrics">
@@ -201,11 +237,17 @@ export function LocalStudyDemo({
                 <span>Chapters visited</span>
               </div>
               <div>
-                <strong>{Object.keys(record.submissions).length} / 3</strong>
+                <strong>
+                  {Object.keys(record.submissions).length} /{" "}
+                  {record.sevenDay ? 4 : 3}
+                </strong>
                 <span>Assessments submitted</span>
               </div>
               <div>
-                <strong>{Object.keys(record.surveys).length} / 2</strong>
+                <strong>
+                  {Object.keys(record.surveys).length} /{" "}
+                  {record.sevenDay ? 3 : 2}
+                </strong>
                 <span>Questionnaires submitted</span>
               </div>
             </div>
@@ -217,14 +259,23 @@ export function LocalStudyDemo({
                 </tr>
               </thead>
               <tbody>
-                {(["pre", "immediate", "plus_60m"] as const).map((stage) => (
+                {(
+                  [
+                    "pre",
+                    "immediate",
+                    "plus_60m",
+                    ...(record.sevenDay ? ["plus_7d" as const] : []),
+                  ] as const
+                ).map((stage) => (
                   <tr key={stage}>
                     <td>
                       {stage === "pre"
                         ? "Baseline A"
                         : stage === "immediate"
                           ? "Immediate B"
-                          : "One-hour C"}
+                          : stage === "plus_7d"
+                            ? "Seven-day D"
+                            : "One-hour C"}
                     </td>
                     <td>
                       {record.submissions[stage]
@@ -247,6 +298,7 @@ export function LocalStudyDemo({
           </p>
         )}
       </section>
+      {review}
     </main>
   );
 }

@@ -129,7 +129,7 @@ test("exports equal database rows, exclude the withdrawn participant and carry n
     for (const id of hidden) expect(csv, table).not.toContain(id);
   }
   const codebook = await (await adminGet(pageOne, "codebook?format=json")).json();
-  expect(codebook.forms.map((f: { form: string }) => f.form)).toEqual(["A", "B", "C"]);
+  expect(codebook.forms.map((f: { form: string }) => f.form)).toEqual(["A", "B", "C", "D"]);
   expect(codebook.status).toMatch(/DRAFT/);
   const audit = await db.query("select count(*)::int n from visuallearn.audit_log where action like 'export:%'");
   expect(audit.rows[0].n).toBeGreaterThanOrEqual(13);

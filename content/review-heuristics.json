@@ -1,0 +1,12 @@
+{
+  "version": "response-review-v1-draft",
+  "status": "Draft researcher review prompts; no validated score or automatic adaptation",
+  "rules": [
+    { "id": "clarity", "forms": ["F3"], "field": "clarity", "operator": "lte", "threshold": 2, "min": 1, "max": 5, "allowed": [], "title": "Difficulty following the lesson", "check": "Clarity rated 1 or 2 of 5", "action": "Review instructions and concept transitions with participants; check whether the wording or presentation caused difficulty." },
+    { "id": "overload", "forms": ["F3"], "field": "overload", "operator": "gte", "threshold": 4, "min": 1, "max": 5, "allowed": [], "title": "Too much information at once", "check": "Overload rated 4 or 5 of 5", "action": "Review simultaneous information and scrolling burden within this frozen presentation. Register any stimulus change as a new version." },
+    { "id": "distraction", "forms": ["F3"], "field": "distraction", "operator": "gte", "threshold": 4, "min": 1, "max": 5, "allowed": [], "title": "Difficulty concentrating on key information", "check": "Distraction rated 4 or 5 of 5", "action": "Ask which elements competed for attention and inspect their hierarchy; browser events alone cannot identify the cause." },
+    { "id": "pacing", "forms": ["F3"], "field": "pacing", "operator": "lte", "threshold": 2, "min": 1, "max": 5, "allowed": [], "title": "Uncomfortable lesson pace", "check": "Pacing rated 1 or 2 of 5", "action": "Review navigation and narration controls. The answer does not say whether the lesson felt too fast or too slow; ask during the approved review." },
+    { "id": "effort", "forms": ["F3"], "field": "mentalEffort", "operator": "gte", "threshold": 7, "min": 1, "max": 9, "allowed": [], "title": "High reported mental effort", "check": "Mental effort rated 7–9 of 9", "action": "Review effort alongside baseline knowledge and clarity. Keep this single item separate from other questionnaire scales." },
+    { "id": "review-exposure", "forms": ["F5", "F6"], "field": "reviewed", "operator": "equals", "threshold": "yes", "min": null, "max": null, "allowed": ["yes", "no", "unsure"], "title": "Interim topic review reported", "check": "Topic review answered Yes", "action": "Inspect reported review sources and the preregistered retention sensitivity plan. Do not automatically exclude the response or attribute retention changes to the interface." }
+  ]
+}

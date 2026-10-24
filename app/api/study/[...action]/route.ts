@@ -47,6 +47,7 @@ async function handle(request: NextRequest, ctx: Context) {
       "assessment/pre",
       "assessment/immediate",
       "assessment/plus_60m",
+      "assessment/plus_7d",
     ];
     const allowedPost = [
       "enroll",
@@ -59,8 +60,10 @@ async function handle(request: NextRequest, ctx: Context) {
       "assessment/pre",
       "assessment/immediate",
       "assessment/plus_60m",
+      "assessment/plus_7d",
       "survey/F3",
       "survey/F5",
+      "survey/F6",
     ];
     if (!(isPost ? allowedPost : allowedGet).includes(action))
       return json(
@@ -160,13 +163,13 @@ async function handle(request: NextRequest, ctx: Context) {
       if (action === "withdraw") return service.withdraw(sessionId);
       if (action.startsWith("assessment/")) {
         const stage = z
-          .enum(["pre", "immediate", "plus_60m"])
+          .enum(["pre", "immediate", "plus_60m", "plus_7d"])
           .parse(action.split("/")[1]);
         return isPost
           ? service.submitAssessment(sessionId, stage, input)
           : service.assessment(sessionId, stage);
       }
-      const form = z.enum(["F3", "F5"]).parse(action.split("/")[1]);
+      const form = z.enum(["F3", "F5", "F6"]).parse(action.split("/")[1]);
       return service.submitSurvey(sessionId, form, input);
     });
     const response = json(data);

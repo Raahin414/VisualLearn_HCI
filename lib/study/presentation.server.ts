@@ -4,7 +4,7 @@ import { conditions } from "@/lib/content/lesson";
 export const MODALITY_VERSION = "modality-v1-draft";
 export const DENSITY_VERSION = "density-v5-draft";
 export const CHUNKING_VERSION = "chunking-v1-draft";
-export const SOURCE_VERSION = "shared-v6-draft";
+export const SOURCE_VERSION = "shared-v7-draft";
 const chunking = {
   chunked: [[0], [1], [2], [3], [4]],
   grouped: [

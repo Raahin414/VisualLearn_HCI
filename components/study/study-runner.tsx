@@ -29,6 +29,7 @@ type Snapshot = {
   visited: number[];
   followup: { due_at: string; deadline_at: string; status: string } | null;
   serverTime: string;
+  sevenDay?: boolean;
 };
 type Form = {
   submitted: boolean;
@@ -253,7 +254,9 @@ export function StudyRunner({
         ? "pre"
         : snapshot!.state === "lesson_complete"
           ? "immediate"
-          : "plus_60m";
+          : snapshot!.state === "waiting_7d"
+            ? "plus_7d"
+            : "plus_60m";
     setBusy(true);
     try {
       await transport(`assessment/${stage}`, {
@@ -270,7 +273,12 @@ export function StudyRunner({
     }
   }
   async function submitSurvey(answers: SurveyDraft) {
-    const form = snapshot!.state === "immediate_test_complete" ? "F3" : "F5";
+    const form =
+      snapshot!.state === "immediate_test_complete"
+        ? "F3"
+        : snapshot!.state === "7d_test_complete"
+          ? "F6"
+          : "F5";
     setBusy(true);
     try {
       await transport(`survey/${form}`, answers);
@@ -479,9 +487,11 @@ export function StudyRunner({
               <h1 className="page-title">
                 {snapshot.state === "enrolled"
                   ? "Before we begin."
-                  : snapshot.state === "waiting_60m"
-                    ? "What stayed with you?"
-                    : "A moment to recall."}
+                  : snapshot.state === "waiting_7d"
+                    ? "What do you remember after a week?"
+                    : snapshot.state === "waiting_60m"
+                      ? "What stayed with you?"
+                      : "A moment to recall."}
               </h1>
               <p>
                 No correctness feedback is released during the study. Please
@@ -497,7 +507,8 @@ export function StudyRunner({
               />
             </>
           ) : snapshot.state === "immediate_test_complete" ||
-            snapshot.state === "60m_test_complete" ? (
+            snapshot.state === "60m_test_complete" ||
+            snapshot.state === "7d_test_complete" ? (
             <>
               <h1 className="page-title">Your experience.</h1>
               <p className="lead">
@@ -507,15 +518,24 @@ export function StudyRunner({
                 key={snapshot.state}
                 diagramNA={snapshot.experimentId === "E2"}
                 form={
-                  snapshot.state === "immediate_test_complete" ? "F3" : "F5"
+                  snapshot.state === "immediate_test_complete"
+                    ? "F3"
+                    : snapshot.state === "7d_test_complete"
+                      ? "F6"
+                      : "F5"
                 }
                 draftKey={`visuallearn-${localDemo ? "simulation" : "study"}-${snapshot.publicCode}-${snapshot.state}-survey-${snapshot.experimentId === "E2" ? "modality-v1" : "v2"}`}
                 onSubmit={submitSurvey}
               />
             </>
-          ) : snapshot.state === "waiting_60m" ? (
+          ) : snapshot.state === "waiting_60m" ||
+            snapshot.state === "waiting_7d" ? (
             <>
-              <h1 className="page-title">Thank you. See you in an hour.</h1>
+              <h1 className="page-title">
+                {snapshot.state === "waiting_7d"
+                  ? "Your seven-day follow-up."
+                  : "Thank you. See you in an hour."}
+              </h1>
               <p className="lead">
                 {localDemo
                   ? "This demonstration is saved in this browser. Use the development clock controls above to test the follow-up."
@@ -532,7 +552,13 @@ export function StudyRunner({
                 disabled={busy}
                 onClick={() =>
                   act(async () => {
-                    setForm(await transport("assessment/plus_60m"));
+                    setForm(
+                      await transport(
+                        snapshot.state === "waiting_7d"
+                          ? "assessment/plus_7d"
+                          : "assessment/plus_60m",
+                      ),
+                    );
                   })
                 }
               >
@@ -551,13 +577,13 @@ export function StudyRunner({
               </h1>
               <p className="lead">
                 {localDemo
-                  ? "You have demonstrated baseline, lesson, immediate assessment, F3, one-hour recall and F5. No research record or scientific result was created."
+                  ? `You have demonstrated baseline, lesson, immediate assessment, F3, one-hour recall and F5${snapshot.sevenDay ? ", plus the optional seven-day D and F6" : ""}. No research record or scientific result was created.`
                   : "Thank you for contributing. Scores and explanations are withheld until the researcher’s approved debrief."}
               </p>
             </>
           ) : null}
           {!localDemo &&
-            ["waiting_60m", "immediate_test_complete"].includes(
+            ["waiting_60m", "immediate_test_complete", "waiting_7d"].includes(
               snapshot.state,
             ) && (
               <section className="return-panel">

@@ -20,6 +20,8 @@ export type StudyState =
   | "immediate_test_complete"
   | "waiting_60m"
   | "60m_test_complete"
+  | "waiting_7d"
+  | "7d_test_complete"
   | "finished"
   | "withdrawn";
 export const transitionMap: Record<StudyState, StudyState[]> = {
@@ -28,7 +30,9 @@ export const transitionMap: Record<StudyState, StudyState[]> = {
   lesson_complete: ["immediate_test_complete", "withdrawn"],
   immediate_test_complete: ["waiting_60m", "withdrawn"],
   waiting_60m: ["60m_test_complete", "withdrawn"],
-  "60m_test_complete": ["finished", "withdrawn"],
+  "60m_test_complete": ["finished", "waiting_7d", "withdrawn"],
+  waiting_7d: ["7d_test_complete", "withdrawn"],
+  "7d_test_complete": ["finished", "withdrawn"],
   finished: ["withdrawn"],
   withdrawn: [],
 };
@@ -61,4 +65,13 @@ export function followupEligibility(
   if (now < dueAt) return "not_yet_available";
   if (now > deadlineAt) return "expired";
   return "eligible";
+}
+/** No default seven-day grace: a reviewed protocol must supply it. */
+export function sevenDayWindow(completedAt: Date, graceMinutes: number) {
+  const window = followupWindow(completedAt, graceMinutes);
+  const shift = (7 * 24 - 1) * 60 * 60_000;
+  return {
+    dueAt: new Date(window.dueAt.getTime() + shift),
+    deadlineAt: new Date(window.deadlineAt.getTime() + shift),
+  };
 }

@@ -1,5 +1,37 @@
 # Verification record — 2026-10-18
 
+## M4 local completion — verified, 2026-10-24
+
+Focused checks: 70 unit/service tests across 11 files (including PGlite), lint/typecheck, 17 real PostgreSQL cases (including concurrent D submissions and one-time physical deletion), and 5 Python analysis contract tests passed. The analysis script ran on actual de-identified exports from the disposable PostgreSQL fixture: 37 SYNTHETIC sessions, two frozen cohorts; every output in `analysis/SYNTHETIC-results/` is labeled SYNTHETIC. No primary model or human analysis ran.
+
+An initial schema fixture repeated migration 005 during the seed-idempotency test; apply it only in setup, retaining the actual seed-idempotency check. An initial simulator edit had a syntax error, caught by formatting/types and corrected before passing checks. The first seven-day browser test reached D but expected its form immediately after refresh; follow-up forms require reopening through the existing availability button. The test now checks restoration after that action. A source-format cleanup briefly wrote a Windows code-page byte into questions.server.ts; UTF-8 was restored and a direct serialized-object comparison against HEAD confirmed all A/B/C/P banks unchanged. These attempts are not reported as passing suites. Docker's runtime socket failure recurred after the owner's reboot and was recovered by preserving/recreating the same two runtime folders; this is not claimed as a permanent upstream Docker fix.
+
+
+### Final M4 checks
+
+Environment: Windows, isolated Node 24.22.1, npm 11.11.0, Docker engine 29.7.2. No dependency/lockfile change, hosted migration, hosting, human participation or approval.
+
+| Check | Actual result |
+|---|---|
+| Clean install | 420 packages; audit 0 |
+| Frozen content/audio/spec | PASS: 5 canonical segments, unchanged 327.0 seconds of WAVs and original spec SHA-256; A/B/C/P serialized question objects unchanged |
+| Unit/service | 75/75 across 12 files (includes PGlite and browser model) |
+| Dedicated PGlite schema command | 5/5, also represented in the unit suite |
+| Lint/types | PASS, no errors or lint warnings |
+| Real PostgreSQL 17 | 18/18 final cases; includes independent-connection D concurrency, one-time purge, linked ratings deletion, policy/flag/delay guards and operator CLI dry-run/no-write checks |
+| Development Chromium | 30/30, 1.4 min; includes actual-answer heuristic assertion and D/F6, three-width axe/overflow, preserved E2/E3 and obsolete-response regression |
+| Production build/bundle | PASS; 22 browser assets without keys/rationales/rubrics/server secret names |
+| Production Chromium | 30/30, 28.6 s; dev simulator/debrief remains unavailable |
+| Pristine local security verifier | 21/21 (adds optional seven-day and physical-deletion gates) |
+| Real local Supabase/Auth/MFA/PostgreSQL Chromium | 25/25, 5.8 min; includes actual expiry, invite/recovery, dashboard/export/ratings, E2/E3 and D/F6 refresh/server-clock/withdrawal |
+| Focused connected D/F6 | 1/1, 14.1 s before full suite |
+| Python analysis tests | 5/5 |
+| Actual exported fixture analysis | 37 SYNTHETIC sessions, two frozen cohorts; all outputs labeled; primary model not run |
+| Production smoke | homepage 200; /dev/study 404; /study/debrief 404; anonymous admin stats 401 |
+| UI review | Mechanical detector [] on new components; fresh finish reviewer disposition ship, no material fixes; documentation check preserves incumbent M1 tokens |
+
+Full development captures are in docs/screenshots/m4/ at 360/768/1280. Current authenticated SYNTHETIC dashboard captures are in docs/screenshots/current/. Focused copies of the debrief and response-review sections are included for inspection. Historical screenshot sets are retained. Automated axe checks require zero WCAG 2.2 AA-tagged violations; manual screen-reader and real-device evaluation remain open. A final migration-upgrade regression additionally verifies that 005 preserves legacy versions, withdrawal metadata and written answers while all new optional fields stay unset. Human educator/psychometric/rubric/narration/consent/ethics, response-threshold and retention decisions remain unapproved. No permanent upstream Docker repair, hosted validation or scientific findings are claimed.
+
 ## Continuation baseline and Windows shutdown failure — 2026-10-24
 
 At c89243c: clean install (420 packages, audit 0), frozen content/audio/spec checks, 62 unit/service tests (including PGlite), dedicated 5-test PGlite schema command, lint/types, 15 real PostgreSQL 17 tests, 29 development Chromium tests (1.8 min), build/22 clean browser assets, 29 production Chromium tests (32.5 s), and production HTTP 200/404/401 passed. No product source changed. Generated baseline screenshots are preserved in ignored `.local/baseline-20261024/`; historical committed screenshots were restored.

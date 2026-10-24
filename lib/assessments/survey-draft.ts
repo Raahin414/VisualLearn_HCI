@@ -8,18 +8,24 @@ import {
 } from "./surveys";
 // Questionnaire drafts mirror assessment drafts: tab-scoped, validated against
 // the current instrument and cleared only after the server accepts them.
-export type SurveyFormKey = "F3" | "F5";
+export type SurveyFormKey = "F3" | "F5" | "F6";
 export type SurveyValue = string | number | string[];
 export type SurveyDraft = Record<string, SurveyValue>;
-const shapes = { F3: f3Schema.shape, F5: f5Base.shape } as const;
+const shapes = {
+  F3: f3Schema.shape,
+  F5: f5Base.shape,
+  F6: f5Base.shape,
+} as const;
 /** Required fields in display order, for progress and first-missing focus. */
 export const surveyRequired: Record<SurveyFormKey, string[]> = {
   F3: [...f3Items.map(([key]) => key), "mentalEffort"],
   F5: ["reviewed", "sources", "discussed", "confidence", "recallEffort"],
+  F6: ["reviewed", "sources", "discussed", "confidence", "recallEffort"],
 };
 const textFields: Record<SurveyFormKey, string[]> = {
   F3: ["confusing", "helpful"],
   F5: ["issues"],
+  F6: ["issues"],
 };
 export function readSurveyDraft(
   raw: string | null,
@@ -46,7 +52,7 @@ export function readSurveyDraft(
 export function surveySubmission(form: SurveyFormKey, draft: SurveyDraft) {
   const data: SurveyDraft = { ...draft };
   for (const key of textFields[form]) data[key] = String(data[key] ?? "");
-  if (form === "F5") {
+  if (form !== "F3") {
     data.sources = data.reviewed === "yes" ? (data.sources ?? []) : [];
   }
   return data;
@@ -73,7 +79,7 @@ export function validateSurveyDraft(
   const fields = result.error.issues.map((i) => String(i.path[0] ?? ""));
   // Zod skips the F5 refinement until base fields parse; report it in order.
   if (
-    form === "F5" &&
+    form !== "F3" &&
     draft.reviewed === "yes" &&
     !(Array.isArray(draft.sources) && draft.sources.length)
   )

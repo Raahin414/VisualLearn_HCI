@@ -70,6 +70,7 @@ describe("SYNTHETIC E2 contract (PGlite, not hosted participants)", () => {
     await db.exec(
       await readFile("supabase/migrations/004_chunking_foundation.sql", "utf8"),
     );
+    await db.exec(await readFile("supabase/migrations/005_optional_followup_privacy.sql", "utf8"));
     await db.exec(await readFile("supabase/seed.sql", "utf8"));
   }, 30000);
   afterAll(async () => {

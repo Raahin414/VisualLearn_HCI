@@ -1929,3 +1929,56 @@ summary {
   margin: 0;
   font-size: 1.5rem;
 }
+
+/* Researcher-only descriptive charts; all values also appear as text. */
+.research-chart {
+  margin: 24px 0 32px;
+  font-variant-numeric: tabular-nums;
+}
+.research-chart figcaption {
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+.research-chart-row {
+  display: grid;
+  grid-template-columns: minmax(140px, 1.4fr) minmax(80px, 2fr) minmax(
+      110px,
+      1fr
+    );
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0;
+}
+.research-chart-track {
+  display: block;
+  height: 12px;
+  background: var(--soft);
+}
+.research-chart-track > span {
+  display: block;
+  height: 100%;
+  background: var(--teal);
+}
+.research-chart-row strong {
+  text-align: right;
+  font-size: 1rem;
+}
+.research-chart-row small {
+  font-weight: 400;
+}
+.retention-pairs {
+  padding-left: 24px;
+  margin: 16px 0;
+}
+@media (max-width: 600px) {
+  .research-chart-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .research-chart-row > span:first-child {
+    grid-column: 1 / -1;
+  }
+}
+
+.response-review-item { margin: 24px 0; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
+.response-review-item p { margin-top: 8px; }
+.response-review-cohort { overflow-wrap: anywhere; font-size: var(--text-small); }

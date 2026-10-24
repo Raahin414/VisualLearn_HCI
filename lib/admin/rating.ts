@@ -8,13 +8,18 @@ import {
   rubricForRaters,
   type ResponseKind,
 } from "@/lib/assessments/rubrics.server";
+import { sevenDayPrompts } from "@/lib/assessments/seven-day";
 import { writtenPrompts } from "@/lib/assessments/written-prompts";
 // Blind rating: raters see only response text, its prompt and an opaque
 // handle. Condition, age band, other raters' scores and identities stay hidden.
 const kindSchema = z.enum(["free_recall", "scenario"]);
-const column = { free_recall: "free_recall", scenario: "scenario_response" } as const;
+const column = {
+  free_recall: "free_recall",
+  scenario: "scenario_response",
+} as const;
 const promptKey = { free_recall: "freeRecall", scenario: "scenario" } as const;
-const handle = (attemptId: string) => `W-${hashToken(`rating:${attemptId}`).slice(0, 16)}`;
+const handle = (attemptId: string) =>
+  `W-${hashToken(`rating:${attemptId}`).slice(0, 16)}`;
 async function attemptForHandle(db: SQL, h: string) {
   const { rows } = await db.query<{ id: string }>(
     "select t.id from visuallearn.assessment_attempts t join visuallearn.sessions s on s.id=t.session_id join visuallearn.participants p on p.id=s.participant_id where p.withdrawn_at is null and t.submitted_at is not null and t.timepoint<>'pre'",
@@ -24,7 +29,12 @@ async function attemptForHandle(db: SQL, h: string) {
 export async function nextForRater(db: SQL, rater: string, kindInput: unknown) {
   const kind = kindSchema.parse(kindInput);
   const col = column[kind];
-  const { rows } = await db.query<{ id: string; timepoint: "immediate" | "plus_60m"; text: string; remaining: number }>(
+  const { rows } = await db.query<{
+    id: string;
+    timepoint: "immediate" | "plus_60m" | "plus_7d";
+    text: string;
+    remaining: number;
+  }>(
     `select t.id,t.timepoint,t.${col} text,count(*) over()::int remaining
      from visuallearn.assessment_attempts t join visuallearn.sessions s on s.id=t.session_id join visuallearn.participants p on p.id=s.participant_id
      where p.withdrawn_at is null and t.submitted_at is not null and t.${col} is not null
@@ -37,16 +47,33 @@ export async function nextForRater(db: SQL, rater: string, kindInput: unknown) {
     rubric: rubricForRaters(kind),
     remaining: r?.remaining ?? 0,
     item: r
-      ? { handle: handle(r.id), prompt: writtenPrompts[r.timepoint][promptKey[kind]], text: r.text }
+      ? {
+          handle: handle(r.id),
+          prompt: (r.timepoint === "plus_7d"
+            ? sevenDayPrompts
+            : writtenPrompts[r.timepoint])[promptKey[kind]],
+          text: r.text,
+        }
       : null,
   };
 }
 export async function submitRating(db: SQL, rater: string, input: unknown) {
-  const { handle: h, kind, scores } = z
-    .object({ handle: z.string().regex(/^W-[0-9a-f]{16}$/), kind: kindSchema, scores: z.unknown() })
+  const {
+    handle: h,
+    kind,
+    scores,
+  } = z
+    .object({
+      handle: z.string().regex(/^W-[0-9a-f]{16}$/),
+      kind: kindSchema,
+      scores: z.unknown(),
+    })
     .strict()
     .parse(input);
-  const sub = ratingSchema(kind as ResponseKind).parse(scores) as Record<string, number>;
+  const sub = ratingSchema(kind as ResponseKind).parse(scores) as Record<
+    string,
+    number
+  >;
   const attempt = await attemptForHandle(db, h);
   if (!attempt) throw new Error("Unknown response.");
   const total = Object.values(sub).reduce((a, b) => a + b, 0);
@@ -60,7 +87,16 @@ export async function submitRating(db: SQL, rater: string, input: unknown) {
 export async function adjudicationQueue(db: SQL, kindInput: unknown) {
   const kind = kindSchema.parse(kindInput);
   const col = column[kind];
-  const { rows } = await db.query<{ id: string; timepoint: "immediate" | "plus_60m"; text: string; ratings: { rater_code: string; sub_scores: Record<string, number>; total_score: number }[] }>(
+  const { rows } = await db.query<{
+    id: string;
+    timepoint: "immediate" | "plus_60m" | "plus_7d";
+    text: string;
+    ratings: {
+      rater_code: string;
+      sub_scores: Record<string, number>;
+      total_score: number;
+    }[];
+  }>(
     `select t.id,t.timepoint,t.${col} text,json_agg(json_build_object('rater_code',r.rater_code,'sub_scores',r.sub_scores,'total_score',r.total_score) order by r.rated_at) ratings
      from visuallearn.assessment_attempts t join visuallearn.sessions s on s.id=t.session_id join visuallearn.participants p on p.id=s.participant_id
      join visuallearn.free_recall_ratings r on r.attempt_id=t.id and r.response_kind=$1 and r.rubric_version=$2
@@ -72,14 +108,25 @@ export async function adjudicationQueue(db: SQL, kindInput: unknown) {
     rubric: rubricForRaters(kind),
     items: rows.map((r) => ({
       handle: handle(r.id),
-      prompt: writtenPrompts[r.timepoint][promptKey[kind]],
+      prompt: (r.timepoint === "plus_7d"
+        ? sevenDayPrompts
+        : writtenPrompts[r.timepoint])[promptKey[kind]],
       text: r.text,
       ratings: r.ratings,
     })),
   };
 }
-export async function submitAdjudication(db: SQL, adjudicator: string, input: unknown) {
-  const { handle: h, kind, scores, note } = z
+export async function submitAdjudication(
+  db: SQL,
+  adjudicator: string,
+  input: unknown,
+) {
+  const {
+    handle: h,
+    kind,
+    scores,
+    note,
+  } = z
     .object({
       handle: z.string().regex(/^W-[0-9a-f]{16}$/),
       kind: kindSchema,
@@ -88,12 +135,23 @@ export async function submitAdjudication(db: SQL, adjudicator: string, input: un
     })
     .strict()
     .parse(input);
-  const sub = ratingSchema(kind as ResponseKind).parse(scores) as Record<string, number>;
+  const sub = ratingSchema(kind as ResponseKind).parse(scores) as Record<
+    string,
+    number
+  >;
   const attempt = await attemptForHandle(db, h);
   if (!attempt) throw new Error("Unknown response.");
   const result = await db.query(
     "insert into visuallearn.rating_adjudications(attempt_id,response_kind,rubric_version,adjudicator_code,sub_scores,total_score,note) values($1,$2,$3,$4,$5,$6,$7) on conflict do nothing returning id",
-    [attempt, kind, RUBRIC_VERSION, adjudicator, JSON.stringify(sub), Object.values(sub).reduce((a, b) => a + b, 0), note ?? null],
+    [
+      attempt,
+      kind,
+      RUBRIC_VERSION,
+      adjudicator,
+      JSON.stringify(sub),
+      Object.values(sub).reduce((a, b) => a + b, 0),
+      note ?? null,
+    ],
   );
   return { saved: true, duplicate: result.rows.length === 0 };
 }
