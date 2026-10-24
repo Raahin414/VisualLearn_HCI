@@ -200,4 +200,5 @@ console.log(
     ? `\n${failed} check(s) failed.`
     : `\nAll ${results.length} checks passed.`,
 );
-process.exit(failed ? 1 : 0);
+// Let pending HTTP handles and stdout close before Node exits (Windows/libuv).
+process.exitCode = failed ? 1 : 0;

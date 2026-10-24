@@ -1,5 +1,10 @@
 # Decisions and unresolved approvals
 
+## Verifier shutdown on Windows — 2026-10-24
+
+- The owner authorized repairing a failed baseline and continuing the remaining milestones. The read-only verifier printed 19/19 passes, then forced `process.exit()` triggered a Windows/libuv `UV_HANDLE_CLOSING` assertion on Node 24.14.1 and 24.22.1. Set `process.exitCode` instead, allowing HTTP/stdout handles to close naturally. Checks and failure exit codes are unchanged; this reversible tooling fix does not change hosted configuration or research behavior.
+- Docker startup was recovered by stopping Desktop and preserving/recreating the two affected runtime socket directories. No Docker data, volumes, settings or WSL distributions were deleted. Local test images were downloaded. This is machine recovery, not project deployment or a hosted backup drill.
+
 ## Windows continuation — 2026-10-24
 
 - M1 uses the existing cream/teal identity with system sans-serif body text, restrained serif headings, common 4/8 px radii, a shared spacing/type scale and teal focus rings. Remove decorative rotations, shadows, emoji and vague marketing copy; retain original instructional diagrams. Increase interface metadata/control text without changing diagram-specific tokens. This is a reversible shared-shell change, versioned `density-v4-draft`; canonical JSON, WAVs, objectives, question wording and SVG density groups stay byte-identical. Re-freeze the manifest and verify all conditions before any research use. No study is active.

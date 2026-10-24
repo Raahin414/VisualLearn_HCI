@@ -1,5 +1,11 @@
 # Verification record — 2026-10-18
 
+## Continuation baseline and Windows shutdown failure — 2026-10-24
+
+At c89243c: clean install (420 packages, audit 0), frozen content/audio/spec checks, 62 unit/service tests (including PGlite), dedicated 5-test PGlite schema command, lint/types, 15 real PostgreSQL 17 tests, 29 development Chromium tests (1.8 min), build/22 clean browser assets, 29 production Chromium tests (32.5 s), and production HTTP 200/404/401 passed. No product source changed. Generated baseline screenshots are preserved in ignored `.local/baseline-20261024/`; historical committed screenshots were restored.
+
+Docker initially failed on inaccessible Windows AF_UNIX runtime sockets; preserving/recreating their parent directories recovered engine 29.7.2 without resetting data. The first two connected attempts passed all 19 local security checks but aborted at verifier shutdown with `UV_HANDLE_CLOSING` (both Node 24.14.1 and isolated 24.22.1). They did not run the browser suite and are not connected-suite passes. A nested npm launcher attempt also failed to resolve `supabase@2`; subsequent runs explicitly use the native `SUPABASE_CLI`. The verifier now sets its exit code and exits naturally. Final connected rerun on isolated Node 24.22.1/npm 11.21.1: **19/19 local security checks and 24/24 real local Supabase/Auth/MFA/PostgreSQL browser tests passed (5.6 min)**. Baseline is green; no hosted service changed.
+
 ## M1 academic interface — 2026-10-24
 
 Node 24.22.1/npm 11.21.1, Docker 29.6.2. `npm ci` PASS: 414 packages installed, 0 audit findings. No dependency versions changed.

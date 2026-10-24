@@ -1,5 +1,9 @@
 # Implementation handoff — 2026-10-16
 
+## Windows verifier repair and baseline — 2026-10-24
+
+At c89243c, the resumed full baseline passed content/spec/audio checks, clean install (420 packages, audit 0), 62 unit/service tests, 5 dedicated PGlite checks, lint/types, 15 real PostgreSQL cases, 29 dev/29 production browser cases, build/22 clean assets and production HTTP 200/404/401. Connected setup initially aborted after its 19 security passes during forced Node shutdown. Owner authorized the fix and continued implementation. Replacing forced exit with `process.exitCode` preserved all checks and produced a complete 24/24 local connected pass in 5.6 min, including actual session expiry, invite/recovery, MFA, exports and E2/E3. No hosted changes. Next: M4.
+
 ## M3 handoff - 2026-10-24 (verified, recruitment closed)
 
 Follows pushed/remote-verified M2 50ca2a5. Implemented E3 canonical groups [1,1,1,1,1], [3,2] and [5], exact word/media parity, fixed-rate single-active narration, unique SVG definition IDs, server-derived group progress, closed pilot/version/time-policy gates, migration 004, UUID-deduplicated exposure/visible-time proxies and versioned export columns. Shared source revision is separated from presentation contract versions without rewriting old rows. The controlled obsolete-load regression is preserved; its ref-cleanup lint warning is removed using a stable callback.
