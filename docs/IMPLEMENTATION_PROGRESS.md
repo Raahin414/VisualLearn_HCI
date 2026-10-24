@@ -168,3 +168,9 @@ User scope: resend staging invites to Rameez and Taj, with Taj's new address raa
 The owner replaced Taj's old, never-accepted UUID `aa42a500-…` (tajuddinraahin@gmail.com) with the new UUID in `ADMIN_ALLOWLIST` in all three ignored staging env files (own, Rameez's, Raahin's). The old Auth user still exists in staging and is no longer allowlisted. No app code, stimuli or research records changed; suites were not rerun.
 
 Next: send the updated env files privately; recipients restart `npm run dev:staging`, then accept the invite and enroll TOTP. Optionally delete the old Auth user.
+
+## Hosted staging migrated to 005 — 2026-10-24
+
+User scope: pull the M1–M4 commits, migrate hosted staging, pin Node 24 and push. Rebased the two local docs commits onto origin `51093e1` without conflicts. Re-ran locally on Linux with Node 24.22.0/npm 11.19.1: verify-content, 75/75 unit/service tests (12 files, includes PGlite), 5 PGlite schema tests, lint, typecheck, build, bundle scan (22 clean assets), `test:pg` 18/18 on real PostgreSQL 17. Browser and connected suites were not re-run here. With Node 22, 5 unit files fail; added `.nvmrc` (24).
+
+Ran `scripts/migrate.mjs` with the owner connection from the ignored `.env.staging.local` against hosted `visuallearn-staging`: "Applied migrations 003, 004, 005 and draft-only seed. Recruitment remains disabled." (one transaction). Then `npm run verify:staging` against hosted staging: **21/21 PASS**, including ledger 001–005, E2–E8 disabled, optional seven-day recruitment disabled, physical-deletion gates inactive, 0 participants, 3/3 allowlisted researcher UUIDs, non-owner runtime login. No participant data, Auth settings or roles changed. Hosting, hosted SYNTHETIC run and restore drill remain pending.

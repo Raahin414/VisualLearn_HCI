@@ -1,5 +1,9 @@
 # VisualLearn progress
 
+## Hosted staging at migration 005 — 2026-10-24
+
+Hosted `visuallearn-staging` now has migrations 001–005; `verify:staging` passes 21/21 there. Use Node 24 (`.nvmrc`). App hosting, a hosted SYNTHETIC run and a backup-restore drill remain pending; recruitment stays closed.
+
 ## M4 local completion — verified, 2026-10-24
 
 Owner scope ends at M4; no hosting or hosted changes. E2/E3 already exist and are included in regressions. Implemented distinct optional D/F6 with frozen version/hash/window, server seven-day scheduling and idempotency; development-only draft debrief; accessible descriptive charts and cohort-safe export analysis; transparent response-review-v1-draft heuristics from submitted answers in the dashboard and local simulator; physical deletion behind an off-by-default operator flag and unapproved policy gates, preserving private allocation counts. Canonical lesson/audio/spec and A/B/C/P question objects remain unchanged. Recruitment and human-review gates remain closed. Verified: clean install (420 packages, audit 0), content/spec/audio parity, 75 unit/service tests, 5 dedicated PGlite checks, lint/types, 18 real PostgreSQL tests, 30 development and 30 production browser tests, build/22 clean assets, 21 local security checks, 25 connected local Supabase/Auth/MFA/PostgreSQL browser tests, 5 Python tests and actual analysis of 37 SYNTHETIC exported sessions. Production smoke is 200/404/404/401. Fresh visual review returned ship; no material fixes. See QA for limits and failed attempts.
