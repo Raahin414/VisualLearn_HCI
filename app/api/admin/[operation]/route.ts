@@ -53,7 +53,7 @@ export async function GET(request: NextRequest, ctx: Ctx) {
       const db = client as unknown as SQL;
       if (operation === "stats") {
         const study = params.get("study") || "E1";
-        if (study !== "E1" && study !== "E2" && study !== "E3")
+        if (study !== "E1")
           return NextResponse.json(
             { error: "Unknown study." },
             { status: 400, headers: noStore },

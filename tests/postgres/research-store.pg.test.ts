@@ -79,11 +79,19 @@ beforeAll(async () => {
 });
 afterAll(async () => {
   await mkdir(".local/m4-synthetic-exports", { recursive: true });
-  for (const name of Object.keys(exportQueries) as (keyof typeof exportQueries)[]) {
+  for (const name of Object.keys(
+    exportQueries,
+  ) as (keyof typeof exportQueries)[]) {
     const out = await exportRows(getPool() as unknown as SQL, name);
-    await writeFile(`.local/m4-synthetic-exports/${name}.csv`, toCsv(out.rows, Object.keys(dataDictionary[name])));
+    await writeFile(
+      `.local/m4-synthetic-exports/${name}.csv`,
+      toCsv(out.rows, Object.keys(dataDictionary[name])),
+    );
   }
-  await writeFile(".local/m4-synthetic-exports/codebook.json", JSON.stringify(codebook(), null, 2));
+  await writeFile(
+    ".local/m4-synthetic-exports/codebook.json",
+    JSON.stringify(codebook(), null, 2),
+  );
   await owner.end();
   await getPool().end();
 });
@@ -92,11 +100,18 @@ describe("Migrations and least-privilege runtime login", () => {
     const m = await owner.query(
       "select version from visuallearn_ops.migrations order by version",
     );
-    expect(m.rows.map((r) => r.version)).toEqual(["001", "002", "003", "004", "005"]);
+    expect(m.rows.map((r) => r.version)).toEqual([
+      "001",
+      "002",
+      "003",
+      "004",
+      "005",
+      "006",
+    ]);
     const e = await owner.query(
       "select id,enabled,status,consent_version from visuallearn.experiments order by id",
     );
-    expect(e.rows).toHaveLength(8);
+    expect(e.rows).toHaveLength(1);
     expect(e.rows.filter((r) => r.enabled).map((r) => r.id)).toEqual(["E1"]);
     expect(e.rows[0].consent_version).toMatch(/^SYNTHETIC/);
     expect(e.rows.slice(1).every((r) => r.status === "draft")).toBe(true);
@@ -414,222 +429,218 @@ describe("Withdrawal and export integrity", () => {
   });
 });
 
-describe("SYNTHETIC E2 concurrency over real PostgreSQL connections", () => {
-  it("balances concurrent allocations across four arms and rejects cross-study links", async () => {
-    await owner.query(
-      "update visuallearn.experiments set enabled=true,pilot_reviewed=true,pilot_contract_version='modality-v1-draft',status='recruiting',content_approved=true,ethics_approved=true,consent_version='SYNTHETIC-LOCAL-CONSENT',consent_text='SYNTHETIC LOCAL TEST',study_contact='SYNTHETIC' where id='E2'",
-    );
-    try {
-      const ids = await Promise.all(
-        Array.from(
-          { length: 12 },
-          async () =>
-            (
-              await tx((s) =>
-                s.enroll(
-                  { ...consent, experimentId: "E2" },
-                  crypto.randomUUID(),
-                ),
-              )
-            ).sessionId,
-        ),
-      );
-      await Promise.all(
-        ids.map((id) =>
-          tx((s) => s.submitAssessment(id, "pre", { answers: answerKey("A") })),
-        ),
-      );
-      const counts = await owner.query(
-        "select a.arm_key,count(*)::int n from visuallearn.assignments a join visuallearn.sessions s on s.assignment_id=a.id where s.id=any($1) group by a.arm_key",
-        [ids],
-      );
-      expect(counts.rows).toHaveLength(4);
-      expect(counts.rows.every((r) => r.n === 3)).toBe(true);
-      const selected = ids[0];
-      const views = await Promise.all(
-        Array.from({ length: 4 }, () => tx((s) => s.getLesson(selected))),
-      );
-      expect(
-        views.every(
-          (v) =>
-            JSON.stringify(v.presentation) ===
-            JSON.stringify(views[0].presentation),
-        ),
-      ).toBe(true);
-      expect(
-        views.every(
-          (v) =>
-            new Date(v.lessonOpenedAt).getTime() ===
-            new Date(views[0].lessonOpenedAt).getTime(),
-        ),
-      ).toBe(true);
-      await expect(
-        owner.query(
-          "update visuallearn.sessions set experiment_id='E1' where id=$1",
-          [selected],
-        ),
-      ).rejects.toThrow(/foreign key/);
-      const e1 = await enroll();
-      await tx((s) =>
-        s.submitAssessment(e1, "pre", { answers: answerKey("A") }),
-      );
-      const assignment = (
-        await owner.query(
-          "select assignment_id from visuallearn.sessions where id=$1",
-          [e1],
-        )
-      ).rows[0].assignment_id;
-      await expect(
-        owner.query(
-          "update visuallearn.sessions set assignment_id=$2 where id=$1",
-          [selected, assignment],
-        ),
-      ).rejects.toThrow(/foreign key|unique/);
-      await Promise.all(ids.map((id) => tx((s) => s.withdraw(id))));
-      await tx((s) => s.withdraw(e1));
-    } finally {
-      await owner.query(
-        "update visuallearn.experiments set enabled=false,status='draft',pilot_reviewed=false,pilot_contract_version=null,content_approved=false,ethics_approved=false where id='E2'",
-      );
-    }
-  });
-});
-
-describe("SYNTHETIC E3 allocation over independent PostgreSQL connections", () => {
-  it("balances nine allocations, derives visits from the assigned group and deduplicates counters", async () => {
-    await owner.query(
-      "update visuallearn.experiments set enabled=true,pilot_reviewed=true,pilot_contract_version='chunking-v1-draft',study_time_policy='self-paced-no-minimum-v1',status='recruiting',content_approved=true,ethics_approved=true,consent_version='SYNTHETIC-LOCAL-CONSENT',consent_text='SYNTHETIC LOCAL TEST',study_contact='SYNTHETIC' where id='E3'",
-    );
-    try {
-      const ids = await Promise.all(
-        Array.from(
-          { length: 9 },
-          async () =>
-            (
-              await tx((s) =>
-                s.enroll(
-                  { ...consent, experimentId: "E3" },
-                  crypto.randomUUID(),
-                ),
-              )
-            ).sessionId,
-        ),
-      );
-      await Promise.all(
-        ids.map((id) =>
-          tx((s) => s.submitAssessment(id, "pre", { answers: answerKey("A") })),
-        ),
-      );
-      const counts = await owner.query(
-        "select a.arm_key,count(*)::int n from visuallearn.assignments a join visuallearn.sessions s on s.assignment_id=a.id where s.id=any($1) group by a.arm_key",
-        [ids],
-      );
-      expect(counts.rows).toHaveLength(3);
-      expect(counts.rows.every((row) => row.n === 3)).toBe(true);
-      const id = ids[0];
-      const view = await tx((s) => s.getLesson(id));
-      if (view.presentation.kind !== "chunking")
-        throw new Error("Wrong projection");
-      const progress = await tx((s) => s.progress(id, { segment: 0 }));
-      expect(progress.visited.sort()).toEqual(view.presentation.groups[0]);
-      const event = {
-        clientEventId: crypto.randomUUID(),
-        eventType: "active_time",
-        segmentId: "overview",
-        elapsedMs: 0,
-        clientTime: new Date().toISOString(),
-        payload: { groupIndex: 0, activeMs: 1800 },
-      };
-      await Promise.all(
-        Array.from({ length: 4 }, () => tx((s) => s.ingestEvents(id, [event]))),
-      );
-      const metric = (
-        await owner.query(
-          "select active_time_ms,presentation_version,stimulus_version from visuallearn.sessions where id=$1",
-          [id],
-        )
-      ).rows[0];
-      expect(Number(metric.active_time_ms)).toBe(1800);
-      expect(metric.presentation_version).toBe("chunking-v1-draft");
-      expect(metric.stimulus_version).toBe("shared-v7-draft");
-      await Promise.all(ids.map((id) => tx((s) => s.withdraw(id))));
-    } finally {
-      await owner.query(
-        "update visuallearn.experiments set enabled=false,status='draft',pilot_reviewed=false,pilot_contract_version=null,content_approved=false,ethics_approved=false,study_time_policy=null where id='E3'",
-      );
-    }
-  });
-});
-
 describe("M4 optional follow-up and physical deletion on real PostgreSQL", () => {
   it("freezes D, rejects early access and commits concurrent submissions once", async () => {
     const savedClock = clock;
-    await owner.query("update visuallearn.experiments set seven_day_enabled=true,seven_day_reviewed=true,seven_day_form_version='1.0-seven-day-draft',seven_day_window_minutes=60 where id='E1'");
+    await owner.query(
+      "update visuallearn.experiments set seven_day_enabled=true,seven_day_reviewed=true,seven_day_form_version='1.0-seven-day-draft',seven_day_window_minutes=60 where id='E1'",
+    );
     try {
       const id = await enroll();
-      await owner.query("update visuallearn.experiments set seven_day_enabled=false,seven_day_reviewed=false,seven_day_window_minutes=null where id='E1'");
+      await owner.query(
+        "update visuallearn.experiments set seven_day_enabled=false,seven_day_reviewed=false,seven_day_window_minutes=null where id='E1'",
+      );
       await toLessonComplete(id);
-      await tx((s) => s.submitAssessment(id, "immediate", { answers: answerKey("B"), ...written }));
+      await tx((s) =>
+        s.submitAssessment(id, "immediate", {
+          answers: answerKey("B"),
+          ...written,
+        }),
+      );
       await tx((s) => s.submitSurvey(id, "F3", f3));
       clock = new Date(clock.getTime() + 61 * 60000);
-      await tx((s) => s.submitAssessment(id, "plus_60m", { answers: answerKey("C"), ...written }));
+      await tx((s) =>
+        s.submitAssessment(id, "plus_60m", {
+          answers: answerKey("C"),
+          ...written,
+        }),
+      );
       await tx((s) => s.submitSurvey(id, "F5", f5));
       expect((await tx((s) => s.snapshot(id))).state).toBe("waiting_7d");
-      await expect(tx((s) => s.assessment(id, "plus_7d"))).rejects.toThrow(/not available yet/);
-      clock = new Date((await owner.query("select due_at from visuallearn.scheduled_followups where session_id=$1 and timepoint='plus_7d'", [id])).rows[0].due_at);
-      const results = await Promise.all(Array.from({ length: 4 }, () => tx((s) => s.submitAssessment(id, "plus_7d", { answers: answerKey("D"), ...written }))));
+      await expect(tx((s) => s.assessment(id, "plus_7d"))).rejects.toThrow(
+        /not available yet/,
+      );
+      clock = new Date(
+        (
+          await owner.query(
+            "select due_at from visuallearn.scheduled_followups where session_id=$1 and timepoint='plus_7d'",
+            [id],
+          )
+        ).rows[0].due_at,
+      );
+      const results = await Promise.all(
+        Array.from({ length: 4 }, () =>
+          tx((s) =>
+            s.submitAssessment(id, "plus_7d", {
+              answers: answerKey("D"),
+              ...written,
+            }),
+          ),
+        ),
+      );
       expect(results.filter((r) => !r.alreadySubmitted)).toHaveLength(1);
-      await tx((s) => s.submitSurvey(id, "F6", { ...f5, reviewed: "yes", sources: ["notes"] }));
+      await tx((s) =>
+        s.submitSurvey(id, "F6", {
+          ...f5,
+          reviewed: "yes",
+          sources: ["notes"],
+        }),
+      );
       expect((await tx((s) => s.snapshot(id))).state).toBe("finished");
-      expect((await owner.query("select form_key,correct from visuallearn.assessment_attempts where session_id=$1 and timepoint='plus_7d'", [id])).rows).toEqual([{ form_key: "D", correct: 8 }]);
-      expect((await owner.query("select answers_json from visuallearn.survey_submissions where session_id=$1 and form_key='F6'", [id])).rows[0].answers_json.sources).toEqual(["notes"]);
+      expect(
+        (
+          await owner.query(
+            "select form_key,correct from visuallearn.assessment_attempts where session_id=$1 and timepoint='plus_7d'",
+            [id],
+          )
+        ).rows,
+      ).toEqual([{ form_key: "D", correct: 8 }]);
+      expect(
+        (
+          await owner.query(
+            "select answers_json from visuallearn.survey_submissions where session_id=$1 and form_key='F6'",
+            [id],
+          )
+        ).rows[0].answers_json.sources,
+      ).toEqual(["notes"]);
     } finally {
       clock = savedClock;
-      await owner.query("update visuallearn.experiments set seven_day_enabled=false,seven_day_reviewed=false,seven_day_window_minutes=null where id='E1'");
+      await owner.query(
+        "update visuallearn.experiments set seven_day_enabled=false,seven_day_reviewed=false,seven_day_window_minutes=null where id='E1'",
+      );
     }
   });
   it("purges all linked records once under concurrency while preserving private allocation history", async () => {
     const id = await enroll();
     await tx((s) => s.submitAssessment(id, "pre", { answers: answerKey("A") }));
-    const participant = (await owner.query("select participant_id from visuallearn.sessions where id=$1", [id])).rows[0].participant_id;
-    const run = (enabled: boolean) => transaction((db) => db.query("select visuallearn.purge_withdrawn($1,'SYNTHETIC-POLICY', $2) deleted", [participant, enabled]));
+    const participant = (
+      await owner.query(
+        "select participant_id from visuallearn.sessions where id=$1",
+        [id],
+      )
+    ).rows[0].participant_id;
+    const run = (enabled: boolean) =>
+      transaction((db) =>
+        db.query(
+          "select visuallearn.purge_withdrawn($1,'SYNTHETIC-POLICY', $2) deleted",
+          [participant, enabled],
+        ),
+      );
     await expect(run(false)).rejects.toThrow(/disabled/);
     await expect(run(true)).rejects.toThrow(/Approved retention/);
-    await owner.query("update visuallearn.experiments set retention_approved=true,retention_policy_version='SYNTHETIC-POLICY',withdrawal_retention_days=30 where id='E1'");
+    await owner.query(
+      "update visuallearn.experiments set retention_approved=true,retention_policy_version='SYNTHETIC-POLICY',withdrawal_retention_days=30 where id='E1'",
+    );
     try {
       await expect(run(true)).rejects.toThrow(/not eligible/);
-      const attempt = (await owner.query("select id from visuallearn.assessment_attempts where session_id=$1", [id])).rows[0].id;
-      await owner.query("insert into visuallearn.free_recall_ratings(attempt_id,rater_code,rubric_version,sub_scores,total_score) values($1,'SYNTHETIC-RATER','SYNTHETIC','{}',0)", [attempt]);
-      await owner.query("insert into visuallearn.rating_adjudications(attempt_id,response_kind,rubric_version,adjudicator_code,sub_scores,total_score) values($1,'free_recall','SYNTHETIC','SYNTHETIC','{}',0)", [attempt]);
+      const attempt = (
+        await owner.query(
+          "select id from visuallearn.assessment_attempts where session_id=$1",
+          [id],
+        )
+      ).rows[0].id;
+      await owner.query(
+        "insert into visuallearn.free_recall_ratings(attempt_id,rater_code,rubric_version,sub_scores,total_score) values($1,'SYNTHETIC-RATER','SYNTHETIC','{}',0)",
+        [attempt],
+      );
+      await owner.query(
+        "insert into visuallearn.rating_adjudications(attempt_id,response_kind,rubric_version,adjudicator_code,sub_scores,total_score) values($1,'free_recall','SYNTHETIC','SYNTHETIC','{}',0)",
+        [attempt],
+      );
       await tx((s) => s.issueReturnToken(id));
       await tx((s) => s.withdraw(id));
       await expect(run(true)).rejects.toThrow(/not eligible/);
-      await owner.query("update visuallearn.participants set withdrawn_at=now()-interval '31 days' where id=$1", [participant]);
-      const before = Number((await owner.query("select coalesce(sum(n),0) n from visuallearn.deleted_allocation_counts")).rows[0].n);
-      const results = await Promise.all(Array.from({ length: 4 }, () => run(true)));
+      await owner.query(
+        "update visuallearn.participants set withdrawn_at=now()-interval '31 days' where id=$1",
+        [participant],
+      );
+      const before = Number(
+        (
+          await owner.query(
+            "select coalesce(sum(n),0) n from visuallearn.deleted_allocation_counts",
+          )
+        ).rows[0].n,
+      );
+      const results = await Promise.all(
+        Array.from({ length: 4 }, () => run(true)),
+      );
       expect(results.filter((r) => r.rows[0].deleted)).toHaveLength(1);
-      expect(Number((await owner.query("select sum(n) n from visuallearn.deleted_allocation_counts")).rows[0].n)).toBe(before + 1);
-      expect((await owner.query("select id from visuallearn.participants where id=$1", [participant])).rowCount).toBe(0);
+      expect(
+        Number(
+          (
+            await owner.query(
+              "select sum(n) n from visuallearn.deleted_allocation_counts",
+            )
+          ).rows[0].n,
+        ),
+      ).toBe(before + 1);
+      expect(
+        (
+          await owner.query(
+            "select id from visuallearn.participants where id=$1",
+            [participant],
+          )
+        ).rowCount,
+      ).toBe(0);
       for (const table of ["free_recall_ratings", "rating_adjudications"])
-        expect((await owner.query(`select id from visuallearn.${table} where attempt_id=$1`, [attempt])).rowCount).toBe(0);
-      for (const table of ["events", "assessment_attempts", "return_tokens", "survey_submissions", "scheduled_followups"])
-        expect((await owner.query(`select * from visuallearn.${table} where session_id=$1`, [id])).rowCount).toBe(0);
+        expect(
+          (
+            await owner.query(
+              `select id from visuallearn.${table} where attempt_id=$1`,
+              [attempt],
+            )
+          ).rowCount,
+        ).toBe(0);
+      for (const table of [
+        "events",
+        "assessment_attempts",
+        "return_tokens",
+        "survey_submissions",
+        "scheduled_followups",
+      ])
+        expect(
+          (
+            await owner.query(
+              `select * from visuallearn.${table} where session_id=$1`,
+              [id],
+            )
+          ).rowCount,
+        ).toBe(0);
     } finally {
-      await owner.query("update visuallearn.experiments set retention_approved=false,retention_policy_version=null,withdrawal_retention_days=null where id='E1'");
+      await owner.query(
+        "update visuallearn.experiments set retention_approved=false,retention_policy_version=null,withdrawal_retention_days=null where id='E1'",
+      );
     }
   });
 });
 
-
 it("operator CLI defaults to a read-only dry run and rejects apply when the feature flag is off", async () => {
-  const before = (await owner.query("select count(*)::int n from visuallearn.participants")).rows[0].n;
-  const env = { ...process.env, DATABASE_URL: appUrl, PHYSICAL_DELETION_ENABLED: "false" };
-  const dry = spawnSync(process.execPath, ["scripts/purge-withdrawn.mjs"], { env, encoding: "utf8" });
+  const before = (
+    await owner.query("select count(*)::int n from visuallearn.participants")
+  ).rows[0].n;
+  const env = {
+    ...process.env,
+    DATABASE_URL: appUrl,
+    PHYSICAL_DELETION_ENABLED: "false",
+  };
+  const dry = spawnSync(process.execPath, ["scripts/purge-withdrawn.mjs"], {
+    env,
+    encoding: "utf8",
+  });
   expect(dry.status).toBe(0);
   expect(dry.stdout).toContain("DRY RUN");
-  const disabled = spawnSync(process.execPath, ["scripts/purge-withdrawn.mjs", "--apply"], { env, encoding: "utf8" });
+  const disabled = spawnSync(
+    process.execPath,
+    ["scripts/purge-withdrawn.mjs", "--apply"],
+    { env, encoding: "utf8" },
+  );
   expect(disabled.status).toBe(1);
   expect(disabled.stderr).toContain("Deletion disabled");
-  expect((dry.stdout + disabled.stderr).includes(new URL(appUrl).password)).toBe(false);
-  expect((await owner.query("select count(*)::int n from visuallearn.participants")).rows[0].n).toBe(before);
+  expect(
+    (dry.stdout + disabled.stderr).includes(new URL(appUrl).password),
+  ).toBe(false);
+  expect(
+    (await owner.query("select count(*)::int n from visuallearn.participants"))
+      .rows[0].n,
+  ).toBe(before);
 });

@@ -23,18 +23,10 @@ import {
   followupEligibility,
   type StudyState,
 } from "./lifecycle";
-import {
-  f3Schema,
-  f5Schema,
-  SURVEY_VERSION,
-  f3ModalitySchema,
-  MODALITY_SURVEY_VERSION,
-} from "@/lib/assessments/surveys";
+import { f3Schema, f5Schema, SURVEY_VERSION } from "@/lib/assessments/surveys";
 import {
   SOURCE_VERSION,
   DENSITY_VERSION,
-  CHUNKING_VERSION,
-  MODALITY_VERSION,
   presentationFor,
 } from "./presentation.server";
 import { visibleSegments } from "./presentation";
@@ -71,7 +63,7 @@ type Session = {
   withdrawn_at: Date | null;
   public_code: string;
   arm_key: string | null;
-  experiment_id: "E1" | "E2" | "E3";
+  experiment_id: "E1";
   presentation_version: string;
   lesson_opened_at: Date | null;
   seven_day_form_version: string | null;
@@ -111,7 +103,13 @@ export class StudyService {
     private db: SQL,
     private now: () => Date = () => new Date(),
   ) {}
-  async gate(experimentId: "E1" | "E2" | "E3" = "E1") {
+  async gate(experimentId: string = "E1") {
+    if (experimentId !== "E1")
+      throw new StudyError(
+        "STUDY_UNSUPPORTED",
+        "Only the visual-density study is available.",
+        404,
+      );
     const { rows } = await this.db.query<{
       enabled: boolean;
       status: string;
@@ -122,9 +120,6 @@ export class StudyService {
       study_contact: string | null;
       followup_window_minutes: number;
       protocol_version: string;
-      pilot_reviewed: boolean;
-      pilot_contract_version: string | null;
-      study_time_policy: string | null;
       seven_day_enabled: boolean;
       seven_day_reviewed: boolean;
       seven_day_form_version: string | null;
@@ -144,26 +139,6 @@ export class StudyService {
       throw new StudyError(
         "STUDY_CLOSED",
         "Research enrollment is not approved or open.",
-        503,
-      );
-    if (
-      experimentId !== "E1" &&
-      (!e.pilot_reviewed ||
-        e.pilot_contract_version !==
-          (experimentId === "E2" ? MODALITY_VERSION : CHUNKING_VERSION))
-    )
-      throw new StudyError(
-        "PILOT_CLOSED",
-        "A reviewed presentation pilot contract is required.",
-        503,
-      );
-    if (
-      experimentId === "E3" &&
-      e.study_time_policy !== "self-paced-no-minimum-v1"
-    )
-      throw new StudyError(
-        "PILOT_CLOSED",
-        "A reviewed chunking time policy is required.",
         503,
       );
     if (
@@ -190,6 +165,12 @@ export class StudyService {
         "UNAUTHORIZED",
         "A valid study session is required.",
         401,
+      );
+    if (s.experiment_id !== "E1")
+      throw new StudyError(
+        "STUDY_RETIRED",
+        "This historical study is no longer available. Its saved records are preserved; contact the researcher.",
+        409,
       );
     if (s.withdrawn_at || s.state === "withdrawn")
       throw new StudyError(
@@ -264,13 +245,9 @@ export class StudyService {
         stimulusHash,
         e.followup_window_minutes,
         data.experimentId,
-        data.experimentId === "E1"
-          ? DENSITY_VERSION
-          : data.experimentId === "E2"
-            ? MODALITY_VERSION
-            : CHUNKING_VERSION,
-        data.experimentId === "E3" ? "visible-interval-v1" : null,
-        data.experimentId === "E3" ? e.study_time_policy : null,
+        DENSITY_VERSION,
+        null,
+        null,
       ],
     );
     if (e.seven_day_enabled)
@@ -562,20 +539,13 @@ export class StudyService {
         "Please complete the assessment first.",
         409,
       );
-    const modalitySurvey = form === "F3" && s.experiment_id === "E2";
-    const data = (
-      form === "F3" ? (modalitySurvey ? f3ModalitySchema : f3Schema) : f5Schema
-    ).parse(input);
+    const data = (form === "F3" ? f3Schema : f5Schema).parse(input);
     await this.db.query(
       "insert into visuallearn.survey_submissions(session_id,form_key,form_version,answers_json,submitted_at) values($1,$2,$3,$4,$5)",
       [
         id,
         form,
-        form === "F6"
-          ? SEVEN_DAY_SURVEY_VERSION
-          : modalitySurvey
-            ? MODALITY_SURVEY_VERSION
-            : SURVEY_VERSION,
+        form === "F6" ? SEVEN_DAY_SURVEY_VERSION : SURVEY_VERSION,
         JSON.stringify(data),
         this.now(),
       ],
@@ -637,65 +607,15 @@ export class StudyService {
           409,
         );
       if (
-        session.experiment_id === "E2" &&
-        (e.eventType.startsWith("audio_") ||
-          e.eventType === "diagram_interacted")
-      ) {
-        const assigned = presentationFor(
-          session.experiment_id,
-          session.arm_key,
-        );
-        if (
-          assigned.kind !== "modality" ||
-          (e.eventType.startsWith("audio_") && !assigned.audio) ||
-          (e.eventType === "diagram_interacted" && !assigned.diagram)
+        ["accommodation_used", "presentation_exposed", "active_time"].includes(
+          e.eventType,
         )
-          throw new StudyError(
-            "INVALID_CHANNEL_EVENT",
-            "This channel is not part of the assigned presentation.",
-          );
-      }
-      if (e.eventType === "accommodation_used") {
-        const assigned = presentationFor(
-          session.experiment_id,
-          session.arm_key,
+      )
+        throw new StudyError(
+          "INVALID_CHANNEL_EVENT",
+          "This event is not part of the visual-density study.",
         );
-        if (
-          assigned.kind !== "modality" ||
-          assigned.text ||
-          e.payload.accommodation !== "transcript" ||
-          !e.segmentId
-        )
-          throw new StudyError(
-            "INVALID_ACCOMMODATION",
-            "This accommodation event is not valid for this study.",
-          );
-      }
-      if (
-        e.eventType === "presentation_exposed" ||
-        e.eventType === "active_time"
-      ) {
-        const assigned = presentationFor(
-          session.experiment_id,
-          session.arm_key,
-        );
-        const segment = lesson.segments.findIndex(
-          (segment) => segment.id === e.segmentId,
-        );
-        if (
-          assigned.kind !== "chunking" ||
-          !session.lesson_opened_at ||
-          segment < 0 ||
-          e.payload.groupIndex !==
-            assigned.groups.findIndex((group) => group.includes(segment)) ||
-          (e.eventType === "active_time" && !e.payload.activeMs)
-        )
-          throw new StudyError(
-            "INVALID_EXPOSURE_EVENT",
-            "This exposure event does not match the assigned presentation.",
-          );
-      }
-      const inserted = await this.db.query<{ id: string }>(
+      await this.db.query<{ id: string }>(
         "insert into visuallearn.events(session_id,client_event_id,event_type,segment_id,elapsed_ms,client_time,payload) values($1,$2,$3,$4,$5,$6,$7) on conflict(session_id,client_event_id) do nothing returning id",
         [
           id,
@@ -707,21 +627,6 @@ export class StudyService {
           JSON.stringify(e.payload),
         ],
       );
-      if (inserted.rows.length && e.eventType === "presentation_exposed")
-        await this.db.query(
-          "update visuallearn.sessions set presentation_exposures=presentation_exposures+1 where id=$1",
-          [id],
-        );
-      if (inserted.rows.length && e.eventType === "active_time")
-        await this.db.query(
-          "update visuallearn.sessions set active_time_ms=active_time_ms+$2 where id=$1",
-          [id, e.payload.activeMs],
-        );
-      if (inserted.rows.length && e.eventType === "accommodation_used")
-        await this.db.query(
-          "update visuallearn.sessions set accommodations=jsonb_set(accommodations,array[$2],coalesce(accommodations->$2,to_jsonb($3::text)),true) where id=$1",
-          [id, `transcript:${e.segmentId}`, this.now().toISOString()],
-        );
     }
     return { accepted: true };
   }

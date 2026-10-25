@@ -16,12 +16,10 @@ export function SurveyForm({
   form,
   draftKey,
   onSubmit,
-  diagramNA = false,
 }: {
   form: SurveyFormKey;
   draftKey: string;
   onSubmit: (answers: SurveyDraft) => Promise<void>;
-  diagramNA?: boolean;
 }) {
   const [draft, setDraft] = useState<SurveyDraft>({});
   const [ready, setReady] = useState(false);
@@ -34,11 +32,7 @@ export function SurveyForm({
     let saved: SurveyDraft = {};
     let available = true;
     try {
-      saved = readSurveyDraft(
-        sessionStorage.getItem(draftKey),
-        form,
-        diagramNA,
-      );
+      saved = readSurveyDraft(sessionStorage.getItem(draftKey), form);
     } catch {
       available = false;
     }
@@ -47,7 +41,7 @@ export function SurveyForm({
       setCanSave(available);
       setReady(true);
     });
-  }, [draftKey, form, diagramNA]);
+  }, [draftKey, form]);
   useEffect(() => {
     if (!ready) return;
     try {
@@ -61,7 +55,7 @@ export function SurveyForm({
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (submitting.current || !ready) return;
-    const invalid = validateSurveyDraft(form, draft, diagramNA);
+    const invalid = validateSurveyDraft(form, draft);
     if (invalid) {
       setError(invalid.message);
       formRef.current
@@ -125,10 +119,7 @@ export function SurveyForm({
               key={key}
               name={key}
               label={text}
-              na={
-                ["audio", "motion", "color"].includes(key) ||
-                (diagramNA && key === "support")
-              }
+              na={["audio", "motion", "color"].includes(key)}
               value={draft[key]}
               disabled={disabled}
               onChange={(v) => set(key, v)}

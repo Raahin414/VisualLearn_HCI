@@ -267,29 +267,9 @@ export function AdminWorkspace({
         Database-backed research overview. Descriptive summaries only; no
         significance tests or causal claims.
       </p>
-      <nav aria-label="Research experiment" className="export-links">
-        <a
-          href="/admin?study=E1"
-          aria-current={stats.experimentId === "E1" ? "page" : undefined}
-        >
-          E1: Visual density
-        </a>
-        <a
-          href="/admin?study=E2"
-          aria-current={stats.experimentId === "E2" ? "page" : undefined}
-        >
-          E2: Modality (draft)
-        </a>
-        <a
-          href="/admin?study=E3"
-          aria-current={stats.experimentId === "E3" ? "page" : undefined}
-        >
-          E3: Chunking (draft)
-        </a>
-      </nav>
       <p>
-        Overview scope: {stats.experimentId}. Exports contain all studies with
-        joinable experiment identifiers.
+        Visual-density study: low, medium and high. Dashboard and exports
+        include E1 records only.
       </p>
       <div className="admin-tabs" role="group" aria-label="Workspace sections">
         {(

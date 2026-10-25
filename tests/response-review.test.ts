@@ -32,7 +32,7 @@ describe("Draft response-based review prompts", () => {
   it("keeps study/presentation, frozen cohort and questionnaire versions separate", () => {
     const result = responseReview([
       row({ overload: 5 }),
-      row({ overload: 1 }, { cohort: "SYNTHETIC E2 audio / frozen-v1" }),
+      row({ overload: 1 }, { cohort: "SYNTHETIC E1 low / frozen-v2" }),
       row({ overload: 5 }, { form_version: "SYNTHETIC-F3-v2" }),
     ]);
     expect(result.items).toHaveLength(3);

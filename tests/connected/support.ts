@@ -59,7 +59,7 @@ export async function api(page: Page, action: string, body?: unknown) {
         });
   return { status: r.status(), body: await r.json() };
 }
-export async function enroll(page: Page, study: "E1" | "E2" | "E3" = "E1") {
+export async function enroll(page: Page, study: "E1" = "E1") {
   await page.goto(`/study/enroll?study=${study}`);
   await expect(page.getByText(/SYNTHETIC LOCAL TEST/)).toBeVisible();
   await page.getByLabel("Age band").selectOption("18-30");

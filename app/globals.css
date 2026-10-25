@@ -1869,67 +1869,6 @@ summary {
   }
 }
 
-/* The modality canvas reserves the same essential diagram footprint. */
-.presentation-canvas {
-  display: grid;
-  place-items: center;
-  padding: 24px;
-  background: var(--surface, #fff);
-  border: 1px solid var(--border, #cbd5e1);
-}
-.presentation-canvas p {
-  max-width: 36ch;
-  text-align: center;
-}
-.modality-presentation {
-  display: grid;
-  gap: 16px;
-  min-width: 0;
-}
-.transcript-access {
-  display: grid;
-  gap: 8px;
-}
-.transcript-access button {
-  white-space: normal;
-  height: auto;
-  min-height: 44px;
-}
-.instruction-script p {
-  max-width: 72ch;
-}
-@media (max-width: 600px) {
-  .presentation-canvas {
-    padding: 16px;
-  }
-}
-
-.modality-presentation .lesson-canvas,
-.modality-presentation .presentation-canvas {
-  height: clamp(200px, 40vw, 390px);
-}
-.modality-presentation .lesson-canvas > svg {
-  height: 100%;
-  max-height: none;
-}
-
-.chunk-presentation {
-  display: grid;
-  gap: 32px;
-  min-width: 0;
-}
-.concept-block {
-  display: grid;
-  gap: 16px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid var(--border, #cbd5e1);
-  min-width: 0;
-}
-.concept-block h2 {
-  margin: 0;
-  font-size: 1.5rem;
-}
-
 /* Researcher-only descriptive charts; all values also appear as text. */
 .research-chart {
   margin: 24px 0 32px;
@@ -1979,6 +1918,191 @@ summary {
   }
 }
 
-.response-review-item { margin: 24px 0; padding-bottom: 20px; border-bottom: 1px solid var(--line); }
-.response-review-item p { margin-top: 8px; }
-.response-review-cohort { overflow-wrap: anywhere; font-size: var(--text-small); }
+.response-review-item {
+  margin: 24px 0;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--line);
+}
+.response-review-item p {
+  margin-top: 8px;
+}
+.response-review-cohort {
+  overflow-wrap: anywhere;
+  font-size: var(--text-small);
+}
+
+/* E1: shared essential canvas with additive visual-density layers. */
+.density-visuals {
+  min-width: 0;
+  display: grid;
+  gap: 12px;
+}
+.density-support {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+.density-process {
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  background: var(--soft);
+  border-radius: var(--radius-panel);
+  text-align: center;
+}
+.density-process svg {
+  display: block;
+  width: 100%;
+  height: 84px;
+}
+.density-process figcaption {
+  font-size: 14px;
+  font-weight: 700;
+}
+.density-high .density-support {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.density-decoration {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  margin-bottom: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  background: var(--soft);
+}
+.density-decoration span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #6a9174;
+}
+.density-decoration span:nth-child(3n) {
+  background: #c3984e;
+  width: 16px;
+  height: 16px;
+}
+.density-overview {
+  margin: 48px 0;
+}
+.density-overview h2 {
+  font-size: clamp(28px, 4vw, 40px);
+  margin: 12px 0 24px;
+}
+.density-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+.density-tier {
+  padding: 24px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+  min-width: 0;
+}
+.density-tier h3 {
+  margin: 16px 0 8px;
+  font-size: 21px;
+}
+.density-tier p,
+.density-invariant {
+  color: var(--muted);
+}
+.density-example {
+  height: 108px;
+  display: grid;
+  grid-template-columns: repeat(3, 18px);
+  align-content: center;
+  justify-content: center;
+  gap: 12px;
+  border: 1px solid var(--line);
+  background: var(--soft);
+  border-radius: var(--radius-control);
+}
+.density-example span {
+  width: 18px;
+  height: 18px;
+  background: var(--teal);
+  border-radius: 50%;
+}
+.tier-low .density-example {
+  grid-template-columns: 28px;
+}
+.tier-low .density-example span {
+  width: 28px;
+  height: 28px;
+}
+.tier-medium .density-example {
+  grid-template-columns: repeat(2, 18px);
+}
+.tier-high .density-example span {
+  background: #77576e;
+}
+.density-invariant {
+  padding: 20px;
+  margin-top: 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-panel);
+}
+.study-process {
+  max-width: 800px;
+}
+.study-process h2 {
+  margin-bottom: 20px;
+}
+.study-process ol {
+  padding-left: 24px;
+}
+.study-process li {
+  margin: 12px 0;
+}
+.study-process p {
+  margin: 20px 0;
+}
+@media (max-width: 900px) {
+  .header-inner {
+    gap: 20px;
+  }
+  .site-header nav {
+    gap: 16px;
+  }
+}
+@media (max-width: 600px) {
+  .density-overview-grid {
+    grid-template-columns: 1fr;
+  }
+  .density-high .density-support {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .density-tier {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 760px) {
+  .header-inner {
+    flex-wrap: wrap;
+    height: auto;
+    min-height: 78px;
+    padding-top: 14px;
+    padding-bottom: 14px;
+    gap: 12px;
+  }
+  .site-header nav {
+    display: flex;
+    flex-wrap: wrap;
+    order: 3;
+    flex-basis: 100%;
+    margin-left: 0;
+    gap: 8px 20px;
+  }
+  .site-header nav a {
+    min-height: 32px;
+    display: inline-flex;
+    align-items: center;
+  }
+}

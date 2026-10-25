@@ -54,20 +54,16 @@
       "sha256": "4550a86b74ba10e445dfe52e1e75311bd20622cfadd69621c5d1af49b27aa7e5"
     },
     {
-      "path": "components/learning/modality-lesson.tsx",
-      "sha256": "9f68b7a8dac0ce60488390edc2ba55d6fa6e06cbebf8e3bc1650988ba9e65392"
-    },
-    {
-      "path": "components/learning/chunked-lesson.tsx",
-      "sha256": "d38f0185b93d511581b08fb07681fba719e2e76967c5e8222022b5cceafcaab6"
+      "path": "components/learning/density-visuals.tsx",
+      "sha256": "930516e09e90302060990728c93ea9725c322c5eed9450f757c5c8c3fd23af3d"
     },
     {
       "path": "lib/study/presentation.ts",
-      "sha256": "f8a69757bd793d3a98d139fac78558de8a2a32a0ac0a600cfdca199069cf4127"
+      "sha256": "10fba70e480e353c989cac7bcf6b401cc245adfab8a0893b0af96fd40a1ef5ba"
     },
     {
       "path": "lib/study/presentation.server.ts",
-      "sha256": "bd315070a9debc0073a94a53d0ecd7730679d72261dd4636faa661938c47347c"
+      "sha256": "fd3c3d2dc4cdc3db9bf853e97745588e6ededf77d10a0f7a6c7d14e9ceb26d9c"
     },
     {
       "path": "lib/telemetry/schema.ts",
@@ -75,11 +71,11 @@
     },
     {
       "path": "lib/content/lesson.ts",
-      "sha256": "c072b4fee12ab3681662e56c6e90b61b3dda8862bc74b6f7972b77543e695ded"
+      "sha256": "8a4d08481592dc18229998735711370c8fa0e4061a19e9ebf6676257562a2138"
     },
     {
       "path": "app/globals.css",
-      "sha256": "c5037aedc810bd8311bc745cebb620a83ccbfb940791771722c8e3f83d45de3b"
+      "sha256": "23f20bc3cbef4974cec84146fb6f0f1296b4ae4294c1e6e23072995076768f24"
     },
     {
       "path": "app/layout.tsx",
@@ -87,7 +83,7 @@
     },
     {
       "path": "components/site-header.tsx",
-      "sha256": "e6c7ac06eb6d5c71a6c9459d95ec55826dd0ad34a270251a4b4f1d20408881cf"
+      "sha256": "3ed40e5e5cd7623ab514833742d2e594cefc43144b3a87c6c016a474de6cdaa9"
     },
     {
       "path": "components/ui/button.tsx",
@@ -95,7 +91,7 @@
     },
     {
       "path": "lib/assessments/surveys.ts",
-      "sha256": "272d209b50b603f028bed54c565033a34567f4ffabc6e92d1cfeceb77988d374"
+      "sha256": "4670790fcc5e81822a86f7085656b0899fef73d12f453b44ec33e0366d45a06d"
     },
     {
       "path": "components/learning/narration-player.tsx",
@@ -103,11 +99,11 @@
     },
     {
       "path": "components/learning/lesson-player.tsx",
-      "sha256": "a1eb1c47dc66630f74780213c30281e3f8b5172f623f465bf4c10cccbbd92c1c"
+      "sha256": "4216cb7c64863fdac1550a104f1f025ae86ea4d14b8b290da1493edaa4cd4b41"
     },
     {
       "path": "components/study/study-runner.tsx",
-      "sha256": "84299572a0545b859215e01da4f14ba76fd705a73b23dd7d8fd844b6fe0ba44a"
+      "sha256": "f5d3fe95b7f99370c79e56f51927b6d732d92011572c4574dcb7a26e781d662f"
     },
     {
       "path": "components/study/followup-status.tsx",
@@ -127,11 +123,11 @@
     },
     {
       "path": "components/surveys/survey-form.tsx",
-      "sha256": "7bf83092c2817471d3eb5065ff50142ef8f0c7192cbddc554ad3da032bb663f6"
+      "sha256": "81ec7dabc1269ddc3f651434a47f2613043a7cbdee70345383489d8766a8720c"
     },
     {
       "path": "lib/assessments/survey-draft.ts",
-      "sha256": "89b4ee5c8796f0d36c90ba6927c14956e1ef7053003664d5250e9e8525220ee0"
+      "sha256": "83849148b5f855dcc5263aaa2af9c427f1ddfc9aee0b3cd3ef99261e18f4fb83"
     },
     {
       "path": "lib/assessments/written-prompts.ts",

@@ -20,19 +20,26 @@ describe("PostgreSQL migration and data boundaries", () => {
     await db.exec(
       await readFile("supabase/migrations/004_chunking_foundation.sql", "utf8"),
     );
-    await db.exec(await readFile("supabase/migrations/005_optional_followup_privacy.sql", "utf8"));
+    await db.exec(
+      await readFile(
+        "supabase/migrations/005_optional_followup_privacy.sql",
+        "utf8",
+      ),
+    );
+    await db.exec(
+      await readFile("supabase/migrations/006_e1_only.sql", "utf8"),
+    );
     await db.exec(await readFile("supabase/seed.sql", "utf8"));
   }, 30000);
   afterAll(async () => {
     await db?.close();
   });
-  it("seeds eight draft experiments without human data and seed is idempotent", async () => {
-
+  it("seeds only the E1 draft study without human data and seed is idempotent", async () => {
     await db.exec(await readFile("supabase/seed.sql", "utf8"));
     const e = await db.query<{ n: number }>(
       "select count(*)::int n from visuallearn.experiments where not enabled and status='draft'",
     );
-    expect(e.rows[0].n).toBe(8);
+    expect(e.rows[0].n).toBe(1);
     const p = await db.query<{ n: number }>(
       "select count(*)::int n from visuallearn.participants",
     );
@@ -80,7 +87,9 @@ describe("PostgreSQL migration and data boundaries", () => {
   });
   it("disallows accidental activation of roadmap experiments", async () => {
     await expect(
-      db.query("update visuallearn.experiments set enabled=true where id='E2'"),
+      db.query(
+        "insert into visuallearn.experiments(id,name,protocol_version,primary_outcome,arms,enabled) values('E4','RETIRED','test','test',array['static'],true)",
+      ),
     ).rejects.toThrow(/check constraint/);
   });
   it("rejects withdrawn participant assignment", async () => {

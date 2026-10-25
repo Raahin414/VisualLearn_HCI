@@ -17,3 +17,6 @@ __pycache__/
 *.db-journal
 .postgres-data/
 .vercel
+
+# Temporary PDF rendering and artifact QA
+/tmp/pdfs/

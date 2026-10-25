@@ -17,10 +17,10 @@ export function DraftDebrief() {
         study.
       </p>
       <p>
-        The visual-density study varies supporting and decorative visuals. The
-        modality study varies written text, narration and diagrams. The chunking
-        study varies how many concept blocks appear together. Each study uses
-        the same core Water Cycle material within its conditions.
+        The study compares low, medium and high visual density. All three use
+        identical Water Cycle text, narration, objectives and assessments.
+        Supporting illustrations and decorative details vary; participants keep
+        one assigned density throughout their lesson.
       </p>
       <p>
         Lesson interactions describe browser behavior. They do not measure

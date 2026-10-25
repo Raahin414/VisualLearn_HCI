@@ -1,11 +1,5 @@
 import { z } from "zod";
-import {
-  f3Items,
-  f3Schema,
-  f3ModalitySchema,
-  f5Base,
-  f5Schema,
-} from "./surveys";
+import { f3Items, f3Schema, f5Base, f5Schema } from "./surveys";
 // Questionnaire drafts mirror assessment drafts: tab-scoped, validated against
 // the current instrument and cleared only after the server accepts them.
 export type SurveyFormKey = "F3" | "F5" | "F6";
@@ -30,14 +24,12 @@ const textFields: Record<SurveyFormKey, string[]> = {
 export function readSurveyDraft(
   raw: string | null,
   form: SurveyFormKey,
-  diagramNA = false,
 ): SurveyDraft {
   try {
     const parsed = z
       .record(z.string(), z.unknown())
       .parse(JSON.parse(raw || "null"));
-    const shape: Record<string, z.ZodType> =
-      form === "F3" && diagramNA ? f3ModalitySchema.shape : shapes[form];
+    const shape: Record<string, z.ZodType> = shapes[form];
     return Object.fromEntries(
       Object.entries(parsed).filter(
         ([key, value]) =>
@@ -66,14 +58,10 @@ export function answeredCount(form: SurveyFormKey, draft: SurveyDraft) {
       : draft[key] !== undefined,
   ).length;
 }
-export function validateSurveyDraft(
-  form: SurveyFormKey,
-  draft: SurveyDraft,
-  diagramNA = false,
-) {
-  const result = (
-    form === "F3" ? (diagramNA ? f3ModalitySchema : f3Schema) : f5Schema
-  ).safeParse(surveySubmission(form, draft));
+export function validateSurveyDraft(form: SurveyFormKey, draft: SurveyDraft) {
+  const result = (form === "F3" ? f3Schema : f5Schema).safeParse(
+    surveySubmission(form, draft),
+  );
   if (result.success) return null;
   const order = surveyRequired[form];
   const fields = result.error.issues.map((i) => String(i.path[0] ?? ""));

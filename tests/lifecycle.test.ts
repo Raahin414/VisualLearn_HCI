@@ -49,8 +49,9 @@ describe("Server timing and lifecycle", () => {
       enrollmentSchema.safeParse({ ageBand: "100", voluntary: true }).success,
     ).toBe(false);
   });
-  it("keeps every experiment draft and unable to recruit", () => {
-    expect(experiments).toHaveLength(8);
+  it("registers only E1 and keeps recruitment closed", () => {
+    expect(experiments).toHaveLength(1);
+    expect(experiments[0].id).toBe("E1");
     expect(experiments.every((e) => !canRecruit(e.id))).toBe(true);
   });
 });

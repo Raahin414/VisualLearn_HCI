@@ -19,10 +19,6 @@ export const f3Schema = z
     helpful: z.string().max(2000).optional(),
   })
   .strict();
-// Same wording/scale, with an explicit N/A choice for diagram support in E2.
-// No default answer is selected. This is a separate draft instrument version.
-export const MODALITY_SURVEY_VERSION = "2.1-modality-draft";
-export const f3ModalitySchema = f3Schema.extend({ support: optionalLikert });
 export const f5Sources = [
   ["this_website", "This website"],
   ["notes", "Notes"],

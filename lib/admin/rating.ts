@@ -22,7 +22,7 @@ const handle = (attemptId: string) =>
   `W-${hashToken(`rating:${attemptId}`).slice(0, 16)}`;
 async function attemptForHandle(db: SQL, h: string) {
   const { rows } = await db.query<{ id: string }>(
-    "select t.id from visuallearn.assessment_attempts t join visuallearn.sessions s on s.id=t.session_id join visuallearn.participants p on p.id=s.participant_id where p.withdrawn_at is null and t.submitted_at is not null and t.timepoint<>'pre'",
+    "select t.id from visuallearn.assessment_attempts t join visuallearn.sessions s on s.id=t.session_id join visuallearn.participants p on p.id=s.participant_id where p.withdrawn_at is null and p.experiment_id='E1' and t.submitted_at is not null and t.timepoint<>'pre'",
   );
   return rows.find((r) => handle(r.id) === h)?.id ?? null;
 }
@@ -37,7 +37,7 @@ export async function nextForRater(db: SQL, rater: string, kindInput: unknown) {
   }>(
     `select t.id,t.timepoint,t.${col} text,count(*) over()::int remaining
      from visuallearn.assessment_attempts t join visuallearn.sessions s on s.id=t.session_id join visuallearn.participants p on p.id=s.participant_id
-     where p.withdrawn_at is null and t.submitted_at is not null and t.${col} is not null
+     where p.withdrawn_at is null and p.experiment_id='E1' and t.submitted_at is not null and t.${col} is not null
        and not exists(select 1 from visuallearn.free_recall_ratings r where r.attempt_id=t.id and r.response_kind=$1 and r.rater_code=$2 and r.rubric_version=$3)
      order by md5(t.id::text||$2) limit 1`,
     [kind, rater, RUBRIC_VERSION],
@@ -100,7 +100,7 @@ export async function adjudicationQueue(db: SQL, kindInput: unknown) {
     `select t.id,t.timepoint,t.${col} text,json_agg(json_build_object('rater_code',r.rater_code,'sub_scores',r.sub_scores,'total_score',r.total_score) order by r.rated_at) ratings
      from visuallearn.assessment_attempts t join visuallearn.sessions s on s.id=t.session_id join visuallearn.participants p on p.id=s.participant_id
      join visuallearn.free_recall_ratings r on r.attempt_id=t.id and r.response_kind=$1 and r.rubric_version=$2
-     where p.withdrawn_at is null and not exists(select 1 from visuallearn.rating_adjudications d where d.attempt_id=t.id and d.response_kind=$1 and d.rubric_version=$2)
+     where p.withdrawn_at is null and p.experiment_id='E1' and not exists(select 1 from visuallearn.rating_adjudications d where d.attempt_id=t.id and d.response_kind=$1 and d.rubric_version=$2)
      group by t.id having count(*)>=2 and count(distinct r.sub_scores)>1 order by md5(t.id::text) limit 20`,
     [kind, RUBRIC_VERSION],
   );

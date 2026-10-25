@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { WaterDiagram } from "@/components/learning/water-diagram";
 import { Button } from "@/components/ui/button";
+import { DensityOverview } from "@/components/learning/density-overview";
 export default function Home() {
   return (
     <main id="main">
@@ -21,11 +22,12 @@ export default function Home() {
           </div>
           <h1>
             Science,
-            <br /><span>step by step.</span>
+            <br />
+            <span>step by step.</span>
           </h1>
           <p>
-            Study the water cycle with diagrams, narration and a short practice quiz.
-            Follow five chapters at your own pace.
+            Study the water cycle with diagrams, narration and a short practice
+            quiz. Follow five chapters at your own pace.
           </p>
           <div className="hero-actions">
             <Button asChild>
@@ -33,9 +35,7 @@ export default function Home() {
                 Explore the lesson <ArrowRight size={18} />
               </Link>
             </Button>
-            <span className="hero-note">
-              Public demo · No account required
-            </span>
+            <span className="hero-note">Public demo · No account required</span>
           </div>
         </div>
         <div className="hero-art">
@@ -98,7 +98,8 @@ export default function Home() {
             <span className="pill">EARTH SCIENCE</span>
             <h3>The Water Cycle</h3>
             <p>
-              Learn about evaporation, condensation, precipitation and collection.
+              Learn about evaporation, condensation, precipitation and
+              collection.
             </p>
             <div className="course-meta">
               <span>
@@ -117,6 +118,9 @@ export default function Home() {
           </div>
         </Link>
       </section>
+      <div className="container">
+        <DensityOverview />
+      </div>
       <section className="container approach-note">
         <span className="round-icon">
           <BookOpen size={21} />

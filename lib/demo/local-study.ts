@@ -5,11 +5,7 @@ import {
   followupWindow,
   sevenDayWindow,
 } from "@/lib/study/lifecycle";
-import {
-  f3Schema,
-  f3ModalitySchema,
-  f5Schema,
-} from "@/lib/assessments/surveys";
+import { f3Schema, f5Schema } from "@/lib/assessments/surveys";
 import {
   presentationSchema,
   visibleSegments,
@@ -68,7 +64,7 @@ const recordSchema = z
     version: z.literal(3),
     sevenDay: z.boolean().default(false),
     publicCode: z.string().startsWith("SYNTHETIC-"),
-    experimentId: z.enum(["E1", "E2", "E3"]),
+    experimentId: z.literal("E1"),
     armKey: z.string().min(1).max(40),
     condition: z.enum(conditions).nullable(),
     presentation: presentationSchema,
@@ -88,7 +84,7 @@ const recordSchema = z
       plus_7d: storedSubmission.optional(),
     }),
     surveys: z.object({
-      F3: f3ModalitySchema.optional(),
+      F3: f3Schema.optional(),
       F5: f5Schema.optional(),
       F6: f5Schema.optional(),
     }),
@@ -187,11 +183,7 @@ export class LocalStudy {
     z.enum(conditions).parse(condition);
     this.startExperiment("E1", condition);
   }
-  startExperiment(
-    experimentId: "E1" | "E2" | "E3",
-    armKey: string,
-    sevenDay = false,
-  ) {
+  startExperiment(experimentId: "E1", armKey: string, sevenDay = false) {
     const definition = this.experiments.find((e) => e.id === experimentId);
     const arm = definition?.arms.find((a) => a.key === armKey);
     if (!arm) throw new Error("Choose a registered simulated presentation.");
@@ -204,8 +196,7 @@ export class LocalStudy {
       publicCode: `SYNTHETIC-${crypto.randomUUID().slice(0, 8).toUpperCase()}`,
       experimentId,
       armKey,
-      condition:
-        arm.presentation.kind === "density" ? arm.presentation.density : null,
+      condition: arm.presentation.density,
       presentation: presentationSchema.parse(arm.presentation),
       transcriptSegments: [],
       state: "enrolled",
@@ -416,9 +407,7 @@ export class LocalStudy {
       )
         throw new Error("Complete the assessment first.");
       if (form === "F3") {
-        r.surveys.F3 = (
-          r.experimentId === "E2" ? f3ModalitySchema : f3Schema
-        ).parse(input);
+        r.surveys.F3 = f3Schema.parse(input);
         r.state = "waiting_60m";
       } else {
         r.surveys[form] = f5Schema.parse(input);
@@ -426,40 +415,18 @@ export class LocalStudy {
       }
     } else if (action === "events") {
       const events = eventBatchSchema.parse(input);
-      for (const event of events)
-        if (event.eventType === "accommodation_used") {
-          if (
-            r.presentation.kind !== "modality" ||
-            r.presentation.text ||
-            event.payload.accommodation !== "transcript" ||
-            !event.segmentId
-          )
-            throw new Error("Invalid simulated accommodation event.");
-          r.transcriptSegments = [
-            ...new Set([...r.transcriptSegments, event.segmentId]),
-          ];
-        }
       for (const event of events) {
         if (r.seenEventIds.includes(event.clientEventId)) continue;
         if (
-          event.eventType === "presentation_exposed" ||
-          event.eventType === "active_time"
-        ) {
-          const segment = lesson.segments.findIndex(
-            (segment) => segment.id === event.segmentId,
+          [
+            "accommodation_used",
+            "presentation_exposed",
+            "active_time",
+          ].includes(event.eventType)
+        )
+          throw new Error(
+            "This event is not part of the visual-density simulation.",
           );
-          if (
-            r.presentation.kind !== "chunking" ||
-            segment < 0 ||
-            event.payload.groupIndex !==
-              r.presentation.groups.findIndex((group) =>
-                group.includes(segment),
-              )
-          )
-            throw new Error("Invalid simulated exposure event.");
-          if (event.eventType === "presentation_exposed") r.exposures++;
-          else r.activeTimeMs += event.payload.activeMs!;
-        }
         r.seenEventIds = [...r.seenEventIds, event.clientEventId].slice(-2000);
         r.eventCount++;
       }

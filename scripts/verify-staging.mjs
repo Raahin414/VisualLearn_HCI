@@ -30,8 +30,8 @@ try {
       await q("select version from visuallearn_ops.migrations order by 1")
     ).map((r) => r.version);
     check(
-      "Migrations 001-005 applied",
-      ["001", "002", "003", "004", "005"].every((x) => v.includes(x)),
+      "Migrations 001-006 applied",
+      ["001", "002", "003", "004", "005", "006"].every((x) => v.includes(x)),
       v.join(","),
     );
   }
@@ -67,11 +67,20 @@ try {
     "select id,enabled,status,consent_version,seven_day_enabled,retention_approved from visuallearn.experiments order by id",
   );
   check(
-    "E2–E8 disabled",
-    e.filter((x) => x.id !== "E1").every((x) => !x.enabled),
+    "Historical studies archived and disabled",
+    e
+      .filter((x) => x.id !== "E1")
+      .every((x) => !x.enabled && x.status === "archived"),
   );
-  check("Optional seven-day recruitment disabled", e.every((x) => !x.seven_day_enabled));
-  check("Physical deletion gates inactive", env.PHYSICAL_DELETION_ENABLED !== "true" && e.every((x) => !x.retention_approved));
+  check(
+    "Optional seven-day recruitment disabled",
+    e.every((x) => !x.seven_day_enabled),
+  );
+  check(
+    "Physical deletion gates inactive",
+    env.PHYSICAL_DELETION_ENABLED !== "true" &&
+      e.every((x) => !x.retention_approved),
+  );
   const e1 = e.find((x) => x.id === "E1");
   const syntheticOpen =
     e1?.enabled && String(e1.consent_version || "").startsWith("SYNTHETIC");

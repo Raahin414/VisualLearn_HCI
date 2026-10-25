@@ -7,27 +7,27 @@ import {
   type Question,
 } from "@/lib/assessments/questions.server";
 const live =
-  "join visuallearn.sessions s on s.id=t.session_id join visuallearn.participants p on p.id=s.participant_id where p.withdrawn_at is null";
+  "join visuallearn.sessions s on s.id=t.session_id join visuallearn.participants p on p.id=s.participant_id where p.withdrawn_at is null and p.experiment_id='E1'";
 // Every dataset excludes withdrawn participants. No public codes, tokens,
 // consent free text, enrollment keys or researcher identities are selected.
 export const exportQueries = {
   participants_deidentified:
-    "select p.id participant_id,p.experiment_id,p.age_band,p.language,(p.f0->>'languageComfort')::int language_comfort,(p.f0->>'familiarity')::int prior_familiarity,p.consent_version,p.consent_at,p.created_at from visuallearn.participants p where p.withdrawn_at is null",
+    "select p.id participant_id,p.experiment_id,p.age_band,p.language,(p.f0->>'languageComfort')::int language_comfort,(p.f0->>'familiarity')::int prior_familiarity,p.consent_version,p.consent_at,p.created_at from visuallearn.participants p where p.withdrawn_at is null and p.experiment_id='E1'",
   assignments:
-    "select a.participant_id,a.experiment_id,a.arm_key,a.randomization_version,a.assigned_at from visuallearn.assignments a join visuallearn.participants p on p.id=a.participant_id where p.withdrawn_at is null",
+    "select a.participant_id,a.experiment_id,a.arm_key,a.randomization_version,a.assigned_at from visuallearn.assignments a join visuallearn.participants p on p.id=a.participant_id where p.withdrawn_at is null and p.experiment_id='E1'",
   sessions:
-    "select s.id session_id,s.participant_id,s.experiment_id,s.presentation_version,s.seven_day_form_version,s.seven_day_bank_sha256,s.seven_day_window_minutes,s.exposure_measure_version,s.study_time_policy,s.active_time_ms,s.presentation_exposures,s.lesson_opened_at,s.state,s.content_version,s.content_sha256,s.protocol_version,s.stimulus_version,s.media_manifest_sha256,s.question_bank_sha256,s.stimulus_sha256,s.followup_window_minutes,s.accommodations,s.started_at,s.lesson_completed_at from visuallearn.sessions s join visuallearn.participants p on p.id=s.participant_id where p.withdrawn_at is null",
+    "select s.id session_id,s.participant_id,s.experiment_id,s.presentation_version,s.seven_day_form_version,s.seven_day_bank_sha256,s.seven_day_window_minutes,s.exposure_measure_version,s.study_time_policy,s.active_time_ms,s.presentation_exposures,s.lesson_opened_at,s.state,s.content_version,s.content_sha256,s.protocol_version,s.stimulus_version,s.media_manifest_sha256,s.question_bank_sha256,s.stimulus_sha256,s.followup_window_minutes,s.accommodations,s.started_at,s.lesson_completed_at from visuallearn.sessions s join visuallearn.participants p on p.id=s.participant_id where p.withdrawn_at is null and p.experiment_id='E1'",
   assessment_attempts: `select t.id attempt_id,t.session_id,t.timepoint,t.form_key,t.form_version,t.opened_at,t.submitted_at,round(extract(epoch from (t.submitted_at-t.opened_at))*1000)::bigint duration_ms,t.correct,t.max_score,t.scoring_version,t.rubric_version from visuallearn.assessment_attempts t ${live}`,
   item_responses: `select t.id attempt_id,t.session_id,t.timepoint,t.form_key,t.form_version,a.key item_id,a.value response,(t.item_scores->>a.key)::int auto_score,t.submitted_at from visuallearn.assessment_attempts t cross join lateral jsonb_each(t.answers_json) a ${live} and t.submitted_at is not null order by t.id,a.key`,
   written_responses: `select t.id attempt_id,t.session_id,t.timepoint,w.kind response_kind,t.rubric_version,w.text response_text,length(w.text) char_count from visuallearn.assessment_attempts t cross join lateral (values ('free_recall',t.free_recall),('scenario',t.scenario_response)) w(kind,text) ${live} and w.text is not null`,
   free_recall_ratings: `select r.attempt_id,r.response_kind,r.rater_code,r.rubric_version,r.sub_scores,r.total_score,r.rated_at from visuallearn.free_recall_ratings r join visuallearn.assessment_attempts t on t.id=r.attempt_id ${live}`,
   rating_adjudications: `select d.attempt_id,d.response_kind,d.rubric_version,d.adjudicator_code,d.sub_scores,d.total_score,d.resolved_at from visuallearn.rating_adjudications d join visuallearn.assessment_attempts t on t.id=d.attempt_id ${live}`,
   surveys:
-    "select q.session_id,q.form_key,q.form_version,q.answers_json,q.submitted_at from visuallearn.survey_submissions q join visuallearn.sessions s on s.id=q.session_id join visuallearn.participants p on p.id=s.participant_id where p.withdrawn_at is null",
+    "select q.session_id,q.form_key,q.form_version,q.answers_json,q.submitted_at from visuallearn.survey_submissions q join visuallearn.sessions s on s.id=q.session_id join visuallearn.participants p on p.id=s.participant_id where p.withdrawn_at is null and p.experiment_id='E1'",
   followup_status:
-    "select f.session_id,f.timepoint,f.due_at,f.deadline_at,case when f.status='not_started' and now()>f.deadline_at then 'expired' else f.status end status,f.completed_at from visuallearn.scheduled_followups f join visuallearn.sessions s on s.id=f.session_id join visuallearn.participants p on p.id=s.participant_id where p.withdrawn_at is null",
+    "select f.session_id,f.timepoint,f.due_at,f.deadline_at,case when f.status='not_started' and now()>f.deadline_at then 'expired' else f.status end status,f.completed_at from visuallearn.scheduled_followups f join visuallearn.sessions s on s.id=f.session_id join visuallearn.participants p on p.id=s.participant_id where p.withdrawn_at is null and p.experiment_id='E1'",
   events:
-    "select e.session_id,e.event_type,e.segment_id,e.elapsed_ms,e.client_time,e.server_received_at,e.payload from visuallearn.events e join visuallearn.sessions s on s.id=e.session_id join visuallearn.participants p on p.id=s.participant_id where p.withdrawn_at is null",
+    "select e.session_id,e.event_type,e.segment_id,e.elapsed_ms,e.client_time,e.server_received_at,e.payload from visuallearn.events e join visuallearn.sessions s on s.id=e.session_id join visuallearn.participants p on p.id=s.participant_id where p.withdrawn_at is null and p.experiment_id='E1'",
 } as const;
 export type ExportName = keyof typeof exportQueries;
 const items = new Map<string, Question>(
@@ -86,32 +86,29 @@ export function toCsv(rows: Record<string, unknown>[], columns: string[]) {
   );
 }
 const n = (sql: string) => `(${sql})`;
-export async function studyStats(
-  source: SQL,
-  experimentId: "E1" | "E2" | "E3" = "E1",
-) {
+export async function studyStats(source: SQL, experimentId: "E1" = "E1") {
   // Every aggregate is scoped, including attrition and unassigned sessions.
   const db: SQL = { query: (sql) => source.query(sql, [experimentId]) };
   const live =
-    "join visuallearn.sessions s on s.id=t.session_id join visuallearn.participants p on p.id=s.participant_id where p.withdrawn_at is null and p.experiment_id=$1";
+    "join visuallearn.sessions s on s.id=t.session_id join visuallearn.participants p on p.id=s.participant_id where p.withdrawn_at is null and p.experiment_id='E1' and p.experiment_id=$1";
 
   const balance = await db.query<{
     age_band: string;
     arm_key: string;
     n: number;
   }>(
-    "select p.age_band,a.arm_key,count(*)::int n from visuallearn.participants p join visuallearn.assignments a on a.participant_id=p.id where p.withdrawn_at is null and p.experiment_id=$1 group by p.age_band,a.arm_key order by p.age_band,a.arm_key",
+    "select p.age_band,a.arm_key,count(*)::int n from visuallearn.participants p join visuallearn.assignments a on a.participant_id=p.id where p.withdrawn_at is null and p.experiment_id='E1' and p.experiment_id=$1 group by p.age_band,a.arm_key order by p.age_band,a.arm_key",
   );
   // Cumulative funnel: how many non-withdrawn sessions reached each checkpoint.
   const funnel = await db.query<{ step: string; n: number }>(
     `select step,n from (values
-      (1,'enrolled',${n("select count(*)::int from visuallearn.sessions s join visuallearn.participants p on p.id=s.participant_id where p.withdrawn_at is null and p.experiment_id=$1")}),
+      (1,'enrolled',${n("select count(*)::int from visuallearn.sessions s join visuallearn.participants p on p.id=s.participant_id where p.withdrawn_at is null and p.experiment_id='E1' and p.experiment_id=$1")}),
       (2,'pretest',${n(`select count(*)::int from visuallearn.assessment_attempts t ${live} and t.timepoint='pre' and t.submitted_at is not null`)}),
-      (3,'lesson complete',${n("select count(*)::int from visuallearn.sessions s join visuallearn.participants p on p.id=s.participant_id where p.withdrawn_at is null and p.experiment_id=$1 and s.lesson_completed_at is not null")}),
+      (3,'lesson complete',${n("select count(*)::int from visuallearn.sessions s join visuallearn.participants p on p.id=s.participant_id where p.withdrawn_at is null and p.experiment_id='E1' and p.experiment_id=$1 and s.lesson_completed_at is not null")}),
       (4,'immediate quiz',${n(`select count(*)::int from visuallearn.assessment_attempts t ${live} and t.timepoint='immediate' and t.submitted_at is not null`)}),
-      (5,'immediate survey',${n("select count(*)::int from visuallearn.survey_submissions q join visuallearn.sessions s on s.id=q.session_id join visuallearn.participants p on p.id=s.participant_id where p.withdrawn_at is null and p.experiment_id=$1 and q.form_key='F3'")}),
+      (5,'immediate survey',${n("select count(*)::int from visuallearn.survey_submissions q join visuallearn.sessions s on s.id=q.session_id join visuallearn.participants p on p.id=s.participant_id where p.withdrawn_at is null and p.experiment_id='E1' and p.experiment_id=$1 and q.form_key='F3'")}),
       (6,'60-min quiz',${n(`select count(*)::int from visuallearn.assessment_attempts t ${live} and t.timepoint='plus_60m' and t.submitted_at is not null`)}),
-      (7,'60-min survey',${n("select count(*)::int from visuallearn.survey_submissions q join visuallearn.sessions s on s.id=q.session_id join visuallearn.participants p on p.id=s.participant_id where p.withdrawn_at is null and p.experiment_id=$1 and q.form_key='F5'")})
+      (7,'60-min survey',${n("select count(*)::int from visuallearn.survey_submissions q join visuallearn.sessions s on s.id=q.session_id join visuallearn.participants p on p.id=s.participant_id where p.withdrawn_at is null and p.experiment_id='E1' and p.experiment_id=$1 and q.form_key='F5'")})
      ) f(i,step,n) order by i`,
   );
   const performance = await db.query<{
@@ -120,7 +117,7 @@ export async function studyStats(
     n: number;
     mean_percent: string;
   }>(
-    `select t.timepoint,a.arm_key,count(*)::int n,round(avg(t.correct::numeric/nullif(t.max_score,0)*100),1) mean_percent from visuallearn.assessment_attempts t join visuallearn.sessions s on s.id=t.session_id join visuallearn.assignments a on a.id=s.assignment_id join visuallearn.participants p on p.id=s.participant_id where p.withdrawn_at is null and p.experiment_id=$1 and t.submitted_at is not null group by t.timepoint,a.arm_key order by t.timepoint,a.arm_key`,
+    `select t.timepoint,a.arm_key,count(*)::int n,round(avg(t.correct::numeric/nullif(t.max_score,0)*100),1) mean_percent from visuallearn.assessment_attempts t join visuallearn.sessions s on s.id=t.session_id join visuallearn.assignments a on a.id=s.assignment_id join visuallearn.participants p on p.id=s.participant_id where p.withdrawn_at is null and p.experiment_id='E1' and p.experiment_id=$1 and t.submitted_at is not null group by t.timepoint,a.arm_key order by t.timepoint,a.arm_key`,
   );
   // Paired immediate vs one-hour objective scores, descriptive only.
   const retention = await db.query<{
@@ -134,7 +131,7 @@ export async function studyStats(
      from visuallearn.sessions s join visuallearn.participants p on p.id=s.participant_id join visuallearn.assignments a on a.id=s.assignment_id
      join visuallearn.assessment_attempts i on i.session_id=s.id and i.timepoint='immediate' and i.submitted_at is not null
      join visuallearn.assessment_attempts d on d.session_id=s.id and d.timepoint='plus_60m' and d.submitted_at is not null
-     where p.withdrawn_at is null and p.experiment_id=$1 group by a.arm_key order by a.arm_key`,
+     where p.withdrawn_at is null and p.experiment_id='E1' and p.experiment_id=$1 group by a.arm_key order by a.arm_key`,
   );
   const followups = await db.query<{
     arm_key: string;
@@ -144,16 +141,16 @@ export async function studyStats(
   }>(
     `select coalesce(a.arm_key,'unassigned') arm_key,f.timepoint,case when f.status='not_started' and now()>f.deadline_at then 'expired' when f.status='not_started' and now()<f.due_at then 'waiting' when f.status='not_started' then 'open_now' else f.status end status,count(*)::int n
      from visuallearn.scheduled_followups f join visuallearn.sessions s on s.id=f.session_id join visuallearn.participants p on p.id=s.participant_id left join visuallearn.assignments a on a.id=s.assignment_id
-     where p.withdrawn_at is null and p.experiment_id=$1 group by 1,2,3 order by 1,2,3`,
+     where p.withdrawn_at is null and p.experiment_id='E1' and p.experiment_id=$1 group by 1,2,3 order by 1,2,3`,
   );
   const quality = await db.query<Record<string, number>>(
     `select
       ${n(`select count(*)::int from visuallearn.assessment_attempts t ${live} and t.submitted_at is null`)} opened_not_submitted,
-      ${n("select count(*)::int from visuallearn.scheduled_followups f join visuallearn.sessions s on s.id=f.session_id join visuallearn.participants p on p.id=s.participant_id where p.withdrawn_at is null and p.experiment_id=$1 and f.status='not_started' and f.deadline_at<now()")} expired_followups,
+      ${n("select count(*)::int from visuallearn.scheduled_followups f join visuallearn.sessions s on s.id=f.session_id join visuallearn.participants p on p.id=s.participant_id where p.withdrawn_at is null and p.experiment_id='E1' and p.experiment_id=$1 and f.status='not_started' and f.deadline_at<now()")} expired_followups,
       ${n(`select count(*)::int from visuallearn.assessment_attempts t join visuallearn.scheduled_followups f on f.session_id=t.session_id and f.timepoint=t.timepoint ${live} and t.submitted_at>f.deadline_at`)} submitted_after_deadline,
-      ${n("select count(*)::int from visuallearn.sessions s join visuallearn.participants p on p.id=s.participant_id where p.withdrawn_at is null and p.experiment_id=$1 and s.state='lesson_active' and s.started_at<now()-interval '3 hours'")} stalled_lessons,
-      ${n("select count(*)::int from visuallearn.sessions s join visuallearn.participants p on p.id=s.participant_id where p.withdrawn_at is null and p.experiment_id=$1 and s.state='immediate_test_complete' and s.lesson_completed_at<now()-interval '30 minutes'")} missing_immediate_survey,
-      ${n("select count(distinct s.id)::int from visuallearn.sessions s join visuallearn.participants p on p.id=s.participant_id where p.withdrawn_at is null and p.experiment_id=$1 and s.lesson_completed_at is not null and not exists(select 1 from visuallearn.events e where e.session_id=s.id)")} completed_without_events,
+      ${n("select count(*)::int from visuallearn.sessions s join visuallearn.participants p on p.id=s.participant_id where p.withdrawn_at is null and p.experiment_id='E1' and p.experiment_id=$1 and s.state='lesson_active' and s.started_at<now()-interval '3 hours'")} stalled_lessons,
+      ${n("select count(*)::int from visuallearn.sessions s join visuallearn.participants p on p.id=s.participant_id where p.withdrawn_at is null and p.experiment_id='E1' and p.experiment_id=$1 and s.state='immediate_test_complete' and s.lesson_completed_at<now()-interval '30 minutes'")} missing_immediate_survey,
+      ${n("select count(distinct s.id)::int from visuallearn.sessions s join visuallearn.participants p on p.id=s.participant_id where p.withdrawn_at is null and p.experiment_id='E1' and p.experiment_id=$1 and s.lesson_completed_at is not null and not exists(select 1 from visuallearn.events e where e.session_id=s.id)")} completed_without_events,
       ${n("select count(*)::int from visuallearn.participants where withdrawn_at is not null and experiment_id=$1")} withdrawn_excluded`,
   );
   const versions = await db.query<{
@@ -162,7 +159,7 @@ export async function studyStats(
     question_bank_sha256: string;
     n: number;
   }>(
-    "select s.protocol_version,s.stimulus_version,s.presentation_version,s.content_sha256,s.media_manifest_sha256,s.question_bank_sha256,s.seven_day_bank_sha256,s.stimulus_sha256,s.seven_day_window_minutes,count(*)::int n from visuallearn.sessions s join visuallearn.participants p on p.id=s.participant_id where p.withdrawn_at is null and p.experiment_id=$1 group by 1,2,3,4,5,6,7,8,9 order by 10 desc",
+    "select s.protocol_version,s.stimulus_version,s.presentation_version,s.content_sha256,s.media_manifest_sha256,s.question_bank_sha256,s.seven_day_bank_sha256,s.stimulus_sha256,s.seven_day_window_minutes,count(*)::int n from visuallearn.sessions s join visuallearn.participants p on p.id=s.participant_id where p.withdrawn_at is null and p.experiment_id='E1' and p.experiment_id=$1 group by 1,2,3,4,5,6,7,8,9 order by 10 desc",
   );
   const ratings = await db.query<{
     response_kind: string;
@@ -181,7 +178,7 @@ export async function studyStats(
   const reviewRows = await db.query<ReviewResponse>(
     `select concat(s.protocol_version,' / ',s.stimulus_version,' / ',s.presentation_version,' / ',s.content_sha256,' / ',s.media_manifest_sha256,' / ',s.question_bank_sha256,' / ',s.stimulus_sha256,' / ',coalesce(s.seven_day_bank_sha256,'not_assigned'),' / ',coalesce(s.seven_day_window_minutes::text,'not_assigned'),' / ',a.arm_key) cohort,q.form_key,q.form_version,q.answers_json
      from visuallearn.survey_submissions q join visuallearn.sessions s on s.id=q.session_id join visuallearn.participants p on p.id=s.participant_id join visuallearn.assignments a on a.id=s.assignment_id
-     where p.withdrawn_at is null and p.experiment_id=$1 order by q.form_key,q.form_version`,
+     where p.withdrawn_at is null and p.experiment_id='E1' and p.experiment_id=$1 order by q.form_key,q.form_version`,
   );
   return {
     experimentId,

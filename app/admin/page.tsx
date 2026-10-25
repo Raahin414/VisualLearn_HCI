@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
 import { AdminWorkspace } from "@/components/admin/workspace";
 import {
@@ -16,7 +17,8 @@ export default async function Admin({
   searchParams: Promise<{ study?: string }>;
 }) {
   const requested = (await searchParams).study;
-  const study = requested === "E2" || requested === "E3" ? requested : "E1";
+  if (requested && requested !== "E1") notFound();
+  const study = "E1";
   const configured = !!(
     process.env.SUPABASE_URL &&
     process.env.SUPABASE_ANON_KEY &&

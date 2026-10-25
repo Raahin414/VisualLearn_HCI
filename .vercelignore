@@ -11,3 +11,6 @@ coverage/
 docs/screenshots/
 analysis/
 tests/
+
+output/
+tmp/

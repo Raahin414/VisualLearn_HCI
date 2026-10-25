@@ -28,9 +28,29 @@ export const conditions = ["low", "medium", "high"] as const;
 export type Condition = (typeof conditions)[number];
 export const densityConfig: Record<
   Condition,
-  { supportive: boolean; decorative: boolean; label: string }
+  {
+    supportive: boolean;
+    decorative: boolean;
+    supportingPanels: number;
+    label: string;
+  }
 > = {
-  low: { supportive: false, decorative: false, label: "Low" },
-  medium: { supportive: true, decorative: false, label: "Medium" },
-  high: { supportive: true, decorative: true, label: "High" },
+  low: {
+    supportive: false,
+    decorative: false,
+    supportingPanels: 0,
+    label: "Low",
+  },
+  medium: {
+    supportive: true,
+    decorative: false,
+    supportingPanels: 2,
+    label: "Medium",
+  },
+  high: {
+    supportive: true,
+    decorative: true,
+    supportingPanels: 4,
+    label: "High",
+  },
 };

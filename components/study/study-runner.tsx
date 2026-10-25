@@ -9,20 +9,13 @@ import { NarrationPlayer } from "@/components/learning/narration-player";
 import { FollowupStatus } from "./followup-status";
 import { safeSessionStorage } from "@/lib/browser-storage";
 import { Button } from "@/components/ui/button";
-import { WaterDiagram } from "@/components/learning/water-diagram";
+import { DensityVisuals } from "@/components/learning/density-visuals";
 import { lesson, type Condition } from "@/lib/content/lesson";
 import { EventQueue } from "@/lib/telemetry/client-queue";
-import {
-  presentationSchema,
-  visibleSegments,
-  type Presentation,
-} from "@/lib/study/presentation";
-import { ChunkedLesson } from "@/components/learning/chunked-lesson";
-import type { StudyEvent } from "@/lib/telemetry/schema";
-import { ModalityLesson } from "@/components/learning/modality-lesson";
+import { presentationSchema, visibleSegments } from "@/lib/study/presentation";
 import type { StudyState } from "@/lib/study/lifecycle";
 type Snapshot = {
-  experimentId?: "E1" | "E2" | "E3";
+  experimentId?: "E1";
   publicCode: string;
   state: StudyState;
   progress: number;
@@ -62,7 +55,6 @@ export function StudyRunner({
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
   const [form, setForm] = useState<Form | null>(null);
   const [condition, setCondition] = useState<Condition>("low");
-  const [presentation, setPresentation] = useState<Presentation | null>(null);
   const [lessonReady, setLessonReady] = useState(false);
   const [segment, setSegment] = useState(0);
   const [error, setError] = useState("");
@@ -75,16 +67,6 @@ export function StudyRunner({
   const invalidateLoad = useCallback(() => {
     loadSequence.current++;
   }, []);
-  const emit = useCallback(
-    (
-      event: StudyEvent["eventType"],
-      segment?: StudyEvent["segmentId"],
-      payload: StudyEvent["payload"] = {},
-    ) => {
-      queue.current?.add(event, segment, payload);
-    },
-    [],
-  );
   const reload = useCallback(async () => {
     const sequence = ++loadSequence.current;
     const current = () => sequence === loadSequence.current;
@@ -98,19 +80,14 @@ export function StudyRunner({
         const assigned = info.presentation
           ? presentationSchema.parse(info.presentation)
           : null;
-        if (state.experimentId === "E2" && assigned?.kind !== "modality")
+        if (state.experimentId && state.experimentId !== "E1")
           throw new Error(
-            "The saved modality presentation could not be loaded. Retry your session.",
-          );
-        if (state.experimentId === "E3" && assigned?.kind !== "chunking")
-          throw new Error(
-            "The saved chunking presentation could not be loaded.",
+            "This study is no longer supported. Contact the researcher.",
           );
         const progressed = await transport("progress", {
           segment: info.progress,
         });
         if (!current()) return;
-        setPresentation(assigned);
         if (assigned?.kind === "density") setCondition(assigned.density);
         else if (!assigned) setCondition(info.condition);
         setSegment(info.progress);
@@ -231,12 +208,7 @@ export function StudyRunner({
           ? {
               ...p,
               progress: next,
-              visited: progressed.visited ?? [
-                ...new Set([
-                  ...p.visited,
-                  ...visibleSegments(presentation, next),
-                ]),
-              ],
+              visited: progressed.visited ?? [...new Set([...p.visited, next])],
             }
           : p,
       );
@@ -328,21 +300,8 @@ export function StudyRunner({
       </Main>
     );
   const current = lesson.segments[segment];
-  const chunking = presentation?.kind === "chunking" ? presentation : null;
-  const groupIndex = chunking
-    ? chunking.groups.findIndex((group) => group.includes(segment))
-    : -1;
-  const group = visibleSegments(presentation, segment);
-  const previous = chunking
-    ? chunking.groups[groupIndex - 1]?.[0]
-    : segment > 0
-      ? segment - 1
-      : undefined;
-  const next = chunking
-    ? chunking.groups[groupIndex + 1]?.[0]
-    : segment < 4
-      ? segment + 1
-      : undefined;
+  const previous = segment > 0 ? segment - 1 : undefined;
+  const next = segment < 4 ? segment + 1 : undefined;
   return (
     <Main
       id={localDemo ? undefined : "main"}
@@ -375,13 +334,9 @@ export function StudyRunner({
         <>
           {snapshot.state === "lesson_active" ? (
             <article className="lesson-main">
-              <p className="eyebrow">
-                {chunking
-                  ? `GROUP ${groupIndex + 1} OF ${chunking.groups.length}`
-                  : `CHAPTER ${segment + 1} OF 5`}
-              </p>
+              <p className="eyebrow">{`CHAPTER ${segment + 1} OF 5`}</p>
               <h1 ref={heading} tabIndex={-1}>
-                {chunking ? "The water cycle" : current.heading}
+                {current.heading}
               </h1>
               <progress
                 className="study-chapter-progress"
@@ -389,66 +344,35 @@ export function StudyRunner({
                 value={snapshot.visited.length}
                 max={5}
               />
-              {chunking ? (
-                <ChunkedLesson
-                  key={groupIndex}
-                  indices={group}
-                  groupIndex={groupIndex}
-                  busy={busy}
-                  emit={emit}
-                />
-              ) : presentation?.kind === "modality" ? (
-                <ModalityLesson
+              <>
+                <NarrationPlayer
                   key={current.id}
-                  segment={current}
-                  presentation={presentation}
-                  busy={busy}
-                  onAudio={(event, position) =>
+                  src={current.audioSrc}
+                  title={current.shortTitle}
+                  pauseWhen={busy}
+                  onEvent={(event, position) =>
                     queue.current?.add(event, current.id as "overview", {
                       playbackPositionSeconds: position,
                     })
                   }
-                  onTranscript={() => {
-                    queue.current?.add(
-                      "accommodation_used",
-                      current.id as "overview",
-                      { accommodation: "transcript" },
-                    );
-                    void queue.current?.flush();
-                  }}
                 />
-              ) : (
-                <>
-                  <div className="lesson-canvas">
-                    <WaterDiagram condition={condition} active={current.id} />
-                    <p className="diagram-caption">
-                      {current.diagramDescription}
-                    </p>
+                <DensityVisuals
+                  condition={condition}
+                  active={current.id}
+                  description={current.diagramDescription}
+                />
+                <details open className="transcript">
+                  <summary>Read the full explanation</summary>
+                  <div className="transcript-content">
+                    {current.body.split("\n\n").map((p, i) => (
+                      <p key={i}>{p}</p>
+                    ))}
                   </div>
-                  <NarrationPlayer
-                    key={current.id}
-                    src={current.audioSrc}
-                    title={current.shortTitle}
-                    pauseWhen={busy}
-                    onEvent={(event, position) =>
-                      queue.current?.add(event, current.id as "overview", {
-                        playbackPositionSeconds: position,
-                      })
-                    }
-                  />
-                  <details open className="transcript">
-                    <summary>Read the full explanation</summary>
-                    <div className="transcript-content">
-                      {current.body.split("\n\n").map((p, i) => (
-                        <p key={i}>{p}</p>
-                      ))}
-                    </div>
-                  </details>
-                  <div className="key-idea">
-                    <p>{current.keyIdea}</p>
-                  </div>
-                </>
-              )}
+                </details>
+                <div className="key-idea">
+                  <p>{current.keyIdea}</p>
+                </div>
+              </>
               <div className="lesson-nav">
                 <Button
                   variant="outline"
@@ -457,14 +381,10 @@ export function StudyRunner({
                 >
                   Previous
                 </Button>
-                <span>
-                  {chunking
-                    ? `Group ${groupIndex + 1} of ${chunking.groups.length}`
-                    : `Chapter ${segment + 1} of 5`}
-                </span>
+                <span>{`Chapter ${segment + 1} of 5`}</span>
                 {next !== undefined ? (
                   <Button disabled={busy} onClick={() => navigate(next)}>
-                    {chunking ? "Next group" : "Next chapter"}
+                    Next chapter
                   </Button>
                 ) : (
                   <Button
@@ -516,7 +436,6 @@ export function StudyRunner({
               </p>
               <SurveyForm
                 key={snapshot.state}
-                diagramNA={snapshot.experimentId === "E2"}
                 form={
                   snapshot.state === "immediate_test_complete"
                     ? "F3"
@@ -524,7 +443,7 @@ export function StudyRunner({
                       ? "F6"
                       : "F5"
                 }
-                draftKey={`visuallearn-${localDemo ? "simulation" : "study"}-${snapshot.publicCode}-${snapshot.state}-survey-${snapshot.experimentId === "E2" ? "modality-v1" : "v2"}`}
+                draftKey={`visuallearn-${localDemo ? "simulation" : "study"}-${snapshot.publicCode}-${snapshot.state}-survey-v2`}
                 onSubmit={submitSurvey}
               />
             </>

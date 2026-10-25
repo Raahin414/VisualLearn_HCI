@@ -117,7 +117,7 @@ async function handle(request: NextRequest, ctx: Context) {
       const service = new StudyService(client as unknown as SQL);
       if (action === "consent") {
         const experimentId = z
-          .enum(["E1", "E2", "E3"])
+          .literal("E1")
           .parse(request.nextUrl.searchParams.get("study") ?? "E1");
         const e = await service.gate(experimentId);
         return {
@@ -130,7 +130,7 @@ async function handle(request: NextRequest, ctx: Context) {
         if (id) {
           const session = await service.session(id);
           const target = z
-            .object({ experimentId: z.enum(["E1", "E2", "E3"]).default("E1") })
+            .object({ experimentId: z.literal("E1").default("E1") })
             .parse(input);
           if (session.experiment_id !== target.experimentId)
             throw new StudyError(

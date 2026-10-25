@@ -24,7 +24,7 @@ export function LocalStudyDemo({
 }) {
   const [model, setModel] = useState<LocalStudy | null>(null);
   const [record, setRecord] = useState<LocalStudyRecord | null>(null);
-  const [experimentId, setExperimentId] = useState<"E1" | "E2" | "E3">("E1");
+  const experimentId = "E1";
   const [armKey, setArmKey] = useState("medium");
   const [sevenDay, setSevenDay] = useState(false);
   const definition = experiments.find((e) => e.id === experimentId)!;
@@ -94,29 +94,7 @@ export function LocalStudyDemo({
         {!record ? (
           <div className="dev-actions">
             <label>
-              Simulated experiment
-              <select
-                disabled={!model}
-                value={experimentId}
-                onChange={(e) => {
-                  const id = e.target.value as "E1" | "E2" | "E3";
-                  setExperimentId(id);
-                  setArmKey(
-                    experiments.find((item) => item.id === id)!.arms[0].key,
-                  );
-                }}
-              >
-                {experiments.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.id} · {item.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              {experimentId === "E1"
-                ? "Simulated visual condition"
-                : "Simulated presentation"}
+              Simulated visual condition
               <select
                 disabled={!model}
                 value={armKey}

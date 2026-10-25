@@ -11,12 +11,13 @@ class AnalysisTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.folder = Path(self.temp.name) / "exports"
         self.folder.mkdir()
-        self.people = pd.DataFrame([dict(participant_id=f"SYNTHETIC-p{i}", experiment_id="E1" if i < 2 else "E2", age_band="18-30", language="English", consent_version="SYNTHETIC-CONSENT") for i in range(3)])
+        self.people = pd.DataFrame([dict(participant_id=f"SYNTHETIC-p{i}", experiment_id="E1", age_band="18-30", language="English", consent_version="SYNTHETIC-CONSENT") for i in range(3)])
         self.sessions = pd.DataFrame([dict(**{c: "SYNTHETIC-v1" for c in COHORT}, session_id=f"SYNTHETIC-s{i}", participant_id=f"SYNTHETIC-p{i}") for i in range(3)])
-        self.sessions["experiment_id"] = ["E1", "E1", "E2"]
+        self.sessions["experiment_id"] = ["E1", "E1", "E1"]
+        self.sessions.loc[2, "presentation_version"] = "SYNTHETIC-e1-v2"
         self.sessions["seven_day_bank_sha256"] = None
         self.sessions["seven_day_window_minutes"] = None
-        self.assigned = pd.DataFrame([dict(participant_id="SYNTHETIC-p0", experiment_id="E1", arm_key="low"), dict(participant_id="SYNTHETIC-p2", experiment_id="E2", arm_key="text-only")])
+        self.assigned = pd.DataFrame([dict(participant_id="SYNTHETIC-p0", experiment_id="E1", arm_key="low"), dict(participant_id="SYNTHETIC-p2", experiment_id="E1", arm_key="high")])
         self.attempts = pd.DataFrame([dict(session_id="SYNTHETIC-s0", timepoint=stage, submitted_at="2026-10-24T10:00:00Z", correct=correct, max_score=8, form_version="SYNTHETIC-v1") for stage, correct in [("pre", 0), ("immediate", 4), ("plus_60m", 2)]])
         self.save()
 

@@ -12,7 +12,7 @@ import {
 import { lesson, type Condition, conditions } from "@/lib/content/lesson";
 import { readDemoProgress } from "@/lib/content/demo-progress";
 import { NarrationPlayer } from "./narration-player";
-import { WaterDiagram } from "./water-diagram";
+import { DensityVisuals } from "./density-visuals";
 import { Button } from "@/components/ui/button";
 const STORAGE_KEY = "visuallearn-demo-v1";
 export function LessonPlayer() {
@@ -109,6 +109,7 @@ export function LessonPlayer() {
             <label htmlFor="density">Demo visual density</label>
             <select
               id="density"
+              disabled={!ready}
               value={progress.condition}
               onChange={(e) =>
                 setProgress((p) => ({
@@ -144,14 +145,15 @@ export function LessonPlayer() {
           <h1 ref={heading} tabIndex={-1}>
             {segment.heading}
           </h1>
-          <div className="lesson-canvas">
-            <WaterDiagram condition={progress.condition} active={segment.id} />
-            <p className="diagram-caption">{segment.diagramDescription}</p>
-          </div>
           <NarrationPlayer
             key={segment.id}
             src={segment.audioSrc}
             title={segment.shortTitle}
+          />
+          <DensityVisuals
+            condition={progress.condition}
+            active={segment.id}
+            description={segment.diagramDescription}
           />
           <p className="lesson-feedback" role="status">
             {progress.condition[0].toUpperCase() + progress.condition.slice(1)}{" "}
