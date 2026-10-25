@@ -13,3 +13,7 @@ Checked 2026-10-16. All scientific copy and vector drawing code were authored fo
 | UI primitive | Radix Slot + CVA | MIT / Apache-2.0 respectively; package license metadata in lock/install | shadcn-style button composition, adapted original styling |
 
 The repository does not yet declare a blanket license. Third-party package licenses remain their own. Do not infer distribution permission for the Windows voice from the existence of locally generated files.
+
+## E1-only visual additions - 25 October 2026
+
+The supporting evaporation/condensation/precipitation/collection SVG illustrations and density-summary dots are original project code in components/learning/density-visuals.tsx and density-overview.tsx. They add no external artwork or new canonical prose/audio. The supplied visual reference informs density progression, not copied artwork. Educator, manipulation and narration-rights reviews remain open.

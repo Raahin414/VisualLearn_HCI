@@ -1,5 +1,34 @@
 # Verification record — 2026-10-18
 
+## E1-only restructuring - 25 October 2026
+
+Scope: one course at low/medium/high density. Other experiment controls, renderers and executable suites are removed; migrations and stored historical data are preserved. New E1 checks cover rejection of retired study IDs, archival without losing answers, E1 export isolation, additive illustration counts, canonical paragraph/audio parity and responsive accessibility.
+
+Verified final: 67 unit/service tests across 11 files; 16 real PostgreSQL 17 tests with migrations 001-006; 5 Python analysis contract tests and actual analysis of 37 exported SYNTHETIC sessions in two frozen cohorts. Content verifier confirms five canonical segments / unchanged 327 seconds of WAVs. Original specification, canonical lesson, item bank and rubric bytes are unchanged. Type checking passed; the initial full lint found only an unused retired-renderer callback, which was removed and targeted lint passed.
+
+The first development browser run was interrupted after a transient parse error during a layout edit; it is not a passing suite. The next stable run exposed a genuine demo selector hydration race: selection before restored progress loaded could revert to medium. The selector now stays disabled until progress/handlers are ready. Subsequent stable-source development, production and connected results are recorded below. Visual review removed excessive blank mobile space and placed the shared narration controls before all variable visual material. No eligibility clock, answer key, recruitment or MFA guard was relaxed.
+
+### Stable-source release checks
+
+| Check | Result |
+|---|---|
+| Unit/service | 67/67 across 11 files; includes PGlite and browser model |
+| Dedicated PGlite schema | 5/5 (also represented in unit total) |
+| Focused E1 scope/content rerun | 7/7 after the final layout change |
+| Native PostgreSQL 17 | 16/16; repeated with final frozen hashes; migrations 001-006 |
+| Python analysis | 5/5; actual analysis of 37 SYNTHETIC exported sessions / 2 frozen cohorts; no primary model |
+| Type checking / lint | Passed; unused callback warning removed; stable source checks clean |
+| Development Chromium | 27/27, 4.4 minutes, including fixed hydration selector |
+| Production build | Passed, including TypeScript and route generation |
+| Learner bundle | 22 assets; no keys/rationales/rubrics/server secret names |
+| Production Chromium | 27/27, 2.2 minutes; simulator remains 404 |
+| Local security verifier | 21/21 on fresh migrations 001-006 |
+| Connected local Supabase Auth/MFA/PostgreSQL | 23/23, 6.2 minutes; no participant HTTP mocks |
+
+The preceding browser run finished 26/27 with the selector hydration failure; it is superseded by the complete stable 27/27 run, not relabeled as a pass. Automated responsive checks cover 360/768/1280px with zero axe violations/overflow and consistent text/audio across densities. New density and overview captures are in docs/screenshots/e1/ and were visually reviewed. Manual screen-reader/device, educator/instrument/narration rights and human approvals remain pending.
+
+The five-page teacher PDF was updated to E1-only, with no repository revision. All pages rendered and were visually checked; text bounds and extraction pass. No hosted database migration or deployment was performed.
+
 ## M4 local completion — verified, 2026-10-24
 
 Focused checks: 70 unit/service tests across 11 files (including PGlite), lint/typecheck, 17 real PostgreSQL cases (including concurrent D submissions and one-time physical deletion), and 5 Python analysis contract tests passed. The analysis script ran on actual de-identified exports from the disposable PostgreSQL fixture: 37 SYNTHETIC sessions, two frozen cohorts; every output in `analysis/SYNTHETIC-results/` is labeled SYNTHETIC. No primary model or human analysis ran.

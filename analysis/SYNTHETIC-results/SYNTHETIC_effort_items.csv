@@ -1,8 +1,8 @@
 data_kind,cohort,experiment_id,arm_key,form_key,form_version,measure,value
-SYNTHETIC,7e695b47656ba229,E1,medium,F3,2.0.0-draft,mentalEffort,5
-SYNTHETIC,7e695b47656ba229,E1,low,F3,2.0.0-draft,mentalEffort,5
-SYNTHETIC,7e695b47656ba229,E1,low,F5,2.0.0-draft,recallEffort,4
-SYNTHETIC,7e695b47656ba229,E1,high,F3,2.0.0-draft,mentalEffort,5
-SYNTHETIC,c909596277a7ea96,E1,medium,F3,2.0.0-draft,mentalEffort,5
-SYNTHETIC,c909596277a7ea96,E1,medium,F5,2.0.0-draft,recallEffort,4
-SYNTHETIC,c909596277a7ea96,E1,medium,F6,1.0-seven-day-exposure-draft,recallEffort,4
+SYNTHETIC,ce4819f864694a0f,E1,medium,F3,2.0.0-draft,mentalEffort,5
+SYNTHETIC,ce4819f864694a0f,E1,medium,F3,2.0.0-draft,mentalEffort,5
+SYNTHETIC,ce4819f864694a0f,E1,medium,F5,2.0.0-draft,recallEffort,4
+SYNTHETIC,ce4819f864694a0f,E1,low,F3,2.0.0-draft,mentalEffort,5
+SYNTHETIC,8a88e747701f35bd,E1,medium,F3,2.0.0-draft,mentalEffort,5
+SYNTHETIC,8a88e747701f35bd,E1,medium,F5,2.0.0-draft,recallEffort,4
+SYNTHETIC,8a88e747701f35bd,E1,medium,F6,1.0-seven-day-exposure-draft,recallEffort,4

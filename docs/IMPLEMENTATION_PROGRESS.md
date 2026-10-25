@@ -1,5 +1,15 @@
 # Implementation handoff — 2026-10-16
 
+## E1-only restructuring - 2026-10-25
+
+User-authorized scope: one Water Cycle course in three densities, without an eight-experiment catalog. Current work includes a single registry/presentation contract, E1 API/UI/export/rating scope, density overview and shared additive visual renderer, participant navigation, non-destructive migration 006 and E1-only seed. Replaced retired-module suites with E1 scope/migration/parity/browser coverage. README, roadmap, protocol, stimulus audit, data dictionary and the five-page teacher report now describe E1 only.
+
+Final executed checks (Node 24.22.1): frozen source verifier and unchanged original spec/lesson/audio/banks; 67/67 unit/service; 5/5 dedicated PGlite schema; lint/types; 16/16 native PostgreSQL; 5/5 Python tests plus actual analysis of 37 SYNTHETIC exported sessions / two frozen cohorts; 27/27 development browser (4.4m); production build and 22 clean learner assets; 27/27 production browser (2.2m); 21/21 local security audit and 23/23 real local Supabase/Auth/MFA/PostgreSQL browser (6.2m). A focused 7/7 E1 scope/content rerun passed after the layout change. Original specification, canonical JSON, WAVs and question/rubric files remain unchanged. No dependency changes. Native Postgres harness re-exported the final frozen source, then synthetic analysis was regenerated.
+
+An interrupted layout-edit run and subsequent 26/27 browser run are documented in QA; the latter exposed and fixed pre-hydration density selection reverting during progress restore. The complete stable suites above supersede those attempts. New density/overview screenshots were visually reviewed; historical captures restored, latest researcher/form captures retained under current/. Teacher PDF remains five pages, E1 only, with no repository revision, rendering/bounds checked.
+
+Next three tasks: (1) apply migration 006 to hosted staging using an authorized owner and run the read-only verifier; (2) deploy this tested source and rehearse a fresh hosted SYNTHETIC student/researcher workflow; (3) finish operational backup/SMTP checks and external content/protocol/rights/consent/retention/debrief reviews before recruitment. No hosted migration/deployment, recruitment, human finding or approval was performed. Branch remains feat/visuallearn-foundation; no commit/push was requested. Existing pull-time stash remains untouched.
+
 ## M4 handoff — 2026-10-24 (verified locally)
 
 Follows pushed/remote-verified Windows fix 9b5486a. Owner scope explicitly stops at M4: local-only completion, preserved E2/E3, response-based heuristics and a commit. No hosting or hosted project changes.

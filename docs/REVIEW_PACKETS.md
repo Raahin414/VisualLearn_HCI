@@ -11,6 +11,10 @@
 | 5 | Ethics approval | Institutional ethics board | Any recruitment | Not submitted |
 | 6 | Guardian consent and child assent process | Ethics board | Any minor | Blocked; minors stay disabled in code |
 
+## Current E1 presentation review (25 October 2026)
+
+The project is limited to low/medium/high visual density. Review the shared density renderer and fresh docs/screenshots/e1/ captures: one essential diagram at low, two supporting process illustrations at medium, four plus decoration at high. Canonical text/audio and assessment banks are unchanged. Review the scrolling burden and repeated process labels as part of the density manipulation. Historical multi-experiment plans do not add scope or supply approval.
+
 ## 1. Educator review packet
 
 Give the reviewer: `content/lessons/water-cycle/v1.json` (canonical text), the three density screenshots in `docs/screenshots/`, and `codebook.json` downloaded from the researcher workspace (all A/B/C items with keys, rationales, item blueprint and both rubrics). Ask them to confirm, item by item:

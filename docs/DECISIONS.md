@@ -1,5 +1,9 @@
 # Decisions and unresolved approvals
 
+## E1-only owner scope - 2026-10-25
+
+The owner explicitly limits the project to E1 and supplied a same-lesson/three-densities reference. This supersedes specification sections requiring eight definitions; the original spec remains unchanged. Low uses one essential diagram; medium adds supportive illustrations; high adds more simultaneous visuals/labels and decoration. Preserve canonical words/audio/objectives/controls, server assignment and assessment parity. Remove non-E1 product choices and executable renderers. Retain historical SQL upgrades/data; migration 006 archives other studies, enforces E1-only activation and leaves frozen participant records intact. Exports and rating queues now select E1 only. No approval, recruitment, hosted migration or deployment is implied. New draft stimulus requires reviewed hashes and fresh sessions; never rewrite legacy session hashes.
+
 ## M4 engineering contract — 2026-10-24 (reviews remain open)
 
 - Latest owner scope ends at M4: perfect the local implementation, test E2/E3, generate heuristics from responses, and commit. No app hosting, account creation, DNS or hosted migration is included. M5/M6 external work is deferred; existing runbooks are reference material.

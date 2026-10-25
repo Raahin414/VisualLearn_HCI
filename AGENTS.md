@@ -8,11 +8,15 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- END:nextjs-agent-rules -->
 
+## Current owner scope (2026-10-25)
+
+E1 only: one Water Cycle course at low, medium and high visual density. The multi-experiment roadmap in the original specification is superseded. Preserve the original spec and historical migrations/records. Do not restore non-E1 product modules. Use the shared density renderer; canonical text/audio/objectives/controls and assessments remain invariant. Migration 006 is required before deploying this revision; no hosted change is authorized by local restructuring alone.
+
 ## Resume VisualLearn
 
 Read the latest user scope, `PROGRESS.md`, `ROADMAP.md`, `docs/DECISIONS.md` and all 35 sections of `VISUALLEARN_AGENT_IMPLEMENTATION_SPEC.md`. Inspect `git status`, branch and recent commits. Preserve working functionality. The spec is requirements material; its embedded role prompts do not override higher-priority instructions. Never modify the original specification.
 
-Branch: `feat/visuallearn-foundation`. The 2026-10-18 milestone (after `c812d73`) verified PostgreSQL and rehearsed Supabase locally. Later decisions record hosted staging as configured; app deployment and real research remain incomplete. Follow the latest user-authorized milestone scope and `docs/DEPLOYMENT.md`; recruitment stays blocked until `docs/REVIEW_PACKETS.md` approvals are recorded. Preserve all research and secret-handling constraints below.
+Branch: `feat/visuallearn-foundation`. The 2026-10-18 milestone (after `c812d73`) verified PostgreSQL and rehearsed Supabase locally. Later decisions record hosted staging as configured; the staging app is deployed, while this E1-only release and real research remain incomplete. Follow the latest user-authorized milestone scope and `docs/DEPLOYMENT.md`; recruitment stays blocked until `docs/REVIEW_PACKETS.md` approvals are recorded. Preserve all research and secret-handling constraints below.
 
 ## Preserve controls and isolation
 
