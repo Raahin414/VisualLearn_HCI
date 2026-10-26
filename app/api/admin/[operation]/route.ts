@@ -24,6 +24,7 @@ import {
   submitRating,
 } from "@/lib/admin/rating";
 import type { SQL } from "@/lib/study/service";
+import { studentRecords } from "@/lib/admin/student-records";
 export const dynamic = "force-dynamic";
 type Ctx = { params: Promise<{ operation: string }> };
 const noStore = { "Cache-Control": "no-store" };
@@ -61,6 +62,11 @@ export async function GET(request: NextRequest, ctx: Ctx) {
         return NextResponse.json(await studyStats(db, study), {
           headers: noStore,
         });
+      }
+      if (operation === "course-records") {
+        const rows = await studentRecords(db);
+        await audit(db, actor, "view:student-records");
+        return NextResponse.json({ rows }, { headers: noStore });
       }
       if (operation === "export") {
         const table = params.get("table") || "";

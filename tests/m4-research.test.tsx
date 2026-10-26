@@ -19,6 +19,8 @@ import { LocalStudy } from "@/lib/demo/local-study";
 import { DraftDebrief } from "@/components/study/draft-debrief";
 import { AnalysisCharts } from "@/components/admin/analysis-charts";
 const consent = {
+  studentName: "Synthetic Student",
+  erp: "SYNTHETIC-M4",
   ageBand: "18-30",
   language: "English",
   languageComfort: 4,
@@ -68,7 +70,7 @@ beforeAll(async () => {
     await db.exec(await readFile(`supabase/migrations/${file}`, "utf8"));
   await db.exec(await readFile("supabase/seed.sql", "utf8"));
   await db.exec(
-    "update visuallearn.experiments set enabled=true,status='recruiting',content_approved=true,ethics_approved=true,consent_version='SYNTHETIC-M4',consent_text='SYNTHETIC ONLY',study_contact='SYNTHETIC' where id='E1'",
+    "update visuallearn.experiments set enabled=true,status='recruiting',content_approved=true,ethics_approved=true,consent_version='SYNTHETIC-M4',consent_text='SYNTHETIC ONLY name and ERP',study_contact='SYNTHETIC' where id='E1'",
   );
 }, 30000);
 afterAll(async () => {

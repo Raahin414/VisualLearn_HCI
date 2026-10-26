@@ -7,6 +7,8 @@ import { exportQueries, studyStats } from "@/lib/admin/exports";
 const correct = (form: "A" | "B" | "C") => answerKey(form);
 const scenario = "SYNTHETIC: evaporation turns liquid water into vapor.";
 const consent = {
+  studentName: "Synthetic Student",
+  erp: "SYNTHETIC-001",
   ageBand: "18-30",
   language: "English",
   languageComfort: 4,
@@ -64,6 +66,8 @@ describe("Synthetic E1 lifecycle using real PostgreSQL semantics", () => {
     await db.exec(
       await readFile("supabase/migrations/006_e1_only.sql", "utf8"),
     );
+    await db.exec(await readFile("supabase/migrations/007_student_identity.sql", "utf8"));
+    await db.exec(await readFile("supabase/migrations/008_course_runs.sql", "utf8"));
     await db.exec(await readFile("supabase/seed.sql", "utf8"));
     service = new StudyService(db as unknown as SQL, () => clock);
   }, 30000);
@@ -75,7 +79,7 @@ describe("Synthetic E1 lifecycle using real PostgreSQL semantics", () => {
       tx((s) => s.enroll(consent, crypto.randomUUID())),
     ).rejects.toThrow(/not approved/);
     await db.exec(
-      "update visuallearn.experiments set enabled=true,status='recruiting',content_approved=true,ethics_approved=true,consent_version='SYNTHETIC-consent',consent_text='SYNTHETIC TEST CONSENT, NOT HUMAN APPROVAL',study_contact='SYNTHETIC TEST CONTACT' where id='E1'",
+      "update visuallearn.experiments set enabled=true,status='recruiting',content_approved=true,ethics_approved=true,consent_version='SYNTHETIC-consent',consent_text='SYNTHETIC TEST CONSENT for name and ERP, NOT HUMAN APPROVAL',study_contact='SYNTHETIC TEST CONTACT' where id='E1'",
     );
     await expect(
       tx((s) =>

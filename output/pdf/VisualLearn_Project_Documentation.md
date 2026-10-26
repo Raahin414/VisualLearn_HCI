@@ -1,119 +1,96 @@
 # VisualLearn
-## Experimental plan for the E1 visual-density study
+## Five science courses, three visual densities
 
-### Research question
+### Project aim
 
-Does the amount of visual material on a learning page affect how well students understand and remember the same lesson? We will compare three presentations of one Water Cycle course. The main outcomes are immediate learning and one-hour retention; we will also ask how clear, distracting and mentally demanding the lesson felt.
+VisualLearn is an HCI project about how the amount of visual material affects learning. Students can study five science courses: Water Cycle, Photosynthesis, Electric Circuits, Human Digestion and the Solar System. Each course has low, medium and high visual-density presentations. Within a course, the explanatory text and knowledge-check questions are identical across the three versions.
 
-### Study design
+### The visual comparison
 
-This is one **between-participant experiment**. Each volunteer sees only one assigned version: low, medium or high visual density. All versions contain the same five chapters, factual text, narration recordings, learning objectives, essential diagram meaning, navigation controls and assessment questions. Students cannot choose or change their assigned version during the study.
+| Version | What changes on screen |
+| Low | One key-concept graphic with minimal decoration |
+| Medium | The same core material plus two supporting visual-label cards |
+| High | The same core material plus four supporting cards and repeated labels |
 
-| Assigned version | Visual presentation |
-| Low | Core text, narration and one essential whole-cycle diagram |
-| Medium | The same core material, plus supporting callouts and two process illustrations |
-| High | The same core material, plus four process illustrations, repeated labels and decorative details |
+The original narrated Water Cycle lesson has its own five-chapter E1 workflow and richer diagrams. The four new courses use three shorter sections and an immediate four-question quiz. Their current graphics and questions are drafts for educator review. We will not combine the new quiz scores with the older Water Cycle baseline and one-hour scores as if they were the same measure.
 
-Added illustrations repeat ideas already explained in the shared lesson. They do not add facts needed to answer the tests. We will review screenshots and lesson accuracy before using these versions with participants.
+### Current state
 
-### What we expect to learn
-
-More visuals may support understanding, but they may also compete for attention. We will compare the measured outcomes rather than assume that medium density is best. This experiment tests the **whole visual-density package**; it cannot separately measure the effects of useful illustrations, repeated labels and decoration.
-
-### Current status
-
-The E1 application and research workflow are implemented and have been tested with synthetic data. We have **not conducted a human participant study** or obtained results. Teacher/supervisor review, any required ethics approval, an approved pilot and a final analysis plan must come before recruitment.
+The five course pages, three density previews, server-assigned recorded attempts, private PostgreSQL storage and researcher Student records view are implemented locally. Recorded participation remains disabled until consent, lesson content, identifier handling and required research approvals are reviewed. No human results are claimed.
 
 ---
-# Participant procedure
+# Experimental plan
 
-### Before recruitment
+### Research question and design decision
 
-We will agree on the participant target, sample size, recruitment method, device and language policy, study timing, consent wording, data retention and analysis plan with our teacher/supervisor. An educator will review the lesson, answer keys and rubrics. We will test the hosted workflow using synthetic records and pilot it only after the required approvals.
+Our planned comparison is whether students assigned to low, medium or high visual density differ in immediate quiz performance within the same course. The density is the experimental factor. Course topic can also affect performance, so we will compare conditions within a course and report each course separately. Before recruitment, the supervisor must decide whether each student takes one course or several, and if several, how to counterbalance course order and account for repeated scores from the same student.
 
-### The planned participant journey
+### Before any student is recruited
 
-| Step | What the participant does | What the study records |
-| 1. Consent | Reads the information sheet and agrees voluntarily | Consent and eligibility decision |
-| 2. Baseline | Answers an eight-item quiz before the research lesson | Starting knowledge, age band and prior familiarity |
-| 3. Assignment | Receives one saved density from the server | Low, medium or high condition |
-| 4. Lesson | Studies the same five Water Cycle chapters | Chapter progress and limited interaction events |
-| 5. Immediate test | Writes recall and scenario answers, then takes an eight-item quiz and experience survey | Immediate learning and reported experience |
-| 6. One-hour test | Returns for a parallel quiz, written answers and brief follow-up survey | Delayed retention and interim topic review |
+- An educator will check factual accuracy, question wording, answer keys and whether the added visual cards repeat only facts already taught in the common text.
+- The teacher/supervisor will approve the primary outcome, sample target, recruitment method, eligibility, course order, repeated-attempt policy, analysis model and the exact consent/debrief wording.
+- The consent will explicitly explain collection and retention of student name and ERP, quiz answers, assigned density and timestamps. Institutional ethics approval will be obtained if required. Only adults can enter the current recorded flow; minors need a separately approved process.
+- We will apply the additive database migrations, configure the restricted application login, test a synthetic run on the deployed site and rehearse backup/restore. Real recording gates will stay closed until these steps are complete.
 
-The current enrollment flow accepts adults aged 18-30. Minors remain blocked unless a separate guardian/assent process is reviewed and implemented. Participation is voluntary, and a participant may withdraw.
+### Assignment and controls
 
-### Assignment and control of timing
-
-After the baseline quiz, the server balances assignment among the three versions within age bands, using randomness to break ties. The saved condition persists when a participant refreshes or returns. The one-hour test opens **60 minutes after server-recorded lesson completion**. The draft completion window is from +60 to +90 minutes; the final window and late policy require approval. A secure return link supports the delayed visit.
-
-The optional seven-day test is outside the required E1 procedure and remains disabled until separately reviewed. It will not replace a missing one-hour result.
+The server assigns the least-used density for the chosen course, with a random tie-break. The student cannot select a density for a recorded attempt. Assignment and result are saved in PostgreSQL. The public preview lets visitors switch densities, but its answers are not recorded. All versions of a course use the same text and four questions. The added visual cards alter visual density, not the facts being taught.
 
 ---
-# Measurements and scoring
+# Student procedure and records
 
-### Learning outcomes
+### Planned recorded course journey
 
-| Time | Measures | Purpose |
-| Before lesson (A) | Eight objective questions | Record starting knowledge |
-| Immediately after (B) | Written recall, scenario explanation, eight objective questions | Measure immediate learning |
-| One hour later (C) | Parallel written and objective questions | Measure retention |
+| Step | Student action | Saved record |
+| 1. Choose | Opens one of the five courses | Selected course |
+| 2. Identify and consent | Enters full name and ERP, confirms adult status and voluntary participation | Private identity row and consent version |
+| 3. Assignment | Starts the course in a server-assigned density | Low, medium or high density |
+| 4. Study | Reads the three shared lesson sections | Course attempt and start time |
+| 5. Knowledge check | Answers four identical multiple-choice questions | Answers, score out of four and submission time |
+| 6. Withdraw, if desired | Withdraws the attempt | Withdrawal time; attempt is excluded from researcher results |
 
-Objective questions cover the same blueprint: factual recall, process order, diagram labeling, concepts and transfer to a new example. Each item is worth one point, giving an objective score out of eight at A, B and C. Matching topics alone does not prove the forms have equal difficulty; we will review them before the main study.
+The browser receives an opaque, HttpOnly attempt cookie. Only its hash is stored in the database. A student can refresh the current course and resume the attempt. Answer keys and scoring run on the server. Name and ERP are stored in a separate private identity table, not in the course result row. ERP is self-reported, so the protocol must address duplicate entries or impersonation before recruitment.
 
-Written recall has a 10-point rubric and the scenario has a 4-point rubric. Two researchers will rate written answers independently without seeing the assigned density, then resolve disagreements using the rubric. At B, written answers come before the objective questions so that answer choices do not cue the open responses. Correct answers are withheld during the assessment sequence.
+### Researcher portal
 
-### Experience and behavior measures
-
-The immediate questionnaire asks about clarity, overload, distraction, pacing and effort. The one-hour questionnaire asks whether the student reviewed or discussed the topic between tests. These are project-designed questions, not validated psychological scales. We will describe their responses separately from test scores.
-
-The application also records limited navigation, audio and page-visibility events. They may help explain patterns of use, but they do not prove that a student paid attention. Screen size, scrolling, English comfort and prior familiarity will be documented because they may affect the experience.
-
-### Main comparison
-
-Our draft primary outcome is the **immediate objective score as a percentage**, compared across the three assigned densities while accounting for baseline score. We will also compare one-hour retention, written-answer scores and experience responses as secondary outcomes. The final primary endpoint, sample size, statistical model and uncertainty reporting will be fixed before main-study data collection.
+Researchers sign in through Supabase Auth with an allowlisted account and authenticator-based MFA. The Student records tab shows name, ERP, course, density, progress, score and start time; viewing it is audited. Names and ERP are omitted from de-identified research exports. The original Water Cycle E1 records also gain private name/ERP storage for new enrollments; historical participants without it remain preserved.
 
 ---
-# Analysis and research safeguards
+# Measurements and analysis
 
-### Planned analysis
+### Main five-course measure
 
-- Check enrollment, condition balance, completed lessons and missing follow-ups. Report each condition's participant count and baseline score before interpreting outcomes.
-- Compare the primary immediate score across low, medium and high density, adjusting for baseline knowledge according to the approved analysis plan. Report estimates and uncertainty.
-- Examine one-hour scores, change from immediate performance, written rubric scores and questionnaire responses as secondary findings.
-- Inspect missingness and sensitivity to missed follow-ups. Do not turn missing answers into zero scores. Keep different frozen lesson versions in separate cohorts.
-- Explain limitations: the visual changes come as packages; participants may use different screen sizes; the one-hour interval and unvalidated experience questions limit generalization.
+The immediate knowledge check has four objective items per course. A response is scored on the server as correct or incorrect; the total ranges from zero to four. We will report condition counts and score distributions for each course. The draft primary comparison is the difference in mean immediate score between low, medium and high density within a course, with uncertainty intervals and the approved model. We will not assume a density works best before seeing approved study data.
 
-No statistical conclusion will be presented as a human finding until an approved study has actually collected participant data. Synthetic demonstrations and tests are labeled separately.
+### Important limits
 
-### Data handling
+The five-course flow currently has no pretest, one-hour follow-up or experience questionnaire. It cannot establish learning gain or retention from these four-item scores alone. Course difficulty differs, and repeated course attempts may create practice effects. Density changes are a package of added cards, labels and page space, so the effect of any single visual element cannot be isolated. The new visual cards are draft concept graphics rather than validated scientific illustrations.
 
-Study records use pseudonymous identifiers. PostgreSQL/Supabase stores consent, saved assignment, answers, scores, timing and questionnaire responses. Researchers use protected sign-in with two-factor authentication; exported data excludes withdrawn participants. Withdrawal also disables participant return access. Written answers will be checked for volunteered identifying details before external sharing.
+### Original Water Cycle E1 protocol
 
-The retention, deletion, backup and sharing procedures need review before recruitment. We will document incomplete responses and follow-up loss transparently. Participants receive the approved debrief after the required sequence, with feedback timing set by the final protocol.
+The existing Water Cycle research sequence remains separate: approved consent, eight-item baseline A, saved density assignment, five narrated chapters, immediate written and objective B plus experience survey, then parallel C and a follow-up survey one hour after server-recorded lesson completion. Its draft primary outcome is immediate percentage correct adjusted for baseline knowledge; delayed retention is a secondary outcome. It requires its own approved consent and narration rights. We will not pool its scores with the shorter course checks.
 
-### Approval gates
+### Reporting
 
-Before the main experiment: confirm lesson accuracy and narration rights; review eligibility, consent, assessment equivalence and rubric; agree on sample plan, timing, privacy and analysis; complete accessibility checks and a hosted synthetic workflow; obtain required approvals; then run an approved pilot and resolve its problems.
+The final report will state how many students started and completed each course and density, missing/withdrawn records, score summaries, the approved comparisons and limitations. Synthetic test data will be labeled and excluded from human findings. No finding or causal claim is presented before the approved experiment is run.
 
 ---
-# Application and project deliverables
+# Application, safeguards and next steps
 
-### How the application supports the experiment
+### Application structure
 
-The website provides the Water Cycle lesson, narration, responsive density views, progress recovery, assessments and a participant return link. The server controls assignment, answer scoring, follow-up eligibility and duplicate submission handling. A separate public lesson and practice quiz let visitors explore the material without entering the research study.
+The website is built with Next.js, React and TypeScript. PostgreSQL/Supabase stores private student identities, assigned course attempts and quiz results. A protected researcher portal displays records; public previews work without a database. Automated local checks cover five course routes, visual-density invariance, balanced assignment, saved scoring, withdrawal, E1 regression behavior, accessibility checks and server-only answer keys.
 
-Researchers can inspect progress and condition balance, rate open answers, resolve scoring disagreements and export de-identified E1 data. The same shared lesson content drives every density, making the visual presentation the controlled difference. Research records remain in a private database rather than in a student's browser.
+### Safeguards
 
-### Implementation and verification
+Both the original E1 study and the new course-recording flow are closed by default. Each needs approved database consent/content/ethics settings plus its deployment flag. Passwords and database owner credentials are not part of student pages. Student names and ERP are not included in CSV research exports. Withdrawal excludes an attempt from researcher results; a final retention and physical-deletion procedure still needs institutional approval.
 
-The application uses Next.js, React and TypeScript, with PostgreSQL/Supabase for research records and Python for later analysis. Automated checks cover assignment persistence, timing, secure access, data integrity and key accessibility behavior. Manual educator, device and screen-reader reviews remain part of preparation for human testing.
+### Remaining work
 
-### What we will submit
+- Review the four new courses, their visual graphics and all question banks with an educator.
+- Finalize the design, consent for name/ERP, retention, sample plan and ethics requirements with the teacher/supervisor.
+- Apply migrations 007-008, configure restricted Vercel variables and run a synthetic hosted student-to-researcher test.
+- Run a backup/restore drill and an approved pilot; correct issues before recruitment.
+- Collect results only after approval, then analyze and report each course transparently.
 
-- The working E1 application with three visual-density versions of one course.
-- The reviewed study protocol, consent materials, assessments, rubrics and analysis plan.
-- Testing evidence, an approved pilot record and the final participant study only if authorization is obtained.
-- A results report that distinguishes measured findings, missing data, limitations and synthetic demonstrations.
-
-Our immediate next step is to complete the reviews and approval gates, then run the approved pilot. The experiment remains E1 only; there is no need to build eight separate experiments for this project.
+E2-E8 are not needed. The project tests visual density across five courses, with the original Water Cycle follow-up protocol kept distinct from the newer immediate-quiz flow.

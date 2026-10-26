@@ -1,6 +1,6 @@
 # External reviews and approvals (E1 Water Cycle)
 
-**Status on 2026-10-18: none of these reviews or approvals has been obtained.** This file prepares them; it is not evidence that any happened. Record each outcome (reviewer role, date, decision, version reviewed) in [DECISIONS.md](DECISIONS.md) and keep recruitment closed until every blocking row is approved.
+**Status: these reviews and approvals are not recorded.** This file prepares them; it is not evidence that any happened. Record each outcome (reviewer role, date, decision, version reviewed) in [DECISIONS.md](DECISIONS.md) and keep recruitment closed until every blocking row is approved. The five-course expansion also requires review of each new science lesson and quiz, the cross-course experimental plan, and explicit consent and retention wording for name and ERP. The separate course-recording gate stays off until then.
 
 | # | Review | Owner (role) | Blocking for | Status |
 |---|---|---|---|---|
@@ -41,7 +41,7 @@ Research questions and the single primary outcome (draft: adjusted immediate per
 - **Withdrawal (implemented):** a participant can withdraw at any time from the study screen. Access and return links stop immediately, follow-ups are marked withdrawn and every export excludes the participant. Allocation counts still include them to prevent condition shopping.
 - **Retention and deletion (needs approval):** proposed default is to keep de-identified research data until the end of the approved retention period and to delete withdrawn participants' rows (including written responses) within 30 days of withdrawal; backups expire on the provider's schedule. M4 provides an inactive, tested deletion mechanism; no retention delay is configured by default. Review its scope, private aggregate allocation counts, institutional deletion-request records and backup expiry before enabling the operator flag. The proposed 30-day period is not an approved or configured policy.
 - **Debrief (needs approval):** proposed debrief after F5 explains the three visual-density conditions, that assignment was random and that scores are withheld until all follow-ups close. The marked review draft is in components/study/draft-debrief.tsx through /dev/study only; it is not participant-active. Review feedback timing separately when optional D is assigned.
-- **Data collected:** age band, language, language comfort, topic familiarity, answers, written responses, questionnaire answers and lesson interaction events. No names, emails, exact dates of birth, IP addresses or device fingerprints.
+- **Data collected:** age band, language, language comfort, topic familiarity, answers, written responses, questionnaire answers, lesson interaction events, and—after migrations 007–008—name and ERP in restricted identity tables. No emails, exact dates of birth, IP addresses or device fingerprints. Consent and institutional retention rules must explicitly cover the new identifiers before activation.
 
 ## 5–6. Ethics and minors
 

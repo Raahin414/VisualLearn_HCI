@@ -2,7 +2,11 @@
 
 ## Purpose and scope
 
-Compare comprehension, immediate recall, one-hour retention and reported learning experience across three visual-density presentations of the same Water Cycle lesson. This is one between-participant study; modality, chunking, animation, video and adaptive studies are outside the current project.
+The original E1 protocol compares comprehension, immediate recall, one-hour retention and reported learning experience across three visual-density presentations of the same Water Cycle lesson. The application now also offers four additional draft science courses with the same low/medium/high density factor. The new courses currently have a shorter, immediate-quiz-only workflow and must be analyzed separately from the original E1 longitudinal cohort. Modality, chunking, animation, video and adaptive studies are outside the project.
+
+## Five-course extension (draft; recruitment closed)
+
+The catalog contains Water Cycle, Photosynthesis, Electric Circuits, Human Digestion and Solar System. Each course uses three shared factual sections and one fixed four-item knowledge check. For a recorded run, an adult student supplies name and ERP and accepts reviewed consent; the server allocates the least-used density within that course, breaking ties randomly. The text and quiz remain the same across densities. Low shows one key-concept graphic; medium adds two supporting visual-label cards; high adds four supporting cards and repeated labels. These new graphics are draft placeholders for educator review, not validated scientific illustrations. A student can complete several courses, but current ERP entry is self-reported and attempts are not identity-verified or de-duplicated. Before a real trial, the supervisor must decide whether to use one course per student or a repeated-measures design, course order/counterbalancing, sample size, the primary outcome, and how to handle prior knowledge and repeated attempts. Do not pool course scores or claim a density effect until those decisions are approved. New lessons, questions, visual manipulation, identifier consent and retention require educator/ethics review; `COURSE_RECORDING_ENABLED` and database approval fields remain closed by default.
 
 ## Conditions and controls
 

@@ -17,6 +17,7 @@ await walk(root).catch(() => {
 // Field names of the server-only bank plus distinctive rationale/rubric text.
 const forbidden = [
   "correctAnswer",
+  "courseAnswers",
   "correctCycle",
   "correctLabels",
   "rationale",

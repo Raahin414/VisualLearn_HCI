@@ -61,6 +61,8 @@ export async function api(page: Page, action: string, body?: unknown) {
 }
 export async function enroll(page: Page, study: "E1" = "E1") {
   await page.goto(`/study/enroll?study=${study}`);
+  await page.getByLabel("Your full name").fill("Synthetic Student");
+  await page.getByLabel("ERP / student ID").fill(`SYNTHETIC-${crypto.randomUUID().slice(0, 8)}`);
   await expect(page.getByText(/SYNTHETIC LOCAL TEST/)).toBeVisible();
   await page.getByLabel("Age band").selectOption("18-30");
   await page

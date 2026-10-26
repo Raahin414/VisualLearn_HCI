@@ -2,6 +2,8 @@ import { z } from "zod";
 export const ageBandSchema = z.enum(["9-12", "13-17", "18-30"]);
 export const enrollmentSchema = z
   .object({
+    studentName: z.string().trim().min(2).max(120),
+    erp: z.string().trim().min(2).max(40).regex(/^[A-Za-z0-9][A-Za-z0-9/_-]*$/),
     ageBand: ageBandSchema,
     language: z.enum(["English", "Urdu", "Other", "Prefer not to say"]),
     languageComfort: z.number().int().min(1).max(5),

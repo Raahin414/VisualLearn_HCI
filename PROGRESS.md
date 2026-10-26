@@ -1,5 +1,9 @@
 # VisualLearn progress
 
+## Five-course expansion — 2026-10-26
+
+Added four draft science courses beside Water Cycle. Each has low/medium/high density, invariant text and a four-question knowledge check. Recorded course runs use server-assigned density, a separate closed-by-default approval gate, private PostgreSQL identity/attempt tables and a protected researcher Student records tab. The original E1 Water Cycle longitudinal workflow now asks for name and ERP too; those identifiers are stored separately from F0 and de-identified exports. Migrations 007–008 are required before deploying this revision. No hosted migration or deployment is claimed. All new topics, questions, density manipulation and consent/identifier handling require human review before enrollment.
+
 ## E1-only restructuring - 2026-10-25
 
 Owner scope supersedes the multi-experiment roadmap: same Water Cycle course at low/medium/high density only. Removed active modality/chunking renderers and experiment choices; narrowed APIs, simulator, researcher tools and exports to E1. New additive visual panels follow the supplied reference. Forward migration 006 archives non-E1 definitions and prevents activation without deleting historical records. Fresh seed creates E1 only. Source/presentation advance to e1-v8-draft / density-v6-e1-draft; canonical content/audio/banks are preserved. This is local work; no hosted migration or redeployment has been performed. Verified: 67 unit/service, dedicated 5 schema, 16 native PostgreSQL, 27 development and 27 production browser, 21 local security and 23 real connected Supabase/Auth/MFA/PostgreSQL checks; lint/types/build and 22 clean learner assets; 5 Python checks and analysis of 37 SYNTHETIC exports. Nine density and two overview captures were reviewed, alongside the updated five-page teacher PDF. See docs/QA.md for limitations and corrected failed attempts. Older sections below are historical milestones, not current scope.

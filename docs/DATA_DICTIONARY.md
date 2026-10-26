@@ -8,6 +8,8 @@ The authoritative, column-by-column dictionary is generated from code (`lib/admi
 
 All timestamps are UTC. Exported `participant_id`, `session_id` and `attempt_id` are `VL_` + 24 hex characters of SHA-256 of the internal UUID: stable for joins, not the database IDs. No names, emails, exact birthdates, IP addresses, user-agent strings, public participant codes, return tokens or researcher identities are exported. Written responses are verbatim and may contain volunteered identifiers; review them before sharing. **Withdrawn participants are excluded from every file.**
 
+Migrations 007–008 add private identifier tables: `participant_identity(participant_id, student_name, erp)` for the original E1 flow, and `course_student_identity(id, student_name, erp)` for the five-course flow. `course_attempts` joins the latter by `identity_id` and records `course_slug`, `density`, frozen `content_version`, consent version/time and adult/voluntary/data-use affirmations, submitted `answers`, `score`, `started_at`, `submitted_at` and `withdrawn_at`. The authenticated Student records tab joins identifiers for review; CSV research exports do not. Course quiz scores are out of four and have no baseline or delayed follow-up equivalent yet.
+
 | Dataset | Grain and main fields |
 |---|---|
 | participants_deidentified | One row per participant: age band, language, language comfort (1–5), prior familiarity (1–5), consent version and time |

@@ -108,9 +108,9 @@ def decorate(canvas, doc):
     canvas.setStrokeColor(RULE); canvas.setLineWidth(.6)
     canvas.line(52, h-43, w-52, h-43)
     canvas.setFont('BodyBold', 8); canvas.setFillColor(TEAL)
-    canvas.drawString(52, h-33, 'VISUALLEARN  /  E1 EXPERIMENTAL PLAN')
+    canvas.drawString(52, h-33, 'VISUALLEARN  /  FIVE-COURSE EXPERIMENTAL PLAN')
     canvas.setFont('Body', 8); canvas.setFillColor(MUTED)
-    canvas.drawRightString(w-52, h-33, '25 OCTOBER 2026')
+    canvas.drawRightString(w-52, h-33, '26 OCTOBER 2026')
     canvas.line(52, 42, w-52, 42)
     canvas.drawString(52, 28, 'HCI project  |  Proposed study design and procedure')
     canvas.drawRightString(w-52, 28, f'{doc.page:02d}')
@@ -155,7 +155,7 @@ def build():
             i += 1
     doc = ReportDoc(str(TARGET), pagesize=A4, rightMargin=52, leftMargin=52, topMargin=62, bottomMargin=58,
                     title='VisualLearn - Project Documentation', author='VisualLearn Project Team',
-                    subject='E1 visual-density experiment plan and participant procedure', pageCompression=1)
+                    subject='Five-course visual-density experimental plan and participant procedure', pageCompression=1)
     doc.build(story, onFirstPage=decorate, onLaterPages=decorate)
     print(TARGET)
 

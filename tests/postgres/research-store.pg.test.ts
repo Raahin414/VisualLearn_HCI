@@ -29,6 +29,8 @@ const tx = <T>(run: (s: StudyService) => Promise<T>) =>
     run(new StudyService(c as unknown as SQL, () => clock)),
   );
 const consent = {
+  studentName: "Synthetic Student",
+  erp: "SYNTHETIC-PG",
   ageBand: "18-30",
   language: "English",
   languageComfort: 4,
@@ -107,6 +109,8 @@ describe("Migrations and least-privilege runtime login", () => {
       "004",
       "005",
       "006",
+      "007",
+      "008",
     ]);
     const e = await owner.query(
       "select id,enabled,status,consent_version from visuallearn.experiments order by id",

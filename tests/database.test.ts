@@ -29,6 +29,8 @@ describe("PostgreSQL migration and data boundaries", () => {
     await db.exec(
       await readFile("supabase/migrations/006_e1_only.sql", "utf8"),
     );
+    await db.exec(await readFile("supabase/migrations/007_student_identity.sql", "utf8"));
+    await db.exec(await readFile("supabase/migrations/008_course_runs.sql", "utf8"));
     await db.exec(await readFile("supabase/seed.sql", "utf8"));
   }, 30000);
   afterAll(async () => {

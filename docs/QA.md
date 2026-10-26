@@ -1,5 +1,9 @@
 # Verification record — 2026-10-18
 
+## Five-course extension — 26 October 2026
+
+Local checks passed: 70 Vitest tests across 12 files (including a disposable PGlite five-course recording test), content hash verification for the unchanged Water Cycle canonical lesson/audio, ESLint, TypeScript/Next production build, 24-asset server-only bundle scan, and 28 production Chromium browser tests including all five course pages/density previews. A subsequent targeted production run passed both five-course tests, including closed recording and researcher identity access. The production browser suite used recording disabled and did not write hosted research data. Native PostgreSQL and connected Supabase suites were not completed in this session: Docker Desktop's Linux engine was unavailable (`dockerDesktopLinuxEngine` pipe missing). The updated five-page teacher PDF was rendered and visually reviewed. No hosted migration, Vercel redeployment, educator review or approved human enrollment is claimed.
+
 ## E1-only restructuring - 25 October 2026
 
 Scope: one course at low/medium/high density. Other experiment controls, renderers and executable suites are removed; migrations and stored historical data are preserved. New E1 checks cover rejection of retired study IDs, archival without losing answers, E1 export isolation, additive illustration counts, canonical paragraph/audio parity and responsive accessibility.

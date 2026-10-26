@@ -1,5 +1,11 @@
 # Deployment and operations
 
+## Five-course upgrade (2026-10-26)
+
+Before deploying the five-course revision, apply additive migrations 007 and 008 with the authorized migration connection. Keep `STUDY_ENABLED=false`, `COURSE_RECORDING_ENABLED=false`, and `PHYSICAL_DELETION_ENABLED=false` in Vercel. Public `/courses` previews need no database; recorded starts and the authenticated Student records tab require the restricted runtime `DATABASE_URL`. Run the read-only staging verifier after migration. Do not place the migration-owner URL in Vercel.
+
+The five-course recording gate is separate from E1: `visuallearn.course_study_settings` defaults to disabled with empty consent/contact and false content/ethics approvals. An approved consent must explicitly cover name and ERP. Only after educator, supervisor and required ethics review should an authorized operator populate the approved fields, enable the database row and set `COURSE_RECORDING_ENABLED=true` in a new deployment. Check one synthetic course run, score, researcher-only identity view, withdrawal and backups before inviting students. No hosted changes are claimed by this source update.
+
 **Status (2026-10-18):** hosted **staging exists**: Supabase project `visuallearn-staging` (ref `tyoplurznjqdngacvfke`, organization IAT, region ap-south-1). Steps 2.1–2.6 and 2.8 below are done and `npm run verify:staging` passes 19/19. Auth settings are versioned in `staging/supabase/config.toml` and applied with `supabase config push --workdir staging --project-ref tyoplurznjqdngacvfke`. **Hosted app (2026-10-24):** Vercel project `visuallearn-staging` (team `trs20`, Hobby), region `bom1` (Mumbai, next to the database), production URL https://visuallearn-staging.vercel.app, deployed from a trusted checkout with `vercel deploy --prod` (the repository is not Git-connected). Real enrollment is disabled.
 
 ## E1-only release upgrade (2026-10-25)

@@ -1,0 +1,23 @@
+.course-experience { max-width: 1000px; }
+.course-panel { margin: 28px 0; padding: clamp(20px, 4vw, 32px); border: 1px solid var(--line); border-radius: var(--radius-panel); background: var(--surface); }
+.course-panel h2 { margin: 0 0 16px; }
+.course-panel p { line-height: 1.7; }
+.course-visual { display: flex; align-items: stretch; gap: 14px; margin: 24px 0; padding: 24px; background: var(--soft); border-radius: var(--radius-panel); }
+.course-visual-node { position: relative; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 110px; padding: 14px; text-align: center; border: 2px solid var(--teal); border-radius: 18px; background: var(--surface); }
+.course-visual-node span { display: grid; place-items: center; width: 34px; height: 34px; margin-bottom: 8px; border-radius: 50%; background: var(--teal); color: white; }
+.course-visual-node small { color: var(--muted); margin-top: 5px; }
+.course-visual-medium .course-visual-node { box-shadow: inset 0 0 0 5px #e0efec; }
+.course-visual-high { background: linear-gradient(135deg, #e1efec, #f8e5eb); }
+.course-visual-high .course-visual-node { box-shadow: 0 5px 18px #315a6330; border-color: #966478; }
+.course-visual-detail { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: -8px 0 20px; }
+.course-visual-detail-high { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.course-support-card { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 18px; text-align: center; background: #f0f5f3; border: 1px solid var(--line); border-radius: 16px; }
+.course-support-shape { width: 36px; height: 36px; border-radius: 50%; background: var(--teal); }
+.course-visual-detail-high .course-support-card { background: #f8e5eb; }
+.course-visual-detail-high .course-support-shape { background: #966478; }
+.course-navigation { display: flex; gap: 14px; justify-content: space-between; }
+.course-question { margin: 22px 0; padding: 12px 0; border: 0; }
+.course-question legend { font-weight: 700; margin-bottom: 10px; }
+.course-question label { display: block; margin: 8px 0; }
+.course-question input { margin-right: 10px; }
+@media (max-width: 600px) { .course-visual { flex-direction: column; } .course-visual-detail-high { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

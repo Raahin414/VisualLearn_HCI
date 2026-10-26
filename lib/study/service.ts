@@ -134,6 +134,8 @@ export class StudyService {
       !e.ethics_approved ||
       !e.consent_version ||
       !e.consent_text ||
+      !/\bname\b/i.test(e.consent_text) ||
+      !/\bERP\b/i.test(e.consent_text) ||
       !e.study_contact
     )
       throw new StudyError(
@@ -227,10 +229,14 @@ export class StudyService {
         data.ageBand,
         data.language,
         data.consentVersion,
-        JSON.stringify(data),
+        JSON.stringify({ ageBand: data.ageBand, language: data.language, languageComfort: data.languageComfort, familiarity: data.familiarity, voluntary: data.voluntary, dataUse: data.dataUse, contactViewed: data.contactViewed, consentVersion: data.consentVersion, experimentId: data.experimentId }),
         key,
         data.experimentId,
       ],
+    );
+    await this.db.query(
+      "insert into visuallearn.participant_identity(participant_id,student_name,erp) values($1,$2,$3)",
+      [p.rows[0].id, data.studentName, data.erp],
     );
     const s = await this.db.query<{ id: string }>(
       "insert into visuallearn.sessions(participant_id,content_version,content_sha256,protocol_version,stimulus_version,media_manifest_sha256,question_bank_sha256,stimulus_sha256,followup_window_minutes,experiment_id,presentation_version,exposure_measure_version,study_time_policy) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) returning id",

@@ -26,13 +26,13 @@ export default function Home() {
             <span>step by step.</span>
           </h1>
           <p>
-            Study the water cycle with diagrams, narration and a short practice
-            quiz. Follow five chapters at your own pace.
+            Explore five science courses. Each teaches the same lesson in three
+            visual densities, followed by an identical knowledge check.
           </p>
           <div className="hero-actions">
             <Button asChild>
               <Link href="/courses">
-                Explore the lesson <ArrowRight size={18} />
+                Explore the courses <ArrowRight size={18} />
               </Link>
             </Button>
             <span className="hero-note">Public demo · No account required</span>
@@ -82,7 +82,7 @@ export default function Home() {
       <section className="container discoveries">
         <div className="section-heading">
           <div>
-            <div className="eyebrow">AVAILABLE LESSON</div>
+            <div className="eyebrow">FEATURED COURSE</div>
             <h2>The Water Cycle</h2>
           </div>
           <Link href="/courses" className="text-link">

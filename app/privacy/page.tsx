@@ -14,13 +14,14 @@ export default function Privacy() {
       <h2>Research is separate</h2>
       <p>
         Research recruitment is currently closed. Before it opens, approved
-        consent must explain the study contact, data collected, retention and
-        withdrawal procedures. No minors may enroll without institutional
-        authorization and verified guardian consent.
+        consent must explain collection of name and ERP, the study contact,
+        retention and withdrawal procedures. Names and ERP are kept in private
+        database tables and shown only to authorized researchers. No minors may
+        enroll without institutional authorization and verified guardian consent.
       </p>
       <h2>Choose how you learn</h2>
       <p>
-        Every lesson includes its full narration transcript. Controls support
+        The Water Cycle demo includes its full narration transcript. Controls support
         keyboard navigation, visible focus and browser font scaling.
         Illustrations include text alternatives. The interface honors
         reduced-motion preferences.

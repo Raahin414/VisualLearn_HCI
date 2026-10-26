@@ -9,15 +9,15 @@ test("homepage, catalog and course navigation are functional", async ({
   await expect(page.getByRole("heading", { level: 1 })).toContainText(
     "Science,",
   );
-  await page.getByRole("link", { name: "Explore the lesson", exact: true }).click();
+  await page.getByRole("link", { name: "Explore the courses", exact: true }).click();
   await expect(page).toHaveURL(/\/courses$/);
-  await page.locator(".catalog-card").click();
+  await page.locator('.catalog-card[href="/courses/water-cycle"]').click();
   // A cold development server may compile this route after the click.
   await expect(page).toHaveURL(/\/courses\/water-cycle$/, { timeout: 30000 });
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    "The Water Cycle.",
+    "The Water Cycle",
   );
-  await page.getByRole("link", { name: /Start the lesson demo/ }).click();
+  await page.getByRole("link", { name: /Start the full narrated Water Cycle demo/ }).click();
   await expect(page).toHaveURL(/\/demo\/water-cycle$/, { timeout: 30000 });
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
     "A journey without an end",

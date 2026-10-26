@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import type { StudyStats } from "@/lib/admin/exports";
 import { Dashboard } from "./dashboard";
 import { RatingPanel } from "./rating-panel";
+import { StudentRecords } from "./student-records";
 async function post(path: string, body: unknown) {
   const r = await fetch(path, {
     method: "POST",
@@ -38,7 +39,7 @@ export function AdminWorkspace({
     qrCode?: string;
     secret: string;
   } | null>(null);
-  const [tab, setTab] = useState<"overview" | "rating" | "exports">("overview");
+  const [tab, setTab] = useState<"overview" | "rating" | "exports" | "students">("overview");
   const [forgot, setForgot] = useState<"closed" | "open" | "sent">("closed");
   async function run(task: () => Promise<void>) {
     setBusy(true);
@@ -275,6 +276,7 @@ export function AdminWorkspace({
         {(
           [
             ["overview", "Overview & quality"],
+            ["students", "Student records"],
             ["rating", "Blind scoring"],
             ["exports", "Exports & codebook"],
           ] as const
@@ -290,6 +292,7 @@ export function AdminWorkspace({
         ))}
       </div>
       {tab === "overview" && <Dashboard stats={stats} />}
+      {tab === "students" && <StudentRecords />}
       {tab === "rating" && <RatingPanel />}
       {tab === "exports" && <Exports />}
       {errorBox}

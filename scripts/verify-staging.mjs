@@ -30,8 +30,8 @@ try {
       await q("select version from visuallearn_ops.migrations order by 1")
     ).map((r) => r.version);
     check(
-      "Migrations 001-006 applied",
-      ["001", "002", "003", "004", "005", "006"].every((x) => v.includes(x)),
+      "Migrations 001-008 applied",
+      ["001", "002", "003", "004", "005", "006", "007", "008"].every((x) => v.includes(x)),
       v.join(","),
     );
   }
@@ -94,6 +94,10 @@ try {
       ? `${e1.status}/${e1.enabled ? "enabled" : "disabled"}${syntheticOpen ? "/SYNTHETIC fixture" : ""}`
       : "missing",
   );
+  const courseGate = await q("select enabled,content_approved,ethics_approved from visuallearn.course_study_settings where id=true");
+  check("Five-course recording closed", courseGate.length === 1 && !courseGate[0].enabled && env.COURSE_RECORDING_ENABLED !== "true");
+  const courseRuns = await q("select count(*)::int n from visuallearn.course_attempts");
+  check("No recorded course attempts before approval", courseRuns[0].n === 0);
   const people = await q(
     "select count(*)::int n, count(*) filter (where consent_version not like 'SYNTHETIC%')::int real from visuallearn.participants",
   );

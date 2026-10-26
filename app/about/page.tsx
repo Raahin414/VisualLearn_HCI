@@ -7,11 +7,12 @@ export default function About() {
         VisualLearn connects clear explanations, original diagrams and room to
         reflect.
       </p>
-      <h2>One lesson, thoughtfully presented</h2>
+      <h2>Five courses, three visual presentations each</h2>
       <p>
-        Explore five chapters about the water cycle. Read the full explanation,
-        listen to the same narration, move back and forth, and try a short
-        practice quiz.
+        Explore the Water Cycle, Photosynthesis, Electric Circuits, Human
+        Digestion and the Solar System. Every course keeps its explanation and
+        questions the same across low, medium and high density. The original
+        Water Cycle demo also has five narrated chapters.
       </p>
       <h2>A research project in development</h2>
       <p>

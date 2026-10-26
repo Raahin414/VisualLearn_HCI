@@ -42,6 +42,8 @@ export function EnrollmentForm({
         method: "POST",
         headers: { "Content-Type": "application/json", "Idempotency-Key": key },
         body: JSON.stringify({
+          studentName: form.get("studentName"),
+          erp: form.get("erp"),
           ageBand: form.get("ageBand"),
           language: form.get("language"),
           languageComfort: Number(form.get("languageComfort")),
@@ -74,6 +76,14 @@ export function EnrollmentForm({
         <strong>Study contact:</strong> {studyContact}
       </p>
       <p className="fine-print">Consent version: {consentVersion}</p>
+      <label>
+        Your full name
+        <input name="studentName" autoComplete="name" required minLength={2} maxLength={120} />
+      </label>
+      <label>
+        ERP / student ID
+        <input name="erp" autoComplete="off" required minLength={2} maxLength={40} pattern="[A-Za-z0-9][A-Za-z0-9/_-]*" />
+      </label>
       <label>
         Age band
         <select name="ageBand" required defaultValue="">
